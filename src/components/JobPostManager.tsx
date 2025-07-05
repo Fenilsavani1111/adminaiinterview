@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Plus, Search, Filter, Edit, Trash2, Eye, Users, Calendar, Briefcase, Share2, Copy, Mail, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Filter, Edit, Trash2, Eye, Users, Calendar, Briefcase, Share2, Copy, Mail, CheckCircle, Linkedin } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { JobApplicationsList } from './JobApplicationsList';
 import { useJobPosts } from '../hooks/useJobPosts';
@@ -12,8 +12,8 @@ export function JobPostManager() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [shareModalOpen, setShareModalOpen] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
-  const [selectedJobForApplications, setSelectedJobForApplications] = useState<{id: string, title: string, company: string} | null>(null);
-  const [selectedJobForInterviews, setSelectedJobForInterviews] = useState<{id: string, title: string, company: string} | null>(null);
+  const [selectedJobForApplications, setSelectedJobForApplications] = useState<{ id: string, title: string, company: string } | null>(null);
+  const [selectedJobForInterviews, setSelectedJobForInterviews] = useState<{ id: string, title: string, company: string } | null>(null);
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: ''
@@ -37,7 +37,7 @@ export function JobPostManager() {
   // If viewing applications for a specific job, show the applications list
   if (selectedJobForApplications) {
     return (
-      <JobApplicationsList 
+      <JobApplicationsList
         jobId={selectedJobForApplications.id}
         jobTitle={selectedJobForApplications.title}
         company={selectedJobForApplications.company}
@@ -49,7 +49,7 @@ export function JobPostManager() {
   // If viewing interviews for a specific job, show the interviews list
   if (selectedJobForInterviews) {
     return (
-      <JobApplicationsList 
+      <JobApplicationsList
         jobId={selectedJobForInterviews.id}
         jobTitle={selectedJobForInterviews.title}
         company={selectedJobForInterviews.company}
@@ -61,8 +61,8 @@ export function JobPostManager() {
 
   const filteredJobs = processedJobPosts.filter(job => {
     const matchesSearch = job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.department?.toLowerCase().includes(searchTerm.toLowerCase());
+      job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.department?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || job.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
@@ -112,7 +112,7 @@ This position includes an AI-powered interview process that provides immediate f
 Apply here: ${job.shareableUrl}
 
 Best regards`);
-    
+
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
@@ -161,7 +161,7 @@ Best regards`);
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center space-x-4">
-              <button 
+              <button
                 onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin' })}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
@@ -170,7 +170,7 @@ Best regards`);
               </button>
               <h1 className="text-2xl font-bold text-gray-900">Job Posts</h1>
             </div>
-            <button 
+            <button
               onClick={() => dispatch({ type: 'SET_VIEW', payload: 'create-job' })}
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
@@ -309,7 +309,7 @@ Best regards`);
                       Type & Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Applicants
+                      Applicants
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Interviews
@@ -387,9 +387,41 @@ Best regards`);
                           </button>
                           <button
                             onClick={() => setShareModalOpen(job.id)}
+                            title='Share'
                             className="text-gray-600 hover:text-gray-900"
                           >
                             <Share2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            title='LinkedIn'
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            <Linkedin className="h-4 w-4" />
+                          </button>
+                          <button
+                            title='Monstar'
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            <svg
+                              width={'20'}
+                              height={'20'}
+                              viewBox="0 0 200 200"
+                              xmlns="http://www.w3.org/2000/svg"
+
+                            >
+                              <circle cx="100" cy="100" r="95" fill="#6A1B9A" />
+                              <text
+                                x="50%"
+                                y="55%"
+                                textAnchor="middle"
+                                fill="white"
+                                fontSize="110"
+                                fontFamily="Arial, sans-serif"
+                                dy=".3em"
+                              >
+                                M
+                              </text>
+                            </svg>
                           </button>
                         </div>
                       </td>
@@ -431,7 +463,7 @@ Best regards`);
             <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No job posts found</h3>
             <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || filterStatus !== 'all' 
+              {searchTerm || filterStatus !== 'all'
                 ? 'Try adjusting your search or filter criteria.'
                 : 'Get started by creating your first job post.'
               }
@@ -456,18 +488,18 @@ Best regards`);
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Share Job Post with Email</h3>
-            
+
             {(() => {
               const job = processedJobPosts.find(j => j.id === shareModalOpen);
               if (!job) return null;
-              
+
               return (
                 <div className="space-y-4">
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900">{job.title}</h4>
                     <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {/* <button
                       onClick={() => copyToClipboard(job.shareableUrl!, job.id)}
@@ -477,18 +509,18 @@ Best regards`);
                       <span>Copy Link</span>
                     </button> */}
                     <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-              <input
-                type="text"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Example@gmail.com"
-              />
-            </div>
-                    
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                      <input
+                        type="text"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Example@gmail.com"
+                      />
+                    </div>
+
                   </div>
-                  
+
                   <button
                     onClick={handleSubmit}
                     className="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
