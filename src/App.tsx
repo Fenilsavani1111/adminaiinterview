@@ -11,6 +11,8 @@ import { CreateJobPost } from './components/CreateJobPost';
 import { JobApplication } from './components/JobApplication';
 import { CandidateInterview } from './components/CandidateInterview';
 import { InterviewAnalytics } from './components/InterviewAnalytics';
+import { EditJobPost } from './components/EditJobPost';
+import { ViewJobPost } from './components/ViewJobPost';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -39,7 +41,9 @@ function AppContent() {
     case 'create-job':
       return <CreateJobPost />;
     case 'edit-job':
-      return <CreateJobPost />;
+      return <EditJobPost />;
+    case 'view-job':
+      return <ViewJobPost />;
     case 'interview-analytics':
       return <InterviewAnalytics />;
     default:

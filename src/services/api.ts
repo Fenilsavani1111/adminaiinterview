@@ -76,7 +76,7 @@ export const jobPostAPI = {
   },
 
   // Send job link to email
-  sendJobLink: async (jobId: string, email: string): Promise<void> => {
+  sendJobLink: async (jobId: string, email: string[]): Promise<void> => {
     await api.post('/jobposts/send-job-link', { jobId, email });
   },
 };
