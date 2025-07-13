@@ -20,6 +20,7 @@ import { useApp } from "../context/AppContext";
 import { JobApplicationsList } from "./JobApplicationsList";
 import { useJobPosts } from "../hooks/useJobPosts";
 import { jobPostAPI } from "../services/api";
+import { JobInterviewListing } from "./JobInterviewListing";
 
 export function JobPostManager() {
   const { state, dispatch } = useApp();
@@ -74,12 +75,11 @@ export function JobPostManager() {
   // If viewing interviews for a specific job, show the interviews list
   if (selectedJobForInterviews) {
     return (
-      <JobApplicationsList
+      <JobInterviewListing
         jobId={selectedJobForInterviews.id}
         jobTitle={selectedJobForInterviews.title}
         company={selectedJobForInterviews.company}
         onBack={() => setSelectedJobForInterviews(null)}
-        showInterviewsOnly={true}
       />
     );
   }

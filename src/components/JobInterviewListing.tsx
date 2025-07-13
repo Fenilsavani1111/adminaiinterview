@@ -1,34 +1,61 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Search, Filter, Download, Eye, Star, Calendar, Clock, User, Award, TrendingUp, Mail, Phone, Linkedin, FileText, BarChart3, Video } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { InterviewRecordingViewer } from './InterviewRecordingViewer';
+import React, { useState } from "react";
+import {
+  ArrowLeft,
+  Search,
+  Filter,
+  Download,
+  Eye,
+  Star,
+  Calendar,
+  Clock,
+  User,
+  Award,
+  TrendingUp,
+  Mail,
+  Phone,
+  Linkedin,
+  FileText,
+  BarChart3,
+  Video,
+} from "lucide-react";
+import { useApp } from "../context/AppContext";
+import { InterviewRecordingViewer } from "./InterviewRecordingViewer";
 
 interface JobInterviewListingProps {
   jobId: string;
   jobTitle: string;
   company: string;
+  onBack: () => void;
 }
 
-export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewListingProps) {
+export function JobInterviewListing({
+  jobId,
+  jobTitle,
+  company,
+  onBack,
+}: JobInterviewListingProps) {
   const { dispatch } = useApp();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
-  const [viewingRecording, setViewingRecording] = useState<{id: string, name: string} | null>(null);
+  const [viewingRecording, setViewingRecording] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Mock interview data for the specific job position
   const mockInterviews = [
     {
-      id: '1',
-      candidateName: 'Alice Johnson',
-      email: 'alice.johnson@email.com',
-      phone: '+1 (555) 123-4567',
-      appliedDate: '2024-01-10',
-      interviewDate: '2024-01-15',
+      id: "1",
+      candidateName: "Alice Johnson",
+      email: "alice.johnson@email.com",
+      phone: "+1 (555) 123-4567",
+      appliedDate: "2024-01-10",
+      interviewDate: "2024-01-15",
       duration: 22,
-      status: 'completed',
+      status: "completed",
       overallScore: 92,
       scores: {
         communication: 90,
@@ -36,25 +63,25 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
         problemSolving: 88,
         leadership: 94,
         bodyLanguage: 89,
-        confidence: 93
+        confidence: 93,
       },
-      experience: '6 years',
-      skills: ['React', 'TypeScript', 'Node.js', 'GraphQL'],
-      resumeUrl: '/resumes/alice-johnson.pdf',
-      linkedinUrl: 'https://linkedin.com/in/alice-johnson',
-      recommendation: 'Highly Recommended',
-      notes: 'Exceptional technical skills and leadership potential',
-      hasRecording: true
+      experience: "6 years",
+      skills: ["React", "TypeScript", "Node.js", "GraphQL"],
+      resumeUrl: "/resumes/alice-johnson.pdf",
+      linkedinUrl: "https://linkedin.com/in/alice-johnson",
+      recommendation: "Highly Recommended",
+      notes: "Exceptional technical skills and leadership potential",
+      hasRecording: true,
     },
     {
-      id: '2',
-      candidateName: 'Bob Smith',
-      email: 'bob.smith@email.com',
-      phone: '+1 (555) 234-5678',
-      appliedDate: '2024-01-12',
-      interviewDate: '2024-01-16',
+      id: "2",
+      candidateName: "Bob Smith",
+      email: "bob.smith@email.com",
+      phone: "+1 (555) 234-5678",
+      appliedDate: "2024-01-12",
+      interviewDate: "2024-01-16",
       duration: 18,
-      status: 'completed',
+      status: "completed",
       overallScore: 85,
       scores: {
         communication: 87,
@@ -62,25 +89,25 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
         problemSolving: 85,
         leadership: 80,
         bodyLanguage: 88,
-        confidence: 86
+        confidence: 86,
       },
-      experience: '4 years',
-      skills: ['React', 'JavaScript', 'Python', 'AWS'],
-      resumeUrl: '/resumes/bob-smith.pdf',
-      linkedinUrl: 'https://linkedin.com/in/bob-smith',
-      recommendation: 'Recommended',
-      notes: 'Strong technical foundation with good growth potential',
-      hasRecording: true
+      experience: "4 years",
+      skills: ["React", "JavaScript", "Python", "AWS"],
+      resumeUrl: "/resumes/bob-smith.pdf",
+      linkedinUrl: "https://linkedin.com/in/bob-smith",
+      recommendation: "Recommended",
+      notes: "Strong technical foundation with good growth potential",
+      hasRecording: true,
     },
     {
-      id: '3',
-      candidateName: 'Carol Davis',
-      email: 'carol.davis@email.com',
-      phone: '+1 (555) 345-6789',
-      appliedDate: '2024-01-08',
-      interviewDate: '2024-01-14',
+      id: "3",
+      candidateName: "Carol Davis",
+      email: "carol.davis@email.com",
+      phone: "+1 (555) 345-6789",
+      appliedDate: "2024-01-08",
+      interviewDate: "2024-01-14",
       duration: 25,
-      status: 'completed',
+      status: "completed",
       overallScore: 78,
       scores: {
         communication: 82,
@@ -88,25 +115,26 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
         problemSolving: 79,
         leadership: 76,
         bodyLanguage: 80,
-        confidence: 77
+        confidence: 77,
       },
-      experience: '3 years',
-      skills: ['Vue.js', 'JavaScript', 'CSS', 'HTML'],
-      resumeUrl: '/resumes/carol-davis.pdf',
-      linkedinUrl: 'https://linkedin.com/in/carol-davis',
-      recommendation: 'Consider',
-      notes: 'Good potential but needs more experience in required technologies',
-      hasRecording: true
+      experience: "3 years",
+      skills: ["Vue.js", "JavaScript", "CSS", "HTML"],
+      resumeUrl: "/resumes/carol-davis.pdf",
+      linkedinUrl: "https://linkedin.com/in/carol-davis",
+      recommendation: "Consider",
+      notes:
+        "Good potential but needs more experience in required technologies",
+      hasRecording: true,
     },
     {
-      id: '4',
-      candidateName: 'David Wilson',
-      email: 'david.wilson@email.com',
-      phone: '+1 (555) 456-7890',
-      appliedDate: '2024-01-14',
-      interviewDate: '2024-01-18',
+      id: "4",
+      candidateName: "David Wilson",
+      email: "david.wilson@email.com",
+      phone: "+1 (555) 456-7890",
+      appliedDate: "2024-01-14",
+      interviewDate: "2024-01-18",
       duration: 20,
-      status: 'completed',
+      status: "completed",
       overallScore: 88,
       scores: {
         communication: 85,
@@ -114,25 +142,25 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
         problemSolving: 87,
         leadership: 84,
         bodyLanguage: 89,
-        confidence: 91
+        confidence: 91,
       },
-      experience: '5 years',
-      skills: ['React', 'TypeScript', 'Docker', 'Kubernetes'],
-      resumeUrl: '/resumes/david-wilson.pdf',
-      linkedinUrl: 'https://linkedin.com/in/david-wilson',
-      recommendation: 'Recommended',
-      notes: 'Strong technical skills with excellent problem-solving abilities',
-      hasRecording: true
+      experience: "5 years",
+      skills: ["React", "TypeScript", "Docker", "Kubernetes"],
+      resumeUrl: "/resumes/david-wilson.pdf",
+      linkedinUrl: "https://linkedin.com/in/david-wilson",
+      recommendation: "Recommended",
+      notes: "Strong technical skills with excellent problem-solving abilities",
+      hasRecording: true,
     },
     {
-      id: '5',
-      candidateName: 'Eva Martinez',
-      email: 'eva.martinez@email.com',
-      phone: '+1 (555) 567-8901',
-      appliedDate: '2024-01-11',
-      interviewDate: '2024-01-17',
+      id: "5",
+      candidateName: "Eva Martinez",
+      email: "eva.martinez@email.com",
+      phone: "+1 (555) 567-8901",
+      appliedDate: "2024-01-11",
+      interviewDate: "2024-01-17",
       duration: 19,
-      status: 'completed',
+      status: "completed",
       overallScore: 91,
       scores: {
         communication: 94,
@@ -140,25 +168,25 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
         problemSolving: 90,
         leadership: 92,
         bodyLanguage: 93,
-        confidence: 88
+        confidence: 88,
       },
-      experience: '7 years',
-      skills: ['React', 'TypeScript', 'GraphQL', 'MongoDB'],
-      resumeUrl: '/resumes/eva-martinez.pdf',
-      linkedinUrl: 'https://linkedin.com/in/eva-martinez',
-      recommendation: 'Highly Recommended',
-      notes: 'Outstanding communication and leadership skills',
-      hasRecording: true
+      experience: "7 years",
+      skills: ["React", "TypeScript", "GraphQL", "MongoDB"],
+      resumeUrl: "/resumes/eva-martinez.pdf",
+      linkedinUrl: "https://linkedin.com/in/eva-martinez",
+      recommendation: "Highly Recommended",
+      notes: "Outstanding communication and leadership skills",
+      hasRecording: true,
     },
     {
-      id: '6',
-      candidateName: 'Frank Chen',
-      email: 'frank.chen@email.com',
-      phone: '+1 (555) 678-9012',
-      appliedDate: '2024-01-09',
-      interviewDate: '2024-01-15',
+      id: "6",
+      candidateName: "Frank Chen",
+      email: "frank.chen@email.com",
+      phone: "+1 (555) 678-9012",
+      appliedDate: "2024-01-09",
+      interviewDate: "2024-01-15",
       duration: 23,
-      status: 'completed',
+      status: "completed",
       overallScore: 82,
       scores: {
         communication: 79,
@@ -166,16 +194,16 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
         problemSolving: 83,
         leadership: 78,
         bodyLanguage: 81,
-        confidence: 85
+        confidence: 85,
       },
-      experience: '4 years',
-      skills: ['Angular', 'TypeScript', 'RxJS', 'NgRx'],
-      resumeUrl: '/resumes/frank-chen.pdf',
-      linkedinUrl: 'https://linkedin.com/in/frank-chen',
-      recommendation: 'Consider',
-      notes: 'Good technical skills but limited React experience',
-      hasRecording: true
-    }
+      experience: "4 years",
+      skills: ["Angular", "TypeScript", "RxJS", "NgRx"],
+      resumeUrl: "/resumes/frank-chen.pdf",
+      linkedinUrl: "https://linkedin.com/in/frank-chen",
+      recommendation: "Consider",
+      notes: "Good technical skills but limited React experience",
+      hasRecording: true,
+    },
   ];
 
   // If viewing a recording, show the recording viewer
@@ -191,31 +219,37 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
     );
   }
 
-  const filteredInterviews = mockInterviews.filter(interview => {
-    const matchesSearch = interview.candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         interview.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         interview.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesFilter = filterStatus === 'all' || interview.status === filterStatus;
+  const filteredInterviews = mockInterviews.filter((interview) => {
+    const matchesSearch =
+      interview.candidateName
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      interview.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      interview.skills.some((skill) =>
+        skill.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    const matchesFilter =
+      filterStatus === "all" || interview.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
   const sortedInterviews = [...filteredInterviews].sort((a, b) => {
     let aValue, bValue;
-    
+
     switch (sortBy) {
-      case 'name':
+      case "name":
         aValue = a.candidateName;
         bValue = b.candidateName;
         break;
-      case 'score':
+      case "score":
         aValue = a.overallScore;
         bValue = b.overallScore;
         break;
-      case 'date':
+      case "date":
         aValue = new Date(a.interviewDate).getTime();
         bValue = new Date(b.interviewDate).getTime();
         break;
-      case 'duration':
+      case "duration":
         aValue = a.duration;
         bValue = b.duration;
         break;
@@ -224,7 +258,7 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
         bValue = new Date(b.interviewDate).getTime();
     }
 
-    if (sortOrder === 'asc') {
+    if (sortOrder === "asc") {
       return aValue > bValue ? 1 : -1;
     } else {
       return aValue < bValue ? 1 : -1;
@@ -232,26 +266,31 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
   });
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 bg-green-100';
-    if (score >= 80) return 'text-blue-600 bg-blue-100';
-    if (score >= 70) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
+    if (score >= 90) return "text-green-600 bg-green-100";
+    if (score >= 80) return "text-blue-600 bg-blue-100";
+    if (score >= 70) return "text-yellow-600 bg-yellow-100";
+    return "text-red-600 bg-red-100";
   };
 
   const getRecommendationColor = (recommendation: string) => {
     switch (recommendation) {
-      case 'Highly Recommended': return 'bg-green-100 text-green-800';
-      case 'Recommended': return 'bg-blue-100 text-blue-800';
-      case 'Consider': return 'bg-yellow-100 text-yellow-800';
-      case 'Not Recommended': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "Highly Recommended":
+        return "bg-green-100 text-green-800";
+      case "Recommended":
+        return "bg-blue-100 text-blue-800";
+      case "Consider":
+        return "bg-yellow-100 text-yellow-800";
+      case "Not Recommended":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const toggleCandidateSelection = (candidateId: string) => {
-    setSelectedCandidates(prev => 
-      prev.includes(candidateId) 
-        ? prev.filter(id => id !== candidateId)
+    setSelectedCandidates((prev) =>
+      prev.includes(candidateId)
+        ? prev.filter((id) => id !== candidateId)
         : [...prev, candidateId]
     );
   };
@@ -260,13 +299,21 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
     if (selectedCandidates.length === sortedInterviews.length) {
       setSelectedCandidates([]);
     } else {
-      setSelectedCandidates(sortedInterviews.map(interview => interview.id));
+      setSelectedCandidates(sortedInterviews.map((interview) => interview.id));
     }
   };
 
-  const averageScore = sortedInterviews.reduce((sum, interview) => sum + interview.overallScore, 0) / sortedInterviews.length;
-  const highPerformers = sortedInterviews.filter(interview => interview.overallScore >= 85).length;
-  const averageDuration = sortedInterviews.reduce((sum, interview) => sum + interview.duration, 0) / sortedInterviews.length;
+  const averageScore =
+    sortedInterviews.reduce(
+      (sum, interview) => sum + interview.overallScore,
+      0
+    ) / sortedInterviews.length;
+  const highPerformers = sortedInterviews.filter(
+    (interview) => interview.overallScore >= 85
+  ).length;
+  const averageDuration =
+    sortedInterviews.reduce((sum, interview) => sum + interview.duration, 0) /
+    sortedInterviews.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -275,16 +322,23 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'interview-analytics' })}
+              <button
+                onClick={() =>
+                  // dispatch({ type: "SET_VIEW", payload: "interview-analytics" })
+                  onBack()
+                }
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
                 <span>Back to Analytics</span>
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{jobTitle} Interviews</h1>
-                <p className="text-sm text-gray-600">{company} • {sortedInterviews.length} candidates interviewed</p>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {jobTitle} Interviews
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {company} • {sortedInterviews.length} candidates interviewed
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -309,7 +363,9 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Interviews</p>
-                <p className="text-3xl font-bold text-gray-900">{sortedInterviews.length}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {sortedInterviews.length}
+                </p>
               </div>
               <div className="bg-blue-100 p-3 rounded-lg">
                 <User className="h-6 w-6 text-blue-600" />
@@ -321,7 +377,9 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Average Score</p>
-                <p className="text-3xl font-bold text-gray-900">{averageScore.toFixed(1)}%</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {averageScore.toFixed(1)}%
+                </p>
               </div>
               <div className="bg-green-100 p-3 rounded-lg">
                 <Award className="h-6 w-6 text-green-600" />
@@ -333,7 +391,9 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">High Performers</p>
-                <p className="text-3xl font-bold text-gray-900">{highPerformers}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {highPerformers}
+                </p>
                 <p className="text-sm text-gray-500">Score ≥ 85%</p>
               </div>
               <div className="bg-yellow-100 p-3 rounded-lg">
@@ -346,7 +406,9 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Avg Duration</p>
-                <p className="text-3xl font-bold text-gray-900">{averageDuration.toFixed(1)}m</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {averageDuration.toFixed(1)}m
+                </p>
               </div>
               <div className="bg-purple-100 p-3 rounded-lg">
                 <Clock className="h-6 w-6 text-purple-600" />
@@ -392,10 +454,12 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
                 <option value="duration">Sort by Duration</option>
               </select>
               <button
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                onClick={() =>
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                }
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                {sortOrder === 'asc' ? '↑' : '↓'}
+                {sortOrder === "asc" ? "↑" : "↓"}
               </button>
             </div>
           </div>
@@ -410,7 +474,9 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedCandidates.length === sortedInterviews.length}
+                      checked={
+                        selectedCandidates.length === sortedInterviews.length
+                      }
                       onChange={selectAllCandidates}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
@@ -450,19 +516,33 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
                       <div className="flex items-center">
                         <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
                           <span className="text-sm font-medium text-gray-700">
-                            {interview.candidateName.split(' ').map(n => n[0]).join('')}
+                            {interview.candidateName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
                           </span>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{interview.candidateName}</div>
-                          <div className="text-sm text-gray-500">{interview.email}</div>
-                          <div className="text-sm text-gray-500">{interview.experience} experience</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {interview.candidateName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {interview.email}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {interview.experience} experience
+                          </div>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {interview.skills.slice(0, 3).map((skill, index) => (
-                              <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                                {skill}
-                              </span>
-                            ))}
+                            {interview.skills
+                              .slice(0, 3)
+                              .map((skill, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
                             {interview.skills.length > 3 && (
                               <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
                                 +{interview.skills.length - 3}
@@ -474,59 +554,86 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-center">
-                        <div className={`text-2xl font-bold mb-1 ${getScoreColor(interview.overallScore).split(' ')[0]}`}>
+                        <div
+                          className={`text-2xl font-bold mb-1 ${
+                            getScoreColor(interview.overallScore).split(" ")[0]
+                          }`}
+                        >
                           {interview.overallScore}%
                         </div>
                         <div className="flex items-center justify-center">
-                          {interview.overallScore >= 90 && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
-                          {interview.overallScore >= 85 && interview.overallScore < 90 && (
-                            <TrendingUp className="h-4 w-4 text-green-500" />
+                          {interview.overallScore >= 90 && (
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
                           )}
+                          {interview.overallScore >= 85 &&
+                            interview.overallScore < 90 && (
+                              <TrendingUp className="h-4 w-4 text-green-500" />
+                            )}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-2">
-                        {Object.entries(interview.scores).map(([skill, score]) => (
-                          <div key={skill} className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 capitalize w-20">
-                              {skill.replace(/([A-Z])/g, ' $1').trim()}
-                            </span>
-                            <div className="flex items-center space-x-2">
-                              <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                                <div 
-                                  className={`h-1.5 rounded-full ${
-                                    score >= 90 ? 'bg-green-500' :
-                                    score >= 80 ? 'bg-blue-500' :
-                                    score >= 70 ? 'bg-yellow-500' : 'bg-red-500'
-                                  }`}
-                                  style={{ width: `${score}%` }}
-                                ></div>
+                        {Object.entries(interview.scores).map(
+                          ([skill, score]) => (
+                            <div
+                              key={skill}
+                              className="flex items-center justify-between"
+                            >
+                              <span className="text-xs text-gray-600 capitalize w-20">
+                                {skill.replace(/([A-Z])/g, " $1").trim()}
+                              </span>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                                  <div
+                                    className={`h-1.5 rounded-full ${
+                                      score >= 90
+                                        ? "bg-green-500"
+                                        : score >= 80
+                                        ? "bg-blue-500"
+                                        : score >= 70
+                                        ? "bg-yellow-500"
+                                        : "bg-red-500"
+                                    }`}
+                                    style={{ width: `${score}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-xs font-medium text-gray-900 w-8">
+                                  {score}%
+                                </span>
                               </div>
-                              <span className="text-xs font-medium text-gray-900 w-8">{score}%</span>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
                         <div className="flex items-center space-x-2 mb-1">
                           <Calendar className="h-4 w-4 text-gray-400" />
-                          <span>{new Date(interview.interviewDate).toLocaleDateString()}</span>
+                          <span>
+                            {new Date(
+                              interview.interviewDate
+                            ).toLocaleDateString()}
+                          </span>
                         </div>
                         <div className="flex items-center space-x-2 mb-1">
                           <Clock className="h-4 w-4 text-gray-400" />
                           <span>{interview.duration} minutes</span>
                         </div>
                         <div className="text-xs text-gray-500 mt-2">
-                          Applied: {new Date(interview.appliedDate).toLocaleDateString()}
+                          Applied:{" "}
+                          {new Date(interview.appliedDate).toLocaleDateString()}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(interview.recommendation)}`}>
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
+                            interview.recommendation
+                          )}`}
+                        >
                           {interview.recommendation}
                         </span>
                         <div className="text-xs text-gray-500 mt-1 max-w-32">
@@ -537,21 +644,26 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
                         {interview.hasRecording && (
-                          <button 
-                            onClick={() => setViewingRecording({
-                              id: interview.id,
-                              name: interview.candidateName
-                            })}
+                          <button
+                            onClick={() =>
+                              setViewingRecording({
+                                id: interview.id,
+                                name: interview.candidateName,
+                              })
+                            }
                             className="text-purple-600 hover:text-purple-900 transition-colors"
                             title="View Recording"
                           >
                             <Video className="h-4 w-4" />
                           </button>
                         )}
-                        <button 
+                        <button
                           onClick={() => {
                             // Navigate to detailed candidate view
-                            dispatch({ type: 'SET_VIEW', payload: 'interview-analytics' });
+                            dispatch({
+                              type: "SET_VIEW",
+                              payload: "interview-analytics",
+                            });
                             // This would typically set a selected candidate state
                           }}
                           className="text-blue-600 hover:text-blue-900 transition-colors"
@@ -559,19 +671,19 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
                         >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button 
+                        <button
                           className="text-gray-600 hover:text-gray-900 transition-colors"
                           title="Download Resume"
                         >
                           <FileText className="h-4 w-4" />
                         </button>
-                        <button 
+                        <button
                           className="text-gray-600 hover:text-gray-900 transition-colors"
                           title="Contact Candidate"
                         >
                           <Mail className="h-4 w-4" />
                         </button>
-                        <button 
+                        <button
                           className="text-gray-600 hover:text-gray-900 transition-colors"
                           title="View LinkedIn"
                         >
@@ -603,7 +715,7 @@ export function JobInterviewListing({ jobId, jobTitle, company }: JobInterviewLi
                 <button className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm">
                   Export Selected
                 </button>
-                <button 
+                <button
                   onClick={() => setSelectedCandidates([])}
                   className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                 >
