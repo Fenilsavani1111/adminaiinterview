@@ -143,7 +143,7 @@ export const useJobPosts = () => {
             {
               role: "system",
               content:
-                "Generate a array of interview questions in JSON format with the following fields: id(string), question, type, expectedDuration, difficulty, category, suggestedAnswers (array), evaluationCriteria (array), isRequired, order.",
+                "Generate a array of interview questions in JSON format with the following fields: id, question, type, expectedDuration, difficulty, category, suggestedAnswers (array), evaluationCriteria (array), isRequired, order.",
             },
             {
               role: "user",

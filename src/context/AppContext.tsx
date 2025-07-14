@@ -11,7 +11,7 @@ interface AppState {
   jobPosts: JobPost[];
   applications: JobApplication[];
   adminStats: AdminStats;
-  currentView: 'landing' | 'profile' | 'interview' | 'results' | 'admin' | 'job-posts' | 'create-job' | 'edit-job' | 'job-selection' | 'job-application' | 'candidate-interview' | 'interview-analytics';
+  currentView: 'landing' | 'profile' | 'interview' | 'results' | 'admin' | 'job-posts' | 'create-job' | 'edit-job' | 'view-job' | 'job-selection' | 'job-application' | 'candidate-interview' | 'interview-analytics';
 }
 
 type AppAction =
