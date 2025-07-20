@@ -245,7 +245,6 @@ export const useJobPosts = () => {
           },
         });
         let responseText = response.choices[0]?.message?.content ?? "";
-        console.log("responseText", responseText)
         const evaluation = JSON.parse(responseText);
         let data: string = evaluation?.job_description ?? "";
         return data;

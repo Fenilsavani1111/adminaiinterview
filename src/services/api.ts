@@ -79,6 +79,12 @@ export const jobPostAPI = {
   sendJobLink: async (jobId: string, email: string[]): Promise<void> => {
     await api.post('/jobposts/send-job-link', { jobId, email });
   },
+
+  // generate token for job post interview link
+  generateTokenForJobInterviewLink: async (jobId: string) => {
+    const response = await api.post('/jobposts/generate-job-token', { jobId });
+    return response.data;
+  },
 };
 
 // User API functions (if needed)
