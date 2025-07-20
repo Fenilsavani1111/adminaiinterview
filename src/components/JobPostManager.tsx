@@ -701,7 +701,8 @@ Best regards`);
 
             {/* Share Tabs */}
             <div className="flex border-b">
-              {["Email", "Whatsapp", "Linkedin", "Monstar"].map((tab: any) => (
+              {/* {["Email", "Whatsapp", "Linkedin", "Monstar"].map((tab: any) => ( */}
+              {["Email", "Whatsapp", "Linkedin"].map((tab: any) => (
                 <button
                   key={tab}
                   className={`flex-1 py-2 text-sm font-medium ${
@@ -931,7 +932,7 @@ Best regards`);
                   })()}
                 </Fragment>
               )}
-              {shareModalData.activeTab === "Monstar" && (
+              {/* {shareModalData.activeTab === "Monstar" && (
                 <Fragment>
                   {(() => {
                     const job = processedJobPosts.find(
@@ -984,7 +985,7 @@ Best regards`);
                     );
                   })()}
                 </Fragment>
-              )}
+              )} */}
             </div>
           </div>
         </div>
