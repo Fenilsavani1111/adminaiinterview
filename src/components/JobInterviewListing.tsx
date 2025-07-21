@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Search,
@@ -20,10 +20,13 @@ import {
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { InterviewRecordingViewer } from "./InterviewRecordingViewer";
+import { useJobPosts } from "../hooks/useJobPosts";
+import { Candidate } from "../types";
 
 interface JobInterviewListingProps {
   jobId: string;
   jobTitle: string;
+  tab: string;
   company: string;
   onBack: () => void;
 }
@@ -31,10 +34,12 @@ interface JobInterviewListingProps {
 export function JobInterviewListing({
   jobId,
   jobTitle,
+  tab,
   company,
   onBack,
 }: JobInterviewListingProps) {
   const { dispatch } = useApp();
+  const { getJobPostById, loading, error } = useJobPosts();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("date");
@@ -44,6 +49,7 @@ export function JobInterviewListing({
     id: string;
     name: string;
   } | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
 
   // Mock interview data for the specific job position
   const mockInterviews = [
@@ -219,11 +225,9 @@ export function JobInterviewListing({
     );
   }
 
-  const filteredInterviews = mockInterviews.filter((interview) => {
+  const filteredInterviews = candidates.filter((interview) => {
     const matchesSearch =
-      interview.candidateName
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+      interview.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       interview.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       interview.skills.some((skill) =>
         skill.toLowerCase().includes(searchTerm.toLowerCase())
@@ -238,8 +242,8 @@ export function JobInterviewListing({
 
     switch (sortBy) {
       case "name":
-        aValue = a.candidateName;
-        bValue = b.candidateName;
+        aValue = a.name;
+        bValue = b.name;
         break;
       case "score":
         aValue = a.overallScore;
@@ -315,6 +319,19 @@ export function JobInterviewListing({
     sortedInterviews.reduce((sum, interview) => sum + interview.duration, 0) /
     sortedInterviews.length;
 
+  const getjobpostdata = async () => {
+    try {
+      let job = await getJobPostById(jobId);
+      setCandidates(job?.candidates ?? []);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  useEffect(() => {
+    getjobpostdata();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -330,7 +347,11 @@ export function JobInterviewListing({
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span>Back to Analytics</span>
+                <span>
+                  {tab === "interviewanalytics"
+                    ? "Back to Analytics"
+                    : "Back to Job Posts"}
+                </span>
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -474,9 +495,7 @@ export function JobInterviewListing({
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={
-                        selectedCandidates.length === sortedInterviews.length
-                      }
+                      checked={selectedCandidates.length === candidates.length}
                       onChange={selectAllCandidates}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
@@ -502,7 +521,7 @@ export function JobInterviewListing({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {sortedInterviews.map((interview) => (
+                {sortedInterviews.map((interview: Candidate) => (
                   <tr key={interview.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <input
@@ -516,26 +535,27 @@ export function JobInterviewListing({
                       <div className="flex items-center">
                         <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
                           <span className="text-sm font-medium text-gray-700">
-                            {interview.candidateName
+                            {interview.name
                               .split(" ")
-                              .map((n) => n[0])
+                              .map((n: string) => n[0])
                               .join("")}
                           </span>
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {interview.candidateName}
+                            {interview.name}
                           </div>
                           <div className="text-sm text-gray-500">
                             {interview.email}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {interview.experience} experience
+                            {interview.experienceLevel}
+                            {/* {interview.experience} experience */}
                           </div>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {interview.skills
                               .slice(0, 3)
-                              .map((skill, index) => (
+                              .map((skill: string, index: number) => (
                                 <span
                                   key={index}
                                   className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
@@ -556,10 +576,12 @@ export function JobInterviewListing({
                       <div className="text-center">
                         <div
                           className={`text-2xl font-bold mb-1 ${
-                            getScoreColor(interview.overallScore).split(" ")[0]
+                            getScoreColor(interview.overallScore ?? 0).split(
+                              " "
+                            )[0]
                           }`}
                         >
-                          {interview.overallScore}%
+                          {interview.overallScore ?? 0}%
                         </div>
                         <div className="flex items-center justify-center">
                           {interview.overallScore >= 90 && (
@@ -609,35 +631,45 @@ export function JobInterviewListing({
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <span>
-                            {new Date(
-                              interview.interviewDate
-                            ).toLocaleDateString()}
-                          </span>
-                        </div>
+                        {interview.interviewDate === null ? (
+                          <></>
+                        ) : (
+                          <div className="flex items-center space-x-2 mb-1">
+                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <span>
+                              {new Date(
+                                interview.interviewDate
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center space-x-2 mb-1">
                           <Clock className="h-4 w-4 text-gray-400" />
-                          <span>{interview.duration} minutes</span>
+                          <span>{interview.duration ?? 0} minutes</span>
                         </div>
-                        <div className="text-xs text-gray-500 mt-2">
-                          Applied:{" "}
-                          {new Date(interview.appliedDate).toLocaleDateString()}
-                        </div>
+                        {interview.appliedDate === null ? (
+                          <></>
+                        ) : (
+                          <div className="text-xs text-gray-500 mt-2">
+                            Applied:{" "}
+                            {new Date(
+                              interview.appliedDate
+                            ).toLocaleDateString()}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div>
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
-                            interview.recommendation
+                            interview.recommendation ?? ""
                           )}`}
                         >
-                          {interview.recommendation}
+                          {interview.recommendation ?? ""}
                         </span>
                         <div className="text-xs text-gray-500 mt-1 max-w-32">
-                          {interview.notes}
+                          {interview.notes ?? ""}
                         </div>
                       </div>
                     </td>
@@ -648,7 +680,7 @@ export function JobInterviewListing({
                             onClick={() =>
                               setViewingRecording({
                                 id: interview.id,
-                                name: interview.candidateName,
+                                name: interview.name,
                               })
                             }
                             className="text-purple-600 hover:text-purple-900 transition-colors"
