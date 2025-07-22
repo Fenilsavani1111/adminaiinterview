@@ -262,6 +262,29 @@ export const useJobPosts = () => {
     []
   );
 
+  // Get job responsibilities from job description using chatgtp openai
+  const getRecentCandidatesData = useCallback(
+    async (
+    ) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await jobPostAPI.getRecentCandidates();
+        return data;
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to generate job description pdf"
+        );
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
   // Clear error
   const clearError = useCallback(() => {
     setError(null);
@@ -285,6 +308,7 @@ export const useJobPosts = () => {
     clearError,
     getJobPostOpenaiQuestions,
     getJobPostResponsibilityFromJD,
-    getJobDescriptionFromPDf
+    getJobDescriptionFromPDf,
+    getRecentCandidatesData
   };
 };

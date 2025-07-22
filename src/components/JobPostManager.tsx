@@ -93,6 +93,7 @@ export function JobPostManager() {
         jobTitle={selectedJobForInterviews.title}
         company={selectedJobForInterviews.company}
         onBack={() => setSelectedJobForInterviews(null)}
+        tab="jobposts"
       />
     );
   }
@@ -310,7 +311,7 @@ Best regards`);
       alert("Failed to send job link. Please try again.");
     }
   };
-  console.log("shareModalData.jobId", shareModalData.jobId);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}

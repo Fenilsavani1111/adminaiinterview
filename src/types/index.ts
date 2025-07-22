@@ -36,6 +36,7 @@ export interface JobPost {
   shareableUrl?: string;
   applicants?: number;
   interviews?: number;
+  candidates?: []
 }
 
 export interface JobApplication {
@@ -53,6 +54,35 @@ export interface JobApplication {
   appliedAt: Date;
   status: 'applied' | 'interviewed' | 'shortlisted' | 'rejected';
   interviewSessionId?: string;
+}
+
+export interface Candidate {
+  id: string;
+  jobPostId: string;
+  name: string;
+  email: string;
+  phone: string;
+  appliedDate: string;
+  interviewDate: string;
+  duration: number;
+  status: "completed" | "inprogress" | "scheduled",
+  overallScore: number;
+  scores: {
+    communication: number;
+    technical: number;
+    problemSolving: number;
+    leadership: number;
+    bodyLanguage: number;
+    confidence: number;
+  },
+  experienceLevel: string;
+  skills: string[];
+  resumeUrl: string;
+  linkedinUrl: string;
+  recommendation: string;
+  notes: string;
+  hasRecording: boolean;
+  job_post?: JobPost;
 }
 
 export interface InterviewSession {

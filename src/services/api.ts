@@ -85,6 +85,12 @@ export const jobPostAPI = {
     const response = await api.post('/jobposts/generate-job-token', { jobId });
     return response.data;
   },
+
+  // get recent candidates
+  getRecentCandidates: async () => {
+    const response = await api.post('/jobposts/get-recent-candidates');
+    return response.data;
+  },
 };
 
 // User API functions (if needed)
