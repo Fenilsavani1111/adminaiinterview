@@ -192,6 +192,7 @@ export function InterviewAnalytics() {
         company={selectedJobForListing.company}
         onBack={() => {
           dispatch({ type: "SET_VIEW", payload: "interview-analytics" });
+          setSelectedJobForListing(null);
         }}
         tab="interviewanalytics"
       />

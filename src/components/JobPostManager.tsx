@@ -145,7 +145,7 @@ export function JobPostManager() {
   // share or open job post interview links
   const getJobLink = async (
     jobId: string,
-    type: "open" | "whatsapp" | "linkedin" | "monstar"
+    type: "open" | "whatsapp" | "linkedin" | "monstar" | "copy"
   ) => {
     try {
       if (type === "whatsapp") {
@@ -159,7 +159,11 @@ export function JobPostManager() {
       if (response?.token?.length > 0) {
         let interviewlink = `https://aiinterview.deepvox.ai/?token=${response?.token}`;
         // let interviewlink = `http://localhost:5173/?token=${response?.token}`;
-        if (type === "open") {
+        if (type === "copy") {
+          await navigator.clipboard.writeText(interviewlink);
+          setCopiedUrl(jobId);
+          setTimeout(() => setCopiedUrl(null), 2000);
+        } else if (type === "open") {
           // open link
           window.open(interviewlink, "_blank");
         } else if (type === "whatsapp") {
@@ -192,20 +196,6 @@ export function JobPostManager() {
             interviewlink
           )}`;
           window.open(linkedinURL, "_blank");
-          setShareModalData({
-            isOpenModal: false,
-            activeTab: "Email",
-            jobId: "",
-            data: "",
-            isValid: true,
-            loading: false,
-          });
-        } else if (type === "monstar") {
-          // setShareModalData({
-          //   ...shareModalData,
-          //   loading: true,
-          // });
-          // share job interview link in monstar
           setShareModalData({
             isOpenModal: false,
             activeTab: "Email",
@@ -569,9 +559,7 @@ Best regards`);
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() =>
-                              copyToClipboard(job.shareableUrl!, job.id)
-                            }
+                            onClick={() => getJobLink(job.id, "copy")}
                             className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
                           >
                             {copiedUrl === job.id ? (
@@ -586,7 +574,7 @@ Best regards`);
                               </>
                             )}
                           </button>
-                          <button
+                          {/* <button
                             onClick={() => {
                               getJobLink(job.id, "open");
                             }}
@@ -594,7 +582,7 @@ Best regards`);
                             className="text-gray-600 hover:text-gray-900"
                           >
                             <Link className="h-4 w-4" />
-                          </button>
+                          </button> */}
                           <button
                             onClick={() => {
                               setShareModalData({

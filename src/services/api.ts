@@ -91,6 +91,12 @@ export const jobPostAPI = {
     const response = await api.post('/jobposts/get-recent-candidates');
     return response.data;
   },
+
+  // get admin dashboard
+  getAdminDashboard: async () => {
+    const response = await api.post('/jobposts/get-admin-dashboard');
+    return response.data;
+  },
 };
 
 // User API functions (if needed)

@@ -21,18 +21,47 @@ import {
   UserCheck,
   FileText,
   Mail,
+  TrendingDown,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Candidate } from "../types";
 import { useJobPosts } from "../hooks/useJobPosts";
 
+type SkillType = {
+  skill: string;
+  count: number;
+  percentage: number;
+};
+
+interface SummaryStats {
+  total_interview: number;
+  average_score: number;
+  active_jobs: number;
+  inactive_jobs: number;
+  interview_weekly_growth: number;
+  total_candidates: number;
+  candidate_monthly_growth: number;
+  top_skills: SkillType[];
+}
+
 export function AdminDashboard() {
   const { state, dispatch } = useApp();
-  const { getRecentCandidatesData, error, loading } = useJobPosts();
+  const { getAdminDashboard, error, loading } = useJobPosts();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [summaryStates, setSummaryStates] = useState<SummaryStats>({
+    total_interview: 0,
+    // completedInterviews
+    average_score: 0,
+    active_jobs: 0,
+    inactive_jobs: 0,
+    interview_weekly_growth: 0,
+    total_candidates: 0,
+    candidate_monthly_growth: 0,
+    top_skills: [],
+  });
 
   // Mock data for demonstration
   const mockStats = {
@@ -45,74 +74,6 @@ export function AdminDashboard() {
     weeklyGrowth: 12.5,
     monthlyGrowth: 8.3,
   };
-
-  const mockInterviews = [
-    {
-      id: "1",
-      userName: "Alice Johnson",
-      position: "Senior Frontend Developer",
-      score: 92,
-      status: "completed",
-      date: "2024-01-15",
-      duration: 22,
-      avatar: "AJ",
-      company: "TechCorp Inc.",
-      skills: ["React", "TypeScript", "Node.js"],
-      recommendation: "Highly Recommended",
-    },
-    {
-      id: "2",
-      userName: "Bob Smith",
-      position: "Product Manager",
-      score: 85,
-      status: "completed",
-      date: "2024-01-14",
-      duration: 18,
-      avatar: "BS",
-      company: "InnovateLabs",
-      skills: ["Strategy", "Analytics", "Leadership"],
-      recommendation: "Recommended",
-    },
-    {
-      id: "3",
-      userName: "Carol Davis",
-      position: "Data Scientist",
-      score: 78,
-      status: "completed",
-      date: "2024-01-14",
-      duration: 25,
-      avatar: "CD",
-      company: "DataFlow Solutions",
-      skills: ["Python", "ML", "Statistics"],
-      recommendation: "Consider",
-    },
-    {
-      id: "4",
-      userName: "David Wilson",
-      position: "DevOps Engineer",
-      score: 88,
-      status: "completed",
-      date: "2024-01-15",
-      duration: 20,
-      avatar: "DW",
-      company: "CloudTech",
-      skills: ["AWS", "Docker", "Kubernetes"],
-      recommendation: "Recommended",
-    },
-    {
-      id: "5",
-      userName: "Eva Martinez",
-      position: "UI/UX Designer",
-      score: 91,
-      status: "completed",
-      date: "2024-01-13",
-      duration: 19,
-      avatar: "EM",
-      company: "DesignStudio",
-      skills: ["Figma", "Research", "Prototyping"],
-      recommendation: "Highly Recommended",
-    },
-  ];
 
   const filteredInterviews = candidates.filter((interview) => {
     const matchesSearch =
@@ -158,18 +119,43 @@ export function AdminDashboard() {
     }
   };
 
-  const getjobpostdata = async () => {
+  const getData = async () => {
     try {
-      let data = await getRecentCandidatesData();
-      console.log("data", data);
-      setCandidates(data?.candidates ?? []);
+      let data = await getAdminDashboard();
+      setCandidates(data?.recentCandidates ?? []);
+      let candidates = data?.candidates ?? [];
+
+      // 1. Flatten all skills
+      const allSkills: string[] = candidates.flatMap((item: Candidate) =>
+        item.skills.map((skill) => skill.trim())
+      );
+
+      // 2. Count occurrences
+      const skillCounts: Record<string, number> = {};
+      for (const skill of allSkills) {
+        skillCounts[skill] = (skillCounts[skill] || 0) + 1;
+      }
+
+      // 3. Get total number of skills
+      const totalSkills = allSkills.length;
+
+      // 3. Convert to array and sort by count
+      const topFiveSkills: SkillType[] = Object.entries(skillCounts)
+        .map(([skill, count]) => ({
+          skill,
+          count,
+          percentage: parseFloat(((count / totalSkills) * 100).toFixed(2)),
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5); // Top 5
+      setSummaryStates({ ...data?.summary, top_skills: topFiveSkills });
     } catch (error) {
       console.log("error", error);
     }
   };
 
   useEffect(() => {
-    getjobpostdata();
+    getData();
   }, []);
 
   return (
@@ -236,12 +222,23 @@ export function AdminDashboard() {
                   Total Interviews
                 </p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {mockStats.totalInterviews}
+                  {summaryStates.total_interview}
                 </p>
                 <div className="flex items-center mt-2">
-                  <TrendingUp className="h-4 w-4 text-emerald-500 mr-1" />
-                  <span className="text-sm text-emerald-600 font-medium">
-                    +{mockStats.weeklyGrowth}% this week
+                  {summaryStates.interview_weekly_growth > 0 ? (
+                    <TrendingUp className="h-4 w-4 text-emerald-500 mr-1" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                  )}
+                  <span
+                    className={`text-sm ${
+                      summaryStates.interview_weekly_growth > 0
+                        ? "text-emerald-600"
+                        : "text-red-600"
+                    } font-medium`}
+                  >
+                    +{summaryStates.interview_weekly_growth?.toFixed(2)}% this
+                    week
                   </span>
                 </div>
               </div>
@@ -258,14 +255,19 @@ export function AdminDashboard() {
                   Active Job Posts
                 </p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {mockStats.activeJobPosts}
+                  {summaryStates.active_jobs}
                 </p>
-                <div className="flex items-center mt-2">
-                  <Activity className="h-4 w-4 text-emerald-500 mr-1" />
-                  <span className="text-sm text-emerald-600 font-medium">
-                    All active
-                  </span>
-                </div>
+                {summaryStates.total_interview ===
+                summaryStates?.active_jobs ? (
+                  <div className="flex items-center mt-2">
+                    <Activity className="h-4 w-4 text-emerald-500 mr-1" />
+                    <span className="text-sm text-emerald-600 font-medium">
+                      All active
+                    </span>
+                  </div>
+                ) : (
+                  <></>
+                )}
               </div>
               <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-2xl shadow-lg">
                 <Briefcase className="h-8 w-8 text-white" />
@@ -280,12 +282,13 @@ export function AdminDashboard() {
                   Total Candidates
                 </p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {mockStats.totalCandidates}
+                  {summaryStates.total_candidates}
                 </p>
                 <div className="flex items-center mt-2">
                   <UserCheck className="h-4 w-4 text-blue-500 mr-1" />
                   <span className="text-sm text-blue-600 font-medium">
-                    +{mockStats.monthlyGrowth}% this month
+                    +{summaryStates.candidate_monthly_growth?.toFixed(2)}% this
+                    month
                   </span>
                 </div>
               </div>
@@ -302,7 +305,7 @@ export function AdminDashboard() {
                   Average Score
                 </p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {mockStats.averageScore}%
+                  {summaryStates.average_score}%
                 </p>
                 <div className="flex items-center mt-2">
                   <Target className="h-4 w-4 text-amber-500 mr-1" />
@@ -423,14 +426,18 @@ export function AdminDashboard() {
                             </div>
                           </div>
 
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-gray-900 mb-1">
-                              {interview.duration ?? 0}m
+                          {interview.duration ? (
+                            <div className="text-center">
+                              <div className="text-lg font-bold text-gray-900 mb-1">
+                                {interview.duration ?? 0}m
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Duration
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">
-                              Duration
-                            </div>
-                          </div>
+                          ) : (
+                            <div className="text-center">--</div>
+                          )}
 
                           <div className="text-center">
                             {interview.recommendation?.length > 0 ? (
@@ -442,13 +449,17 @@ export function AdminDashboard() {
                                 {interview.recommendation}
                               </span>
                             ) : (
-                              <></>
+                              <div>--</div>
                             )}
-                            <div className="text-xs text-gray-500 mt-1">
-                              {new Date(
-                                interview.interviewDate
-                              ).toLocaleDateString()}
-                            </div>
+                            {interview.interviewDate ? (
+                              <div className="text-xs text-gray-500 mt-1">
+                                {new Date(
+                                  interview.interviewDate
+                                ).toLocaleDateString()}
+                              </div>
+                            ) : (
+                              <div>--</div>
+                            )}
                           </div>
 
                           <div className="flex items-center space-x-2">
@@ -495,23 +506,22 @@ export function AdminDashboard() {
                 </div>
               </div>
               <div className="space-y-4">
-                {mockStats.topSkills.map((skill, index) => {
-                  const percentage = Math.random() * 40 + 60;
+                {summaryStates.top_skills.map((item, index) => {
                   return (
                     <div key={index} className="group">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-gray-700">
-                          {skill}
+                          {item.skill}
                         </span>
                         <span className="text-sm font-bold text-gray-900">
-                          {Math.floor(percentage)}%
+                          {Math.floor(item?.percentage)}%
                         </span>
                       </div>
                       <div className="relative">
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
                           <div
                             className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-1000 group-hover:from-purple-500 group-hover:to-blue-600"
-                            style={{ width: `${percentage}%` }}
+                            style={{ width: `${item?.percentage}%` }}
                           ></div>
                         </div>
                       </div>
