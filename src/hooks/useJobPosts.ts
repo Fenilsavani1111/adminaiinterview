@@ -331,6 +331,21 @@ export const useJobPosts = () => {
     []
   );
 
+  // Get candidate by ID
+  const getCandidateById = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await jobPostAPI.getCandidateById(id);
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch job post");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Clear error
   const clearError = useCallback(() => {
     setError(null);
@@ -357,6 +372,7 @@ export const useJobPosts = () => {
     getJobDescriptionFromPDf,
     getRecentCandidatesData,
     getAdminDashboard,
-    getAnalyticsDashboard
+    getAnalyticsDashboard,
+    getCandidateById
   };
 };

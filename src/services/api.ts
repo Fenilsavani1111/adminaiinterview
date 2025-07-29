@@ -103,6 +103,12 @@ export const jobPostAPI = {
     const response = await api.post('/jobposts/get-analytics-dashboard');
     return response.data;
   },
+
+  // get admin dashboard
+  getCandidateById: async (id: string): Promise<JobPost> => {
+    const response = await api.get(`/jobposts/get-candidate-byid/${id}`);
+    return response.data;
+  },
 };
 
 // User API functions (if needed)
