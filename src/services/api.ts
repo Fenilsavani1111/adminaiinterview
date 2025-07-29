@@ -97,6 +97,12 @@ export const jobPostAPI = {
     const response = await api.post('/jobposts/get-admin-dashboard');
     return response.data;
   },
+
+  // get admin dashboard
+  getAnalyticsDashboard: async () => {
+    const response = await api.post('/jobposts/get-analytics-dashboard');
+    return response.data;
+  },
 };
 
 // User API functions (if needed)

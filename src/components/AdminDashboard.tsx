@@ -63,22 +63,10 @@ export function AdminDashboard() {
     top_skills: [],
   });
 
-  // Mock data for demonstration
-  const mockStats = {
-    totalInterviews: 247,
-    completedInterviews: 198,
-    averageScore: 76.8,
-    topSkills: ["JavaScript", "React", "Python", "Node.js", "SQL"],
-    activeJobPosts: 12,
-    totalCandidates: 156,
-    weeklyGrowth: 12.5,
-    monthlyGrowth: 8.3,
-  };
-
   const filteredInterviews = candidates.filter((interview) => {
     const matchesSearch =
       interview.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      interview?.job_post?.title
+      interview?.JobPost?.title
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
     const matchesFilter =
@@ -392,10 +380,10 @@ export function AdminDashboard() {
                               )}
                             </div>
                             <p className="text-sm font-medium text-gray-600">
-                              {interview?.job_post?.title}
+                              {interview?.JobPost?.title}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {interview?.job_post?.company}
+                              {interview?.JobPost?.company}
                             </p>
                             <div className="flex items-center space-x-2 mt-2">
                               {interview.skills

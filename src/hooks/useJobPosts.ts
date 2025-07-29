@@ -308,6 +308,29 @@ export const useJobPosts = () => {
     []
   );
 
+  // Get analytics dashboard data
+  const getAnalyticsDashboard = useCallback(
+    async (
+    ) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await jobPostAPI.getAnalyticsDashboard();
+        return data;
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to generate job description pdf"
+        );
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
   // Clear error
   const clearError = useCallback(() => {
     setError(null);
@@ -332,6 +355,8 @@ export const useJobPosts = () => {
     getJobPostOpenaiQuestions,
     getJobPostResponsibilityFromJD,
     getJobDescriptionFromPDf,
-    getRecentCandidatesData, getAdminDashboard
+    getRecentCandidatesData,
+    getAdminDashboard,
+    getAnalyticsDashboard
   };
 };
