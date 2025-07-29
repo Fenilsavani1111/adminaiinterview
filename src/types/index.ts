@@ -82,7 +82,7 @@ export interface Candidate {
   recommendation: string;
   notes: string;
   hasRecording: boolean;
-  job_post?: JobPost;
+  JobPost?: JobPost;
 }
 
 export interface InterviewSession {

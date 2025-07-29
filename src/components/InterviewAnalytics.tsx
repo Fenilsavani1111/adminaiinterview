@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   TrendingUp,
@@ -17,9 +17,52 @@ import {
 import { useApp } from "../context/AppContext";
 import { CandidatePerformanceDetail } from "./CandidatePerformanceDetail";
 import { JobInterviewListing } from "./JobInterviewListing";
+import { useJobPosts } from "../hooks/useJobPosts";
+import { Candidate } from "../types";
+
+interface SummaryStats {
+  total_interview: number;
+  interview_growth: number;
+  total_avg_score: number;
+  score_growth: number;
+  total_avg_duration: number;
+  duration_growth: number;
+  trends: {
+    weekly_scores: number[];
+    monthly_interviews: number[];
+    skill_count: number;
+    skill_trends: {
+      communication: {
+        current_month: number;
+        growth: number;
+      };
+      technical: {
+        current_month: number;
+        growth: number;
+      };
+      problemSolving: {
+        current_month: number;
+        growth: number;
+      };
+      leadership: {
+        current_month: number;
+        growth: number;
+      };
+      bodyLanguage: {
+        current_month: number;
+        growth: number;
+      };
+      confidence: {
+        current_month: number;
+        growth: number;
+      };
+    };
+  };
+}
 
 export function InterviewAnalytics() {
   const { dispatch } = useApp();
+  const { getAnalyticsDashboard, error, loading } = useJobPosts();
   const [selectedJobPost, setSelectedJobPost] = useState<string>("all");
   const [dateRange, setDateRange] = useState("30");
   const [selectedMetric, setSelectedMetric] = useState("overall");
@@ -31,6 +74,46 @@ export function InterviewAnalytics() {
     title: string;
     company: string;
   } | null>(null);
+  const [summaryStates, setSummaryStates] = useState<SummaryStats>({
+    total_interview: 0,
+    interview_growth: 0,
+    total_avg_score: 0,
+    score_growth: 0,
+    total_avg_duration: 0,
+    duration_growth: 0,
+    trends: {
+      weekly_scores: [],
+      monthly_interviews: [],
+      skill_count: 0,
+      skill_trends: {
+        communication: {
+          current_month: 0,
+          growth: 0,
+        },
+        technical: {
+          current_month: 0,
+          growth: 0,
+        },
+        problemSolving: {
+          current_month: 0,
+          growth: 0,
+        },
+        leadership: {
+          current_month: 0,
+          growth: 0,
+        },
+        bodyLanguage: {
+          current_month: 0,
+          growth: 0,
+        },
+        confidence: {
+          current_month: 0,
+          growth: 0,
+        },
+      },
+    },
+  });
+  const [topCandidates, setTopCandidates] = useState<Candidate[]>([]);
 
   // Mock analytics data
   const mockAnalytics = {
@@ -178,26 +261,6 @@ export function InterviewAnalytics() {
     },
   };
 
-  // If a candidate is selected, show their detailed performance
-  if (selectedCandidate) {
-    return <CandidatePerformanceDetail candidateId={selectedCandidate} />;
-  }
-
-  // If a job is selected for listing, show the interview listing
-  if (selectedJobForListing) {
-    return (
-      <JobInterviewListing
-        jobId={selectedJobForListing.id}
-        jobTitle={selectedJobForListing.title}
-        company={selectedJobForListing.company}
-        onBack={() => {
-          dispatch({ type: "SET_VIEW", payload: "interview-analytics" });
-        }}
-        tab="interviewanalytics"
-      />
-    );
-  }
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "excellent":
@@ -219,6 +282,64 @@ export function InterviewAnalytics() {
     if (score >= 65) return "text-yellow-600";
     return "text-red-600";
   };
+
+  const getData = async () => {
+    try {
+      let data = await getAnalyticsDashboard();
+      let total_count = 0;
+      Object.entries(data?.trends?.skill_trends).map(([skill, scores]: any) => {
+        total_count += scores?.current_month ?? 0;
+      });
+      setSummaryStates({
+        ...data?.summary,
+        trends: {
+          weekly_scores: data?.trends?.weekly_scores?.map((v: any) => v?.score),
+          monthly_interviews: data?.trends?.monthly_interview?.map(
+            (v: any) => v?.count
+          ),
+          skill_count: total_count,
+          skill_trends: {
+            ...data?.trends?.skill_trends,
+          },
+        },
+      });
+      setTopCandidates(data?.topCandidates);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedCandidate && !selectedJobForListing) {
+      getData();
+    }
+  }, []);
+
+  // If a candidate is selected, show their detailed performance
+  if (selectedCandidate) {
+    return (
+      <CandidatePerformanceDetail
+        candidateId={selectedCandidate}
+        onBack={() => setSelectedCandidate(null)}
+      />
+    );
+  }
+
+  // If a job is selected for listing, show the interview listing
+  if (selectedJobForListing) {
+    return (
+      <JobInterviewListing
+        jobId={selectedJobForListing.id}
+        jobTitle={selectedJobForListing.title}
+        company={selectedJobForListing.company}
+        onBack={() => {
+          dispatch({ type: "SET_VIEW", payload: "interview-analytics" });
+          setSelectedJobForListing(null);
+        }}
+        tab="interviewanalytics"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -309,10 +430,18 @@ export function InterviewAnalytics() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Interviews</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {mockAnalytics.overview.totalInterviews}
+                  {summaryStates.total_interview}
                 </p>
-                <p className="text-sm text-green-600 mt-1">
-                  ↑ 12% from last month
+                <p
+                  className={`text-sm ${
+                    summaryStates.interview_growth > 0
+                      ? "text-emerald-600"
+                      : "text-red-600"
+                  }  mt-1`}
+                >
+                  {`${summaryStates.interview_growth > 0 ? "↑" : "↓"} ${
+                    summaryStates.interview_growth
+                  }% from last month`}
                 </p>
               </div>
               <div className="bg-blue-100 p-3 rounded-lg">
@@ -326,10 +455,18 @@ export function InterviewAnalytics() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Average Score</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {mockAnalytics.overview.averageScore}%
+                  {summaryStates.total_avg_score}%
                 </p>
-                <p className="text-sm text-green-600 mt-1">
-                  ↑ 3.2% from last month
+                <p
+                  className={`text-sm ${
+                    summaryStates.score_growth > 0
+                      ? "text-emerald-600"
+                      : "text-red-600"
+                  }  mt-1`}
+                >
+                  {`${summaryStates.score_growth > 0 ? "↑" : "↓"} ${
+                    summaryStates.score_growth
+                  }% from last month`}
                 </p>
               </div>
               <div className="bg-green-100 p-3 rounded-lg">
@@ -343,10 +480,12 @@ export function InterviewAnalytics() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Pass Rate</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {mockAnalytics.overview.passRate}%
+                  {/* {mockAnalytics.overview.passRate}% */}
+                  --
                 </p>
                 <p className="text-sm text-red-600 mt-1">
-                  ↓ 1.8% from last month
+                  {/* ↓ 1.8% from last month */}
+                  --
                 </p>
               </div>
               <div className="bg-yellow-100 p-3 rounded-lg">
@@ -360,10 +499,18 @@ export function InterviewAnalytics() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Avg Duration</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {mockAnalytics.overview.averageDuration}m
+                  {summaryStates.total_avg_duration}m
                 </p>
-                <p className="text-sm text-blue-600 mt-1">
-                  ↑ 0.5m from last month
+                <p
+                  className={`text-sm ${
+                    summaryStates.duration_growth > 0
+                      ? "text-blue-600"
+                      : "text-red-600"
+                  }  mt-1`}
+                >
+                  {`${summaryStates.duration_growth > 0 ? "↑" : "↓"} ${
+                    summaryStates.duration_growth
+                  }m from last month`}
                 </p>
               </div>
               <div className="bg-purple-100 p-3 rounded-lg">
@@ -506,7 +653,7 @@ export function InterviewAnalytics() {
               </div>
 
               <div className="space-y-4">
-                {mockAnalytics.candidatePerformance.map((candidate, index) => (
+                {topCandidates.map((candidate, index) => (
                   <div
                     key={candidate.id}
                     className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
@@ -526,7 +673,7 @@ export function InterviewAnalytics() {
                           {candidate.name}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {candidate.position}
+                          {candidate.JobPost?.title}
                         </div>
                         <div className="text-xs text-gray-500">
                           {new Date(
@@ -583,18 +730,20 @@ export function InterviewAnalytics() {
                     <span>Last 7 weeks</span>
                   </div>
                   <div className="flex items-end space-x-1 h-20">
-                    {mockAnalytics.trends.weeklyScores.map((score, index) => (
-                      <div
-                        key={index}
-                        className="flex-1 bg-blue-200 rounded-t"
-                        style={{ height: `${(score / 100) * 100}%` }}
-                      >
+                    {summaryStates?.trends?.weekly_scores?.map(
+                      (score, index) => (
                         <div
-                          className="bg-blue-600 rounded-t h-full"
-                          style={{ height: `${score}%` }}
-                        ></div>
-                      </div>
-                    ))}
+                          key={index}
+                          className="flex-1 bg-blue-200 rounded-t"
+                          style={{ height: `${(score / 100) * 100}%` }}
+                        >
+                          <div
+                            className="bg-blue-600 rounded-t h-full"
+                            style={{ height: `${(score / 100) * 100}%` }}
+                          ></div>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -604,23 +753,16 @@ export function InterviewAnalytics() {
                     <span>Last 6 months</span>
                   </div>
                   <div className="flex items-end space-x-1 h-16">
-                    {mockAnalytics.trends.monthlyInterviews.map(
+                    {summaryStates?.trends?.monthly_interviews?.map(
                       (count, index) => (
                         <div
                           key={index}
-                          className="flex-1 bg-green-200 rounded-t"
+                          className="flex-1 bg-blue-200 rounded-t"
+                          style={{ height: `${(count / 100) * 100}%` }}
                         >
                           <div
                             className="bg-green-600 rounded-t"
-                            style={{
-                              height: `${
-                                (count /
-                                  Math.max(
-                                    ...mockAnalytics.trends.monthlyInterviews
-                                  )) *
-                                100
-                              }%`,
-                            }}
+                            style={{ height: `${(count / 100) * 100}%` }}
                           ></div>
                         </div>
                       )
@@ -637,12 +779,13 @@ export function InterviewAnalytics() {
               </h3>
 
               <div className="space-y-4">
-                {Object.entries(mockAnalytics.trends.skillTrends).map(
+                {Object.entries(summaryStates.trends.skill_trends).map(
                   ([skill, scores]) => {
-                    const avgScore =
-                      scores.reduce((a, b) => a + b, 0) / scores.length;
-                    const trend = scores[scores.length - 1] - scores[0];
-
+                    const scorePercentage =
+                      (scores?.current_month /
+                        summaryStates.trends.skill_count) *
+                      100;
+                    const trend = scores.growth;
                     return (
                       <div key={skill}>
                         <div className="flex justify-between items-center mb-2">
@@ -651,7 +794,7 @@ export function InterviewAnalytics() {
                           </span>
                           <div className="flex items-center space-x-2">
                             <span className="text-sm font-bold text-gray-900">
-                              {avgScore.toFixed(1)}%
+                              {scorePercentage.toFixed(1)}%
                             </span>
                             <span
                               className={`text-xs ${
@@ -666,7 +809,7 @@ export function InterviewAnalytics() {
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${avgScore}%` }}
+                            style={{ width: `${scorePercentage}%` }}
                           ></div>
                         </div>
                       </div>
@@ -691,8 +834,9 @@ export function InterviewAnalytics() {
                     </span>
                   </div>
                   <p className="text-sm text-green-700">
-                    {mockAnalytics.overview.topPerformingJob} has the highest
-                    average score at 82.4%
+                    {/* {mockAnalytics.overview.topPerformingJob} has the highest
+                    average score at 82.4% */}
+                    --
                   </p>
                 </div>
 

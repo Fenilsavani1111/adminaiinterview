@@ -218,7 +218,7 @@ export const useJobPosts = () => {
     []
   );
 
-  // Get job responsibilities from job description using chatgtp openai
+  // Get job description from uploaded pdf using chatgtp openai
   const getJobDescriptionFromPDf = useCallback(
     async (
       jobDescription: string
@@ -262,7 +262,7 @@ export const useJobPosts = () => {
     []
   );
 
-  // Get job responsibilities from job description using chatgtp openai
+  // Get recent candidates
   const getRecentCandidatesData = useCallback(
     async (
     ) => {
@@ -284,6 +284,67 @@ export const useJobPosts = () => {
     },
     []
   );
+
+  // Get admin dashboard data
+  const getAdminDashboard = useCallback(
+    async (
+    ) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await jobPostAPI.getAdminDashboard();
+        return data;
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to generate job description pdf"
+        );
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Get analytics dashboard data
+  const getAnalyticsDashboard = useCallback(
+    async (
+    ) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await jobPostAPI.getAnalyticsDashboard();
+        return data;
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to generate job description pdf"
+        );
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Get candidate by ID
+  const getCandidateById = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await jobPostAPI.getCandidateById(id);
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch job post");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Clear error
   const clearError = useCallback(() => {
@@ -309,6 +370,9 @@ export const useJobPosts = () => {
     getJobPostOpenaiQuestions,
     getJobPostResponsibilityFromJD,
     getJobDescriptionFromPDf,
-    getRecentCandidatesData
+    getRecentCandidatesData,
+    getAdminDashboard,
+    getAnalyticsDashboard,
+    getCandidateById
   };
 };
