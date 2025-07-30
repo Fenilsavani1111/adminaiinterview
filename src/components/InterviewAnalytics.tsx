@@ -686,10 +686,10 @@ export function InterviewAnalytics() {
                     <div className="text-right">
                       <div
                         className={`text-xl font-bold ${getScoreColor(
-                          candidate.overallScore
+                          candidate.overallScore ?? 0
                         )} flex items-center space-x-2`}
                       >
-                        <span>{candidate.overallScore}%</span>
+                        <span>{candidate.overallScore ?? 0}%</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
