@@ -13,6 +13,7 @@ export const useJobPosts = () => {
   const [jobPosts, setJobPosts] = useState<JobPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  let ignore = false
 
   // Fetch all job posts
   const fetchJobPosts = useCallback(async () => {
@@ -353,7 +354,12 @@ export const useJobPosts = () => {
 
   // Load job posts on mount
   useEffect(() => {
-    fetchJobPosts();
+    if (!ignore) {
+      fetchJobPosts();
+    }
+    return () => {
+      ignore = true;
+    };
   }, [fetchJobPosts]);
 
   return {

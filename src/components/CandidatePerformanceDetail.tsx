@@ -18,21 +18,25 @@ import {
 import { useApp } from "../context/AppContext";
 import { Candidate } from "../types";
 import { useJobPosts } from "../hooks/useJobPosts";
+import { format } from "date-fns";
 
 interface CandidatePerformanceDetailProps {
   candidateId: string;
+  backText: string;
   onBack: () => void;
 }
 
 export function CandidatePerformanceDetail({
   candidateId,
+  backText = "Back",
   onBack,
 }: CandidatePerformanceDetailProps) {
   const { dispatch } = useApp();
   const { getCandidateById, error } = useJobPosts();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-  const [candidateData, setCandidateData] = useState<any>();
+  const [candidateData, setCandidateData] = useState<Candidate>();
+  let ignore = false;
 
   // Mock detailed candidate data
   const MockcandidateData = {
@@ -218,9 +222,14 @@ export function CandidatePerformanceDetail({
   };
 
   useEffect(() => {
-    getjobpostdata();
+    if (!ignore) {
+      getjobpostdata();
+    }
+    return () => {
+      ignore = true;
+    };
   }, []);
-  console.log("candidateData", loading, candidateData);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -233,7 +242,7 @@ export function CandidatePerformanceDetail({
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span>Back to Analytics</span>
+                <span>{backText}</span>
               </button>
               <div className="flex items-center space-x-3">
                 <div className="bg-blue-600 p-2 rounded-lg">
@@ -300,38 +309,39 @@ export function CandidatePerformanceDetail({
                   <div className="text-center">
                     <div
                       className={`text-4xl font-bold mb-2 ${
-                        getScoreColor(candidateData.overallScore).split(" ")[0]
+                        getScoreColor(candidateData?.overallScore ?? 0).split(
+                          " "
+                        )[0]
                       }`}
                     >
-                      {candidateData.overallScore}%
+                      {candidateData?.overallScore}%
                     </div>
                     <div className="text-sm text-gray-600">Overall Score</div>
                     <div
                       className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${getScoreColor(
-                        candidateData.overallScore
+                        candidateData?.overallScore ?? 0
                       )}`}
                     >
-                      Grade: {getScoreGrade(candidateData.overallScore)}
+                      Grade: {getScoreGrade(candidateData?.overallScore ?? 0)}
                     </div>
                   </div>
 
                   <div className="text-center">
                     <div className="text-4xl font-bold text-gray-900 mb-2">
-                      {candidateData.duration}m
+                      {candidateData?.duration}m
                     </div>
                     <div className="text-sm text-gray-600">
                       Interview Duration
                     </div>
                     <div className="text-sm text-green-600 mt-2">
-                      {/* {candidateData.comparisonData.percentileRank}th percentile */}
+                      {/* {MockcandidateData.comparisonData.percentileRank}th percentile */}
                       --
                     </div>
                   </div>
 
                   <div className="text-center">
                     <div className="text-4xl font-bold text-gray-900 mb-2">
-                      {/* {candidateData.responses.length} */}
-                      --
+                      {candidateData?.attemptedQuestions}
                     </div>
                     <div className="text-sm text-gray-600">
                       Questions Answered
@@ -361,7 +371,8 @@ export function CandidatePerformanceDetail({
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4" />
                         <span>
-                          Applied: --
+                          Applied:{" "}
+                          {format(candidateData?.appliedDate, "dd/MM/yyyy")}
                           {/* {new Date(
                           candidateData.appliedDate
                         ).toLocaleDateString()} */}
@@ -371,16 +382,14 @@ export function CandidatePerformanceDetail({
                         <Clock className="h-4 w-4" />
                         <span>
                           Interviewed:{" "}
-                          {new Date(
-                            candidateData.interviewDate
-                          ).toLocaleDateString()}
+                          {format(candidateData?.interviewDate, "dd/MM/yyyy")}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Award className="h-4 w-4" />
                         <span>
                           Status:{" "}
-                          {candidateData.status.charAt(0).toUpperCase() +
+                          {candidateData?.status.charAt(0).toUpperCase() +
                             candidateData.status.slice(1)}
                         </span>
                       </div>
@@ -695,63 +704,66 @@ export function CandidatePerformanceDetail({
 
             {activeTab === "responses" && (
               <div className="space-y-6">
-                {/* {candidateData.responses.map((response, index) => (
-              <div
-                key={response.questionId}
-                className="bg-white rounded-xl shadow-sm p-6"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                        Question {index + 1}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {response.duration}s
-                      </span>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
-                          response.score
-                        )}`}
-                      >
-                        {response.score}%
-                      </span>
+                {candidateData?.StudentInterviewAnswer?.filter(
+                  (que) => que?.answer?.length > 0
+                ).map((response: any, index: number) => (
+                  <div
+                    key={response.id}
+                    className="bg-white rounded-xl shadow-sm p-6"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                            Question {index + 1}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {response.responseTime}s
+                          </span>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
+                              response.score
+                            )}`}
+                          >
+                            {response.score}%
+                          </span>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-3">
+                          {response.Question?.question}
+                        </h3>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                          <Video className="h-4 w-4" />
+                        </button>
+                        <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                          <Mic className="h-4 w-4" />
+                        </button>
+                        <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                          <Play className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-3">
-                      {response.question}
-                    </h3>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                      <Video className="h-4 w-4" />
-                    </button>
-                    <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                      <Mic className="h-4 w-4" />
-                    </button>
-                    <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                      <Play className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <h4 className="font-medium text-gray-900 mb-2">
-                    Candidate Response:
-                  </h4>
-                  <p className="text-gray-700 leading-relaxed">
-                    {response.response}
-                  </p>
-                </div>
+                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Candidate Response:
+                      </h4>
+                      <p className="text-gray-700 leading-relaxed">
+                        {response.answer}
+                      </p>
+                    </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">
-                    AI Analysis:
-                  </h4>
-                  <p className="text-blue-800 text-sm">{response.feedback}</p>
-                </div>
-              </div>
-            ))} */}
-                --
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-blue-900 mb-2">
+                        AI Analysis:
+                      </h4>
+                      <p className="text-blue-800 text-sm">
+                        {response.aiEvaluation}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 

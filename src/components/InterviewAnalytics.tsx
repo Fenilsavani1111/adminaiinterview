@@ -114,6 +114,7 @@ export function InterviewAnalytics() {
     },
   });
   const [topCandidates, setTopCandidates] = useState<Candidate[]>([]);
+  let ignore = false;
 
   // Mock analytics data
   const mockAnalytics = {
@@ -310,9 +311,14 @@ export function InterviewAnalytics() {
   };
 
   useEffect(() => {
-    if (!selectedCandidate && !selectedJobForListing) {
-      getData();
+    if (!ignore) {
+      if (!selectedCandidate && !selectedJobForListing) {
+        getData();
+      }
     }
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // If a candidate is selected, show their detailed performance
@@ -320,6 +326,7 @@ export function InterviewAnalytics() {
     return (
       <CandidatePerformanceDetail
         candidateId={selectedCandidate}
+        backText="Back to Analytics"
         onBack={() => setSelectedCandidate(null)}
       />
     );
@@ -781,10 +788,13 @@ export function InterviewAnalytics() {
               <div className="space-y-4">
                 {Object.entries(summaryStates.trends.skill_trends).map(
                   ([skill, scores]) => {
-                    const scorePercentage =
+                    let scorePercentage =
                       (scores?.current_month /
                         summaryStates.trends.skill_count) *
                       100;
+                    scorePercentage = Number.isNaN(scorePercentage)
+                      ? 0
+                      : scorePercentage;
                     const trend = scores.growth;
                     return (
                       <div key={skill}>

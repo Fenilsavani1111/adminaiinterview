@@ -21,7 +21,7 @@ import {
 import { useApp } from "../context/AppContext";
 import { InterviewRecordingViewer } from "./InterviewRecordingViewer";
 import { useJobPosts } from "../hooks/useJobPosts";
-import { Candidate } from "../types";
+import { Candidate, JobPost } from "../types";
 
 interface JobInterviewListingProps {
   jobId: string;
@@ -49,7 +49,9 @@ export function JobInterviewListing({
     id: string;
     name: string;
   } | null>(null);
+  const [jobpost, setJobpost] = useState<JobPost | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  let ignore = false;
 
   // Mock interview data for the specific job position
   const mockInterviews = [
@@ -212,30 +214,19 @@ export function JobInterviewListing({
     },
   ];
 
-  // If viewing a recording, show the recording viewer
-  if (viewingRecording) {
-    return (
-      <InterviewRecordingViewer
-        candidateId={viewingRecording.id}
-        candidateName={viewingRecording.name}
-        jobTitle={jobTitle}
-        company={company}
-        onBack={() => setViewingRecording(null)}
-      />
-    );
-  }
-
-  const filteredInterviews = candidates.filter((interview) => {
-    const matchesSearch =
-      interview.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      interview.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      interview.skills.some((skill) =>
-        skill.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    const matchesFilter =
-      filterStatus === "all" || interview.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  const filteredInterviews = candidates
+    .filter((interview) => interview?.interviewDate)
+    .filter((interview) => {
+      const matchesSearch =
+        interview.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        interview.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        interview.skills.some((skill) =>
+          skill.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      const matchesFilter =
+        filterStatus === "all" || interview.status === filterStatus;
+      return matchesSearch && matchesFilter;
+    });
 
   const sortedInterviews = [...filteredInterviews].sort((a, b) => {
     let aValue, bValue;
@@ -323,14 +314,33 @@ export function JobInterviewListing({
     try {
       let job = await getJobPostById(jobId);
       setCandidates(job?.candidates ?? []);
+      if (job?.post) setJobpost({ ...job?.post });
     } catch (error) {
       console.log("error", error);
     }
   };
 
   useEffect(() => {
-    getjobpostdata();
+    if (!ignore) {
+      getjobpostdata();
+    }
+    return () => {
+      ignore = true;
+    };
   }, []);
+
+  // If viewing a recording, show the recording viewer
+  if (viewingRecording) {
+    return (
+      <InterviewRecordingViewer
+        candidateId={viewingRecording.id}
+        candidateName={viewingRecording.name}
+        jobTitle={jobTitle}
+        company={company}
+        onBack={() => setViewingRecording(null)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -385,7 +395,7 @@ export function JobInterviewListing({
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Interviews</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {sortedInterviews.length}
+                  {jobpost?.interviews}
                 </p>
               </div>
               <div className="bg-blue-100 p-3 rounded-lg">
@@ -399,7 +409,7 @@ export function JobInterviewListing({
               <div>
                 <p className="text-sm text-gray-600 mb-1">Average Score</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {averageScore.toFixed(1)}%
+                  {Number.isNaN(averageScore) ? "0" : averageScore.toFixed(1)}%
                 </p>
               </div>
               <div className="bg-green-100 p-3 rounded-lg">
@@ -428,7 +438,10 @@ export function JobInterviewListing({
               <div>
                 <p className="text-sm text-gray-600 mb-1">Avg Duration</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {averageDuration.toFixed(1)}m
+                  {Number.isNaN(averageDuration)
+                    ? "0"
+                    : averageDuration.toFixed(1)}
+                  m
                 </p>
               </div>
               <div className="bg-purple-100 p-3 rounded-lg">
@@ -666,10 +679,12 @@ export function JobInterviewListing({
                             interview.recommendation ?? ""
                           )}`}
                         >
-                          {interview.recommendation ?? ""}
+                          {/* {interview.recommendation ?? ""} */}
+                          --
                         </span>
                         <div className="text-xs text-gray-500 mt-1 max-w-32">
-                          {interview.notes ?? ""}
+                          {/* {interview.notes} */}
+                          --
                         </div>
                       </div>
                     </td>
