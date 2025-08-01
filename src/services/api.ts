@@ -47,7 +47,7 @@ export const jobPostAPI = {
   },
 
   // Get job post by ID
-  getById: async (id: string): Promise<JobPost> => {
+  getById: async (id: string) => {
     const response = await api.get(`/jobposts/${id}`);
     return response.data;
   },

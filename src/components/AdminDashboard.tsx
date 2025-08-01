@@ -26,6 +26,7 @@ import {
 import { useApp } from "../context/AppContext";
 import { Candidate } from "../types";
 import { useJobPosts } from "../hooks/useJobPosts";
+import { CandidatePerformanceDetail } from "./CandidatePerformanceDetail";
 
 type SkillType = {
   skill: string;
@@ -49,7 +50,6 @@ export function AdminDashboard() {
   const { getAdminDashboard, error, loading } = useJobPosts();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [summaryStates, setSummaryStates] = useState<SummaryStats>({
     total_interview: 0,
@@ -62,6 +62,10 @@ export function AdminDashboard() {
     candidate_monthly_growth: 0,
     top_skills: [],
   });
+  const [selectedCandidate, setSelectedCandidate] = useState<string | null>(
+    null
+  );
+  let ignore = false;
 
   const filteredInterviews = candidates.filter((interview) => {
     const matchesSearch =
@@ -143,8 +147,24 @@ export function AdminDashboard() {
   };
 
   useEffect(() => {
-    getData();
+    if (!ignore) {
+      getData();
+    }
+    return () => {
+      ignore = true;
+    };
   }, []);
+
+  // If a candidate is selected, show their detailed performance
+  if (selectedCandidate) {
+    return (
+      <CandidatePerformanceDetail
+        candidateId={selectedCandidate}
+        backText="Back to Admin Dashboard"
+        onBack={() => setSelectedCandidate(null)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -225,7 +245,8 @@ export function AdminDashboard() {
                         : "text-red-600"
                     } font-medium`}
                   >
-                    +{summaryStates.interview_weekly_growth?.toFixed(2)}% this
+                    {summaryStates.interview_weekly_growth >= 0 ? "+" : ""}
+                    {summaryStates.interview_weekly_growth?.toFixed(2)}% this
                     week
                   </span>
                 </div>
@@ -275,7 +296,8 @@ export function AdminDashboard() {
                 <div className="flex items-center mt-2">
                   <UserCheck className="h-4 w-4 text-blue-500 mr-1" />
                   <span className="text-sm text-blue-600 font-medium">
-                    +{summaryStates.candidate_monthly_growth?.toFixed(2)}% this
+                    {summaryStates.candidate_monthly_growth >= 0 ? "+" : ""}
+                    {summaryStates.candidate_monthly_growth?.toFixed(2)}% this
                     month
                   </span>
                 </div>
@@ -350,9 +372,9 @@ export function AdminDashboard() {
 
               <div className="p-6">
                 <div className="space-y-4">
-                  {filteredInterviews.map((interview) => (
+                  {filteredInterviews.map((item) => (
                     <div
-                      key={interview.id}
+                      key={item.id}
                       className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 group"
                     >
                       <div className="flex items-center justify-between">
@@ -360,7 +382,7 @@ export function AdminDashboard() {
                           <div className="relative">
                             <div className="h-14 w-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                               <span className="text-lg font-bold text-white">
-                                {interview.name
+                                {item.name
                                   .split(" ")
                                   .map((n: string) => n[0])
                                   .join("")}
@@ -373,29 +395,27 @@ export function AdminDashboard() {
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-1">
                               <h3 className="text-lg font-bold text-gray-900">
-                                {interview.name}
+                                {item.name}
                               </h3>
-                              {interview.overallScore >= 90 && (
+                              {item.overallScore >= 90 && (
                                 <Star className="h-5 w-5 text-amber-500 fill-current" />
                               )}
                             </div>
                             <p className="text-sm font-medium text-gray-600">
-                              {interview?.JobPost?.title}
+                              {item?.JobPost?.title}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {interview?.JobPost?.company}
+                              {item?.JobPost?.company}
                             </p>
                             <div className="flex items-center space-x-2 mt-2">
-                              {interview.skills
-                                .slice(0, 3)
-                                .map((skill, index) => (
-                                  <span
-                                    key={index}
-                                    className="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg text-xs font-medium border border-blue-200"
-                                  >
-                                    {skill}
-                                  </span>
-                                ))}
+                              {item.skills.slice(0, 3).map((skill, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg text-xs font-medium border border-blue-200"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
                             </div>
                           </div>
                         </div>
@@ -404,20 +424,20 @@ export function AdminDashboard() {
                           <div className="text-center">
                             <div
                               className={`text-3xl font-bold mb-1 ${getScoreColor(
-                                interview.overallScore ?? 0
+                                item.overallScore ?? 0
                               )}`}
                             >
-                              {interview.overallScore ?? 0}%
+                              {item.overallScore ?? 0}%
                             </div>
                             <div className="text-xs text-gray-500">
                               Overall Score
                             </div>
                           </div>
 
-                          {interview.duration ? (
+                          {item.duration ? (
                             <div className="text-center">
                               <div className="text-lg font-bold text-gray-900 mb-1">
-                                {interview.duration ?? 0}m
+                                {item.duration ?? 0}m
                               </div>
                               <div className="text-xs text-gray-500">
                                 Duration
@@ -428,31 +448,31 @@ export function AdminDashboard() {
                           )}
 
                           <div className="text-center">
-                            {interview.recommendation?.length > 0 ? (
+                            {item.recommendation?.length > 0 ? (
                               <span
                                 className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border ${getRecommendationColor(
-                                  interview.recommendation
+                                  item.recommendation
                                 )}`}
                               >
-                                {interview.recommendation}
+                                {item.recommendation}
                               </span>
                             ) : (
                               <div>--</div>
                             )}
-                            {interview.interviewDate ? (
+                            {item.interviewDate ? (
                               <div className="text-xs text-gray-500 mt-1">
                                 {new Date(
-                                  interview.interviewDate
+                                  item.interviewDate
                                 ).toLocaleDateString()}
                               </div>
                             ) : (
-                              <div>--</div>
+                              <div></div>
                             )}
                           </div>
 
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => setSelectedUser(interview.id)}
+                              onClick={() => setSelectedCandidate(item.id)}
                               className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
                               title="View Details"
                             >

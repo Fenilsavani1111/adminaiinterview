@@ -379,7 +379,7 @@ Best regards`);
                 <p className="text-sm text-gray-600 mb-1">Active Jobs</p>
                 <p className="text-3xl font-bold text-gray-900">
                   {
-                    processedJobPosts.filter((job) => job.status === "active")
+                    processedJobPosts.filter((job) => job.status === "draft")
                       .length
                   }
                 </p>
@@ -539,7 +539,7 @@ Best regards`);
                           }
                           className="text-blue-600 hover:text-blue-800 font-medium underline cursor-pointer"
                         >
-                          {job.activeJoinUserCount || 0}
+                          {job.applicants || 0}
                         </button>
                       </td>
                       <td className="px-6 py-4">
@@ -553,7 +553,7 @@ Best regards`);
                           }
                           className="text-purple-600 hover:text-purple-800 font-medium underline cursor-pointer"
                         >
-                          {job.activeJoinUserCount || 0}
+                          {job.interviews || 0}
                         </button>
                       </td>
                       <td className="px-6 py-4">

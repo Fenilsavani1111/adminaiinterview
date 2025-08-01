@@ -62,8 +62,9 @@ export interface Candidate {
   name: string;
   email: string;
   phone: string;
-  appliedDate: string;
-  interviewDate: string;
+  mobile?: string;
+  appliedDate: any;
+  interviewDate: any;
   duration: number;
   status: "completed" | "inprogress" | "scheduled",
   overallScore: number;
@@ -82,7 +83,19 @@ export interface Candidate {
   recommendation: string;
   notes: string;
   hasRecording: boolean;
+  designation?: string;
+  location?: string;
+  attemptedQuestions: number;
   JobPost?: JobPost;
+  StudentInterviewAnswer?: StudentInterviewAnswer[]
+}
+
+export interface StudentInterviewAnswer {
+  answer: string;
+  aiEvaluation: string;
+  score: number;
+  responseTime: number;
+  Question: InterviewQuestion[]
 }
 
 export interface InterviewSession {
