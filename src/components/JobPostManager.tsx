@@ -58,20 +58,21 @@ export function JobPostManager() {
   });
 
   // Add dummy values for missing fields from API
-  const processedJobPosts = jobPosts.map((job) => ({
-    ...job,
-    // Add dummy values for missing fields
-    applicants: job.applicants || Math.floor(Math.random() * 50) + 5,
-    interviews: job.interviews || Math.floor(Math.random() * 20) + 1,
-    shareableUrl: job.shareableUrl || `${window.location.origin}/job/${job.id}`,
-    department: job.department || "General",
-    experience: job.experience || "mid",
-    type: job.type || "full-time",
-    status: job.status || "active",
-    createdAt: job.createdAt || new Date(),
-    updatedAt: job.updatedAt || new Date(),
-    createdBy: job.createdBy || "admin",
-  }));
+  const processedJobPosts = jobPosts;
+  // .map((job) => ({
+  //   ...job,
+  //   // Add dummy values for missing fields
+  //   applicants: job.applicants,
+  //   interviews: job.interviews,
+  //   shareableUrl: job.shareableUrl || `${window.location.origin}/job/${job.id}`,
+  //   department: job.department || "General",
+  //   experience: job.experience || "mid",
+  //   type: job.type || "full-time",
+  //   status: job.status || "active",
+  //   createdAt: job.createdAt || new Date(),
+  //   updatedAt: job.updatedAt || new Date(),
+  //   createdBy: job.createdBy || "admin",
+  // }));
 
   // If viewing applications for a specific job, show the applications list
   if (selectedJobForApplications) {
@@ -539,7 +540,7 @@ Best regards`);
                           }
                           className="text-blue-600 hover:text-blue-800 font-medium underline cursor-pointer"
                         >
-                          {job.applicants || 0}
+                          {job.applicants}
                         </button>
                       </td>
                       <td className="px-6 py-4">
@@ -553,7 +554,7 @@ Best regards`);
                           }
                           className="text-purple-600 hover:text-purple-800 font-medium underline cursor-pointer"
                         >
-                          {job.interviews || 0}
+                          {job.interviews}
                         </button>
                       </td>
                       <td className="px-6 py-4">

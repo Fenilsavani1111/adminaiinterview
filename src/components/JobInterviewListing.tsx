@@ -395,7 +395,7 @@ export function JobInterviewListing({
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Interviews</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {jobpost?.interviews}
+                  {jobpost?.interviews ?? 0}
                 </p>
               </div>
               <div className="bg-blue-100 p-3 rounded-lg">
