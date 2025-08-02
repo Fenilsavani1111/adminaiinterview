@@ -1,6 +1,22 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Play, Pause, Volume2, VolumeX, RotateCcw, FastForward, Rewind, Download, Share2, Eye, Clock, Calendar, User, Award } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  ArrowLeft,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  RotateCcw,
+  FastForward,
+  Rewind,
+  Download,
+  Share2,
+  Eye,
+  Clock,
+  Calendar,
+  User,
+  Award,
+} from "lucide-react";
+import { useApp } from "../context/AppContext";
 
 interface InterviewRecordingViewerProps {
   candidateId: string;
@@ -10,7 +26,14 @@ interface InterviewRecordingViewerProps {
   onBack: () => void;
 }
 
-export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle, company, onBack }: InterviewRecordingViewerProps) {
+export function InterviewRecordingViewer({
+  candidateId,
+  candidateName,
+  jobTitle,
+  company,
+  onBack,
+}: InterviewRecordingViewerProps) {
+  console.log("candidateId", candidateId);
   const { dispatch } = useApp();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -27,47 +50,56 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
     candidateName,
     jobTitle,
     company,
-    interviewDate: '2024-01-15',
+    interviewDate: "2024-01-15",
     duration: 1320, // 22 minutes in seconds
     overallScore: 92,
-    videoUrl: '/mock-interview-video.mp4', // This would be the actual video URL
+    videoUrl: "/mock-interview-video.mp4", // This would be the actual video URL
     questions: [
       {
-        id: '1',
-        question: 'Tell me about yourself and your professional background.',
+        id: "1",
+        question: "Tell me about yourself and your professional background.",
         startTime: 0,
         endTime: 180,
         score: 88,
-        transcript: "Hi, I'm Alice Johnson. I'm a Senior Frontend Developer with 6 years of experience specializing in React, TypeScript, and modern web technologies. I have led multiple projects at my current company, including a complete redesign of our customer portal that increased user engagement by 40%. I'm passionate about creating user-friendly interfaces and mentoring junior developers.",
-        feedback: 'Well-structured response with specific examples and metrics. Good professional summary.'
+        transcript:
+          "Hi, I'm Alice Johnson. I'm a Senior Frontend Developer with 6 years of experience specializing in React, TypeScript, and modern web technologies. I have led multiple projects at my current company, including a complete redesign of our customer portal that increased user engagement by 40%. I'm passionate about creating user-friendly interfaces and mentoring junior developers.",
+        feedback:
+          "Well-structured response with specific examples and metrics. Good professional summary.",
       },
       {
-        id: '2',
-        question: 'Describe a challenging technical problem you solved recently.',
+        id: "2",
+        question:
+          "Describe a challenging technical problem you solved recently.",
         startTime: 180,
         endTime: 390,
         score: 95,
-        transcript: "Recently, I tackled a performance issue where our React application was experiencing slow rendering with large datasets. I implemented virtualization using react-window and optimized our state management with useMemo and useCallback hooks, resulting in a 60% improvement in rendering performance. The solution involved analyzing the component tree, identifying unnecessary re-renders, and implementing proper memoization strategies.",
-        feedback: 'Excellent technical depth with specific solutions and measurable outcomes. Demonstrates strong problem-solving skills.'
+        transcript:
+          "Recently, I tackled a performance issue where our React application was experiencing slow rendering with large datasets. I implemented virtualization using react-window and optimized our state management with useMemo and useCallback hooks, resulting in a 60% improvement in rendering performance. The solution involved analyzing the component tree, identifying unnecessary re-renders, and implementing proper memoization strategies.",
+        feedback:
+          "Excellent technical depth with specific solutions and measurable outcomes. Demonstrates strong problem-solving skills.",
       },
       {
-        id: '3',
-        question: 'How do you handle working in a team environment?',
+        id: "3",
+        question: "How do you handle working in a team environment?",
         startTime: 390,
         endTime: 555,
         score: 85,
-        transcript: "I believe in collaborative development and clear communication. I regularly conduct code reviews, mentor junior developers, and use tools like Slack and Jira for project coordination. I also advocate for pair programming sessions to share knowledge and maintain code quality. In my current role, I've helped establish coding standards and best practices that improved our team's productivity by 25%.",
-        feedback: 'Good team collaboration examples. Could provide more specific scenarios of conflict resolution or leadership.'
+        transcript:
+          "I believe in collaborative development and clear communication. I regularly conduct code reviews, mentor junior developers, and use tools like Slack and Jira for project coordination. I also advocate for pair programming sessions to share knowledge and maintain code quality. In my current role, I've helped establish coding standards and best practices that improved our team's productivity by 25%.",
+        feedback:
+          "Good team collaboration examples. Could provide more specific scenarios of conflict resolution or leadership.",
       },
       {
-        id: '4',
-        question: 'Where do you see yourself in 5 years?',
+        id: "4",
+        question: "Where do you see yourself in 5 years?",
         startTime: 555,
         endTime: 700,
         score: 90,
-        transcript: "In 5 years, I see myself in a technical leadership role, possibly as a Staff Engineer or Engineering Manager, where I can influence technical decisions and mentor a larger team. I want to continue growing my expertise in emerging technologies while contributing to strategic product decisions. I'm particularly interested in exploring AI integration in frontend development and leading cross-functional initiatives.",
-        feedback: 'Clear career vision with realistic goals. Shows ambition and leadership potential.'
-      }
+        transcript:
+          "In 5 years, I see myself in a technical leadership role, possibly as a Staff Engineer or Engineering Manager, where I can influence technical decisions and mentor a larger team. I want to continue growing my expertise in emerging technologies while contributing to strategic product decisions. I'm particularly interested in exploring AI integration in frontend development and leading cross-functional initiatives.",
+        feedback:
+          "Clear career vision with realistic goals. Shows ambition and leadership potential.",
+      },
     ],
     behavioralAnalysis: {
       eyeContact: 88,
@@ -76,14 +108,14 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
       facialExpressions: 90,
       voiceTone: 87,
       confidence: 94,
-      engagement: 91
+      engagement: 91,
     },
     technicalAssessment: {
       accuracy: 95,
       depth: 90,
       clarity: 88,
-      problemSolving: 92
-    }
+      problemSolving: 92,
+    },
   };
 
   useEffect(() => {
@@ -91,13 +123,13 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
     if (video) {
       const updateTime = () => setCurrentTime(video.currentTime);
       const updateDuration = () => setDuration(video.duration);
-      
-      video.addEventListener('timeupdate', updateTime);
-      video.addEventListener('loadedmetadata', updateDuration);
-      
+
+      video.addEventListener("timeupdate", updateTime);
+      video.addEventListener("loadedmetadata", updateDuration);
+
       return () => {
-        video.removeEventListener('timeupdate', updateTime);
-        video.removeEventListener('loadedmetadata', updateDuration);
+        video.removeEventListener("timeupdate", updateTime);
+        video.removeEventListener("loadedmetadata", updateDuration);
       };
     }
   }, []);
@@ -149,20 +181,24 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 80) return 'text-blue-600';
-    if (score >= 70) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 90) return "text-green-600";
+    if (score >= 80) return "text-blue-600";
+    if (score >= 70) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getCurrentQuestion = () => {
-    return interviewData.questions.find(q => 
-      currentTime >= q.startTime && currentTime <= q.endTime
-    ) || interviewData.questions[0];
+    return (
+      interviewData.questions.find(
+        (q) => currentTime >= q.startTime && currentTime <= q.endTime
+      ) || interviewData.questions[0]
+    );
   };
 
   const currentQuestion = getCurrentQuestion();
@@ -174,7 +210,7 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center space-x-4">
-              <button 
+              <button
                 onClick={onBack}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
@@ -182,8 +218,12 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                 <span>Back to Interview List</span>
               </button>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Interview Recording</h1>
-                <p className="text-sm text-gray-600">{candidateName} • {jobTitle} at {company}</p>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Interview Recording
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {candidateName} • {jobTitle} at {company}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -217,7 +257,7 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                   <source src={interviewData.videoUrl} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
-                
+
                 {/* Video Overlay Controls */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                   <button
@@ -235,8 +275,13 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                 {/* Current Question Indicator */}
                 {currentQuestion && (
                   <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg">
-                    <div className="text-sm font-medium">Question {interviewData.questions.indexOf(currentQuestion) + 1}</div>
-                    <div className="text-xs opacity-80">Score: {currentQuestion.score}%</div>
+                    <div className="text-sm font-medium">
+                      Question{" "}
+                      {interviewData.questions.indexOf(currentQuestion) + 1}
+                    </div>
+                    <div className="text-xs opacity-80">
+                      Score: {currentQuestion.score}%
+                    </div>
                   </div>
                 )}
               </div>
@@ -251,7 +296,7 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                   </div>
                   <div className="relative">
                     <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-blue-600 h-2 rounded-full transition-all duration-100"
                         style={{ width: `${(currentTime / duration) * 100}%` }}
                       ></div>
@@ -264,13 +309,15 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                       onChange={(e) => seekTo(Number(e.target.value))}
                       className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
                     />
-                    
+
                     {/* Question Markers */}
                     {interviewData.questions.map((question, index) => (
                       <div
                         key={question.id}
                         className="absolute top-0 w-1 h-2 bg-yellow-400 cursor-pointer"
-                        style={{ left: `${(question.startTime / duration) * 100}%` }}
+                        style={{
+                          left: `${(question.startTime / duration) * 100}%`,
+                        }}
                         onClick={() => jumpToQuestion(index)}
                         title={`Question ${index + 1}: ${question.question}`}
                       ></div>
@@ -291,10 +338,16 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                       onClick={togglePlay}
                       className="bg-blue-600 hover:bg-blue-700 rounded-full p-2 transition-colors"
                     >
-                      {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+                      {isPlaying ? (
+                        <Pause className="h-5 w-5" />
+                      ) : (
+                        <Play className="h-5 w-5 ml-0.5" />
+                      )}
                     </button>
                     <button
-                      onClick={() => seekTo(Math.min(duration, currentTime + 10))}
+                      onClick={() =>
+                        seekTo(Math.min(duration, currentTime + 10))
+                      }
                       className="hover:text-blue-400 transition-colors"
                     >
                       <FastForward className="h-5 w-5" />
@@ -303,14 +356,20 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                       onClick={toggleMute}
                       className="hover:text-blue-400 transition-colors"
                     >
-                      {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                      {isMuted ? (
+                        <VolumeX className="h-5 w-5" />
+                      ) : (
+                        <Volume2 className="h-5 w-5" />
+                      )}
                     </button>
                   </div>
 
                   <div className="flex items-center space-x-4">
                     <select
                       value={playbackSpeed}
-                      onChange={(e) => changePlaybackSpeed(Number(e.target.value))}
+                      onChange={(e) =>
+                        changePlaybackSpeed(Number(e.target.value))
+                      }
                       className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm"
                     >
                       <option value={0.5}>0.5x</option>
@@ -329,7 +388,9 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
             {showTranscript && currentQuestion && (
               <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-gray-900">Live Transcript</h3>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Live Transcript
+                  </h3>
                   <button
                     onClick={() => setShowTranscript(!showTranscript)}
                     className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -339,14 +400,20 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm font-medium text-gray-700 mb-2">
-                    Question {interviewData.questions.indexOf(currentQuestion) + 1}: {currentQuestion.question}
+                    Question{" "}
+                    {interviewData.questions.indexOf(currentQuestion) + 1}:{" "}
+                    {currentQuestion.question}
                   </div>
                   <div className="text-gray-800 leading-relaxed">
                     {currentQuestion.transcript}
                   </div>
                   <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                    <div className="text-sm font-medium text-blue-900 mb-1">AI Feedback:</div>
-                    <div className="text-sm text-blue-800">{currentQuestion.feedback}</div>
+                    <div className="text-sm font-medium text-blue-900 mb-1">
+                      AI Feedback:
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      {currentQuestion.feedback}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -357,11 +424,17 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
           <div className="space-y-6">
             {/* Interview Summary */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Interview Summary</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Interview Summary
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Overall Score</span>
-                  <span className={`text-lg font-bold ${getScoreColor(interviewData.overallScore)}`}>
+                  <span
+                    className={`text-lg font-bold ${getScoreColor(
+                      interviewData.overallScore
+                    )}`}
+                  >
                     {interviewData.overallScore}%
                   </span>
                 </div>
@@ -388,7 +461,9 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
 
             {/* Question Navigation */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Questions</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Questions
+              </h3>
               <div className="space-y-3">
                 {interviewData.questions.map((question, index) => (
                   <button
@@ -396,8 +471,8 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                     onClick={() => jumpToQuestion(index)}
                     className={`w-full text-left p-3 rounded-lg border transition-colors ${
                       selectedQuestion === index
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -405,7 +480,11 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
                         Question {index + 1}
                       </span>
                       <div className="flex items-center space-x-2">
-                        <span className={`text-sm font-bold ${getScoreColor(question.score)}`}>
+                        <span
+                          className={`text-sm font-bold ${getScoreColor(
+                            question.score
+                          )}`}
+                        >
                           {question.score}%
                         </span>
                         <span className="text-xs text-gray-500">
@@ -423,58 +502,86 @@ export function InterviewRecordingViewer({ candidateId, candidateName, jobTitle,
 
             {/* Performance Metrics */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Performance Metrics</h3>
-              
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Performance Metrics
+              </h3>
+
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Behavioral Analysis</h4>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Behavioral Analysis
+                  </h4>
                   <div className="space-y-2">
-                    {Object.entries(interviewData.behavioralAnalysis).map(([metric, score]) => (
-                      <div key={metric} className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600 capitalize">
-                          {metric.replace(/([A-Z])/g, ' $1').trim()}
-                        </span>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                            <div 
-                              className={`h-1.5 rounded-full ${
-                                score >= 90 ? 'bg-green-500' :
-                                score >= 80 ? 'bg-blue-500' :
-                                score >= 70 ? 'bg-yellow-500' : 'bg-red-500'
-                              }`}
-                              style={{ width: `${score}%` }}
-                            ></div>
+                    {Object.entries(interviewData.behavioralAnalysis).map(
+                      ([metric, score]) => (
+                        <div
+                          key={metric}
+                          className="flex items-center justify-between"
+                        >
+                          <span className="text-xs text-gray-600 capitalize">
+                            {metric.replace(/([A-Z])/g, " $1").trim()}
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                              <div
+                                className={`h-1.5 rounded-full ${
+                                  score >= 90
+                                    ? "bg-green-500"
+                                    : score >= 80
+                                    ? "bg-blue-500"
+                                    : score >= 70
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                                }`}
+                                style={{ width: `${score}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs font-medium text-gray-900 w-8">
+                              {score}%
+                            </span>
                           </div>
-                          <span className="text-xs font-medium text-gray-900 w-8">{score}%</span>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Technical Assessment</h4>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Technical Assessment
+                  </h4>
                   <div className="space-y-2">
-                    {Object.entries(interviewData.technicalAssessment).map(([metric, score]) => (
-                      <div key={metric} className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600 capitalize">
-                          {metric.replace(/([A-Z])/g, ' $1').trim()}
-                        </span>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                            <div 
-                              className={`h-1.5 rounded-full ${
-                                score >= 90 ? 'bg-green-500' :
-                                score >= 80 ? 'bg-blue-500' :
-                                score >= 70 ? 'bg-yellow-500' : 'bg-red-500'
-                              }`}
-                              style={{ width: `${score}%` }}
-                            ></div>
+                    {Object.entries(interviewData.technicalAssessment).map(
+                      ([metric, score]) => (
+                        <div
+                          key={metric}
+                          className="flex items-center justify-between"
+                        >
+                          <span className="text-xs text-gray-600 capitalize">
+                            {metric.replace(/([A-Z])/g, " $1").trim()}
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                              <div
+                                className={`h-1.5 rounded-full ${
+                                  score >= 90
+                                    ? "bg-green-500"
+                                    : score >= 80
+                                    ? "bg-blue-500"
+                                    : score >= 70
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                                }`}
+                                style={{ width: `${score}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs font-medium text-gray-900 w-8">
+                              {score}%
+                            </span>
                           </div>
-                          <span className="text-xs font-medium text-gray-900 w-8">{score}%</span>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </div>
               </div>
