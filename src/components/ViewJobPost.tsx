@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { InterviewQuestion } from '../types';
+import { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useApp } from "../context/AppContext";
+import { InterviewQuestion } from "../types";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
 
@@ -12,32 +12,36 @@ export function ViewJobPost() {
   const [step, setStep] = useState(1);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [newQuestion, setNewQuestion] = useState({
-    question: '',
-    type: 'behavioral' as const,
+    question: "",
+    type: "behavioral" as const,
     expectedDuration: 120,
-    difficulty: 'medium' as const,
-    category: '',
-    suggestedAnswers: [''],
-    evaluationCriteria: [''],
-    isRequired: true
+    difficulty: "medium" as const,
+    category: "",
+    suggestedAnswers: [""],
+    evaluationCriteria: [""],
+    isRequired: true,
   });
   const [formData, setFormData] = useState({
-    title: '',
-    company: '',
-    department: '',
-    location: '',
-    type: 'full-time' as 'full-time' | 'part-time' | 'contract' | 'internship',
-    experience: '',
-    description: '',
-    requirements: [''],
-    responsibilities: [''],
-    skills: [''],
-    salaryMin: '',
-    salaryMax: '',
-    currency: 'USD'
+    title: "",
+    company: "",
+    department: "",
+    location: "",
+    type: "full-time" as "full-time" | "part-time" | "contract" | "internship",
+    experience: "",
+    description: "",
+    requirements: [""],
+    responsibilities: [""],
+    skills: [""],
+    salaryMin: "",
+    salaryMax: "",
+    currency: "USD",
   });
 
-  const updateArrayField = (field: 'requirements' | 'responsibilities' | 'skills', index: number, value: string) => {
+  const updateArrayField = (
+    field: "requirements" | "responsibilities" | "skills",
+    index: number,
+    value: string
+  ) => {
     const updated = [...formData[field]];
     updated[index] = value;
     setFormData({ ...formData, [field]: updated });
@@ -56,14 +60,15 @@ export function ViewJobPost() {
         type: job.type,
         experience: job.experience,
         description: job.description,
-        requirements: job.requirements.length > 0 ? job.requirements : [''],
-        responsibilities: job.responsibilities.length > 0 ? job.responsibilities : [''],
-        skills: job.skills.length > 0 ? job.skills : [''],
-        salaryMin: job.salary?.min?.toString() || '',
-        salaryMax: job.salary?.max?.toString() || '',
-        currency: job.salary?.currency || 'USD'
+        requirements: job.requirements.length > 0 ? job.requirements : [""],
+        responsibilities:
+          job.responsibilities.length > 0 ? job.responsibilities : [""],
+        skills: job.skills.length > 0 ? job.skills : [""],
+        salaryMin: job.salary?.min?.toString() || "",
+        salaryMax: job.salary?.max?.toString() || "",
+        currency: job.salary?.currency || "USD",
       });
-      setQuestions([...job.questions ?? []])
+      setQuestions([...(job.questions ?? [])]);
     }
   }, [state.currentJobPost]);
 
@@ -75,13 +80,17 @@ export function ViewJobPost() {
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'job-posts' })}
+                onClick={() =>
+                  dispatch({ type: "SET_VIEW", payload: "job-posts" })
+                }
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
                 <span>Back to Job Posts</span>
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">View Job Post</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                View Job Post
+              </h1>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">Step {step} of 3</span>
@@ -103,7 +112,9 @@ export function ViewJobPost() {
 
         {step === 1 && (
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Job Details</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Job Details
+            </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
@@ -115,7 +126,9 @@ export function ViewJobPost() {
                   required
                   disabled={true}
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., Senior Software Engineer"
                 />
@@ -130,7 +143,9 @@ export function ViewJobPost() {
                   required
                   disabled={true}
                   value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, company: e.target.value })
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Company name"
                 />
@@ -145,7 +160,9 @@ export function ViewJobPost() {
                   required
                   disabled={true}
                   value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, department: e.target.value })
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., Engineering, Product, Marketing"
                 />
@@ -160,7 +177,9 @@ export function ViewJobPost() {
                   required
                   disabled={true}
                   value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., San Francisco, CA or Remote"
                 />
@@ -173,7 +192,9 @@ export function ViewJobPost() {
                 <select
                   disabled={true}
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, type: e.target.value as any })
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="full-time">Full-time</option>
@@ -190,7 +211,9 @@ export function ViewJobPost() {
                 <select
                   disabled={true}
                   value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, experience: e.target.value })
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Select experience level</option>
@@ -210,7 +233,9 @@ export function ViewJobPost() {
               <textarea
                 disabled={true}
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows={6}
                 placeholder="Describe the role, responsibilities, and what makes this position exciting..."
@@ -223,7 +248,9 @@ export function ViewJobPost() {
                   setStep(2);
                 }}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                disabled={!formData.title || !formData.company || !formData.description}
+                disabled={
+                  !formData.title || !formData.company || !formData.description
+                }
               >
                 Continue
               </button>
@@ -233,7 +260,9 @@ export function ViewJobPost() {
 
         {step === 2 && (
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Requirements & Details</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Requirements & Details
+            </h2>
 
             {/* Requirements */}
             <div className="mb-8">
@@ -246,7 +275,9 @@ export function ViewJobPost() {
                     disabled={true}
                     type="text"
                     value={req}
-                    onChange={(e) => updateArrayField('requirements', index, e.target.value)}
+                    onChange={(e) =>
+                      updateArrayField("requirements", index, e.target.value)
+                    }
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter requirement"
                   />
@@ -265,7 +296,13 @@ export function ViewJobPost() {
                     disabled={true}
                     type="text"
                     value={resp}
-                    onChange={(e) => updateArrayField('responsibilities', index, e.target.value)}
+                    onChange={(e) =>
+                      updateArrayField(
+                        "responsibilities",
+                        index,
+                        e.target.value
+                      )
+                    }
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter responsibility"
                   />
@@ -284,7 +321,9 @@ export function ViewJobPost() {
                     disabled={true}
                     type="text"
                     value={skill}
-                    onChange={(e) => updateArrayField('skills', index, e.target.value)}
+                    onChange={(e) =>
+                      updateArrayField("skills", index, e.target.value)
+                    }
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter skill"
                   />
@@ -302,7 +341,9 @@ export function ViewJobPost() {
                   disabled={true}
                   type="number"
                   value={formData.salaryMin}
-                  onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, salaryMin: e.target.value })
+                  }
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Min salary"
                 />
@@ -310,14 +351,18 @@ export function ViewJobPost() {
                   disabled={true}
                   type="number"
                   value={formData.salaryMax}
-                  onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, salaryMax: e.target.value })
+                  }
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Max salary"
                 />
                 <select
                   disabled={true}
                   value={formData.currency}
-                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, currency: e.target.value })
+                  }
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="USD">USD</option>
@@ -349,19 +394,27 @@ export function ViewJobPost() {
             {/* AI Question Generation */}
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Interview Questions</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Interview Questions
+                </h2>
               </div>
 
               {questions.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  <p>No questions added yet. Generate questions from job description or add manually.</p>
+                  <p>
+                    No questions added yet. Generate questions from job
+                    description or add manually.
+                  </p>
                 </div>
               )}
 
               {/* Questions List */}
               <div className="space-y-4 mb-8">
                 {questions.map((question) => (
-                  <div key={question.id} className="border border-gray-200 rounded-lg p-4">
+                  <div
+                    key={question.id}
+                    className="border border-gray-200 rounded-lg p-4"
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
@@ -371,31 +424,40 @@ export function ViewJobPost() {
                           <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium">
                             {question.difficulty}
                           </span>
-                          <span className="text-sm text-gray-500">{question.expectedDuration}s</span>
+                          <span className="text-sm text-gray-500">
+                            {question.expectedDuration}s
+                          </span>
                         </div>
-                        <p className="text-gray-900 font-medium">{question.question}</p>
+                        <p className="text-gray-900 font-medium">
+                          {question.question}
+                        </p>
                         {question.category && (
-                          <p className="text-sm text-gray-600 mt-1">Category: {question.category}</p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Category: {question.category}
+                          </p>
                         )}
                       </div>
                     </div>
 
-                    {question.suggestedAnswers && question.suggestedAnswers.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Suggested Answer Points:</p>
-                        <ul className="text-sm text-gray-600 list-disc list-inside">
-                          {question.suggestedAnswers.map((answer, idx) => (
-                            <li key={idx}>{answer}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    {question.suggestedAnswers &&
+                      question.suggestedAnswers.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-sm font-medium text-gray-700 mb-1">
+                            Suggested Answer Points:
+                          </p>
+                          <ul className="text-sm text-gray-600 list-disc list-inside">
+                            {question.suggestedAnswers.map((answer, idx) => (
+                              <li key={idx}>{answer}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>
 
               {/* Add New Question */}
-              <div className="border-t pt-6">
+              {/* <div className="border-t pt-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Question</h3>
                 <div className="space-y-4">
                   <textarea
@@ -472,7 +534,7 @@ export function ViewJobPost() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Final Actions */}
