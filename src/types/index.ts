@@ -91,11 +91,12 @@ export interface Candidate {
 }
 
 export interface StudentInterviewAnswer {
+  id: string;
   answer: string;
   aiEvaluation: string;
   score: number;
   responseTime: number;
-  Question: InterviewQuestion[]
+  Question: InterviewQuestion
 }
 
 export interface InterviewSession {

@@ -17,6 +17,7 @@ import {
   FileText,
   BarChart3,
   Video,
+  X,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { InterviewRecordingViewer } from "./InterviewRecordingViewer";
@@ -51,6 +52,9 @@ export function JobInterviewListing({
   } | null>(null);
   const [jobpost, setJobpost] = useState<JobPost | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [selectedInterview, setSelectedInterview] = useState<Candidate | null>(
+    null
+  );
   let ignore = false;
 
   // Mock interview data for the specific job position
@@ -310,7 +314,28 @@ export function JobInterviewListing({
     sortedInterviews.reduce((sum, interview) => sum + interview.duration, 0) /
     sortedInterviews.length;
 
-  const getjobpostdata = async () => {
+  const handleDownloadResume = async (resumeUrl: string, name: string) => {
+    try {
+      const response = await fetch(resumeUrl);
+      if (!response.ok) {
+        throw new Error("Download failed");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${name}_Resume.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error while downloading:", err);
+    }
+  };
+
+  const getData = async () => {
     try {
       let job = await getJobPostById(jobId);
       setCandidates(job?.candidates ?? []);
@@ -322,7 +347,7 @@ export function JobInterviewListing({
 
   useEffect(() => {
     if (!ignore) {
-      getjobpostdata();
+      getData();
     }
     return () => {
       ignore = true;
@@ -350,10 +375,7 @@ export function JobInterviewListing({
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() =>
-                  // dispatch({ type: "SET_VIEW", payload: "interview-analytics" })
-                  onBack()
-                }
+                onClick={onBack}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -705,37 +727,47 @@ export function JobInterviewListing({
                           </button>
                         )}
                         <button
-                          onClick={() => {
-                            // Navigate to detailed candidate view
-                            dispatch({
-                              type: "SET_VIEW",
-                              payload: "interview-analytics",
-                            });
-                            // This would typically set a selected candidate state
-                          }}
+                          onClick={() => setSelectedInterview(interview)}
                           className="text-blue-600 hover:text-blue-900 transition-colors"
                           title="View Details"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
+                        {interview?.resumeUrl && (
+                          <button
+                            onClick={() =>
+                              handleDownloadResume(
+                                interview.resumeUrl,
+                                interview.name
+                              )
+                            }
+                            className="text-gray-600 hover:text-gray-900 transition-colors"
+                            title="Download Resume"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
-                          className="text-gray-600 hover:text-gray-900 transition-colors"
-                          title="Download Resume"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </button>
-                        <button
+                          onClick={() => {
+                            //  window.location.href = `mailto:candidate@example.com?subject=Interview Opportunity&body=Hi, we’d like to connect...`
+                            window.location.href = `mailto:${interview.email}`;
+                          }}
                           className="text-gray-600 hover:text-gray-900 transition-colors"
                           title="Contact Candidate"
                         >
                           <Mail className="h-4 w-4" />
                         </button>
-                        <button
-                          className="text-gray-600 hover:text-gray-900 transition-colors"
-                          title="View LinkedIn"
-                        >
-                          <Linkedin className="h-4 w-4" />
-                        </button>
+                        {interview.linkedinUrl && (
+                          <button
+                            onClick={() =>
+                              window.open(interview.linkedinUrl, "_blank")
+                            }
+                            className="text-gray-600 hover:text-gray-900 transition-colors"
+                            title="View LinkedIn"
+                          >
+                            <Linkedin className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -773,6 +805,223 @@ export function JobInterviewListing({
           </div>
         )}
       </div>
+
+      {/* interview Detail Modal */}
+      {selectedInterview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {selectedInterview.name}
+                  </h2>
+                  <p className="text-gray-600">
+                    {selectedInterview.designation} --
+                    {/* at {selectedInterview.currentCompany} */}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedInterview(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Contact Information
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">
+                        Email
+                      </label>
+                      <p className="text-gray-900">{selectedInterview.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">
+                        Phone
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedInterview.mobile}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">
+                        Location
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedInterview.location}
+                      </p>
+                    </div>
+                    {selectedInterview.linkedinUrl && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          LinkedIn
+                        </label>{" "}
+                        <a
+                          href={selectedInterview.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          View Profile
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Professional Details
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">
+                        Experience
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedInterview.experienceLevel}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">
+                        Current Company
+                      </label>
+                      {/* <p className="text-gray-900">{selectedInterview.currentCompany}</p> */}
+                      --
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">
+                        Current Role
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedInterview.designation}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">
+                        Skills
+                      </label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedInterview.skills.map(
+                          (skill: string, index: number) => (
+                            <span
+                              key={index}
+                              className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm"
+                            >
+                              {skill}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* {selectedInterview.coverLetter && ( */}
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Cover Letter
+                </h3>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-gray-700">
+                    {/* {selectedInterview.coverLetter} */} --
+                  </p>
+                </div>
+              </div>
+              {/* )} */}
+
+              {selectedInterview.interviewDate && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Interview Performance
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {Object.entries(selectedInterview.scores).map(
+                      ([skill, score]) => (
+                        <div
+                          key={skill}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <span className="text-sm font-medium text-gray-700 capitalize">
+                            {skill.replace(/([A-Z])/g, " $1").trim()}
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-20 bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  score >= 90
+                                    ? "bg-green-500"
+                                    : score >= 80
+                                    ? "bg-blue-500"
+                                    : score >= 70
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                                }`}
+                                style={{ width: `${score}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-bold text-gray-900">
+                              {score}%
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end space-x-4">
+                {selectedInterview.resumeUrl && (
+                  <button
+                    onClick={() => {
+                      handleDownloadResume(
+                        selectedInterview.resumeUrl,
+                        selectedInterview.name
+                      );
+                    }}
+                    className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Download Resume
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    //  window.location.href = `mailto:candidate@example.com?subject=Interview Opportunity&body=Hi, we’d like to connect...`
+                    window.location.href = `mailto:${selectedInterview.email}`;
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Contact Candidate
+                </button>
+                {selectedInterview.hasRecording && (
+                  <button
+                    onClick={() => {
+                      setSelectedInterview(null);
+                      setViewingRecording({
+                        id: selectedInterview.id,
+                        name: selectedInterview.name,
+                      });
+                    }}
+                    className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    View Recording
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

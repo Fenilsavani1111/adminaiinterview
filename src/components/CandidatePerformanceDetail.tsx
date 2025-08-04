@@ -389,8 +389,10 @@ export function CandidatePerformanceDetail({
                         <Award className="h-4 w-4" />
                         <span>
                           Status:{" "}
-                          {candidateData?.status.charAt(0).toUpperCase() +
-                            candidateData.status.slice(1)}
+                          {candidateData?.status !== undefined
+                            ? candidateData?.status.charAt(0).toUpperCase() +
+                              candidateData.status.slice(1)
+                            : ""}
                         </span>
                       </div>
                     </div>
@@ -704,66 +706,67 @@ export function CandidatePerformanceDetail({
 
             {activeTab === "responses" && (
               <div className="space-y-6">
-                {candidateData?.StudentInterviewAnswer?.filter(
-                  (que) => que?.answer?.length > 0
-                ).map((response: any, index: number) => (
-                  <div
-                    key={response.id}
-                    className="bg-white rounded-xl shadow-sm p-6"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                            Question {index + 1}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {response.responseTime}s
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
-                              response.score
-                            )}`}
-                          >
-                            {response.score}%
-                          </span>
+                {candidateData?.StudentInterviewAnswer &&
+                  candidateData?.StudentInterviewAnswer?.filter(
+                    (que) => que?.answer?.length > 0
+                  ).map((response, index) => (
+                    <div
+                      key={response.id}
+                      className="bg-white rounded-xl shadow-sm p-6"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                              Question {index + 1}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {response.responseTime}s
+                            </span>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
+                                response.score
+                              )}`}
+                            >
+                              {response.score}%
+                            </span>
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-3">
+                            {response.Question?.question}
+                          </h3>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-3">
-                          {response.Question?.question}
-                        </h3>
+                        <div className="flex items-center space-x-2">
+                          <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                            <Video className="h-4 w-4" />
+                          </button>
+                          <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                            <Mic className="h-4 w-4" />
+                          </button>
+                          <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                            <Play className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                          <Video className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                          <Mic className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                          <Play className="h-4 w-4" />
-                        </button>
+
+                      <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          Candidate Response:
+                        </h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          {response.answer}
+                        </p>
+                      </div>
+
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h4 className="font-medium text-blue-900 mb-2">
+                          AI Analysis:
+                        </h4>
+                        <p className="text-blue-800 text-sm">
+                          {response.aiEvaluation}
+                        </p>
                       </div>
                     </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">
-                        Candidate Response:
-                      </h4>
-                      <p className="text-gray-700 leading-relaxed">
-                        {response.answer}
-                      </p>
-                    </div>
-
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-blue-900 mb-2">
-                        AI Analysis:
-                      </h4>
-                      <p className="text-blue-800 text-sm">
-                        {response.aiEvaluation}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
 
