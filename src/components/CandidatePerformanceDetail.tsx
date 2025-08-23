@@ -35,7 +35,7 @@ export function CandidatePerformanceDetail({
   const { getCandidateById, error } = useJobPosts();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-  const [candidateData, setCandidateData] = useState<Candidate>();
+  const [candidateData, setCandidateData] = useState<any>();
   let ignore = false;
 
   // Mock detailed candidate data
@@ -213,7 +213,8 @@ export function CandidatePerformanceDetail({
       setLoading(true);
       const data: any = await getCandidateById(candidateId);
       console.log("data", data);
-      if (data?.candidate) setCandidateData(data?.candidate ?? {});
+      // if (data?.candidate) setCandidateData(data?.candidate ?? {});
+      setCandidateData({ ...MockcandidateData });
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -334,8 +335,8 @@ export function CandidatePerformanceDetail({
                       Interview Duration
                     </div>
                     <div className="text-sm text-green-600 mt-2">
-                      {/* {MockcandidateData.comparisonData.percentileRank}th percentile */}
-                      --
+                      {MockcandidateData.comparisonData.percentileRank}th
+                      percentile
                     </div>
                   </div>
 
@@ -347,17 +348,16 @@ export function CandidatePerformanceDetail({
                       Questions Answered
                     </div>
                     <div className="flex justify-center mt-2">
-                      {/* {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < 4
-                            ? "text-yellow-500 fill-current"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))} */}
-                      --
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < 4
+                              ? "text-yellow-500 fill-current"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -408,13 +408,12 @@ export function CandidatePerformanceDetail({
                           vs Position Average:
                         </span>
                         <span className="font-medium text-green-600">
-                          {/* +
-                        {(
-                          candidateData.overallScore -
-                          candidateData.comparisonData.positionAverage
-                        ).toFixed(1)}
-                        % */}
-                          --
+                          +
+                          {(
+                            candidateData.overallScore -
+                            candidateData.comparisonData.positionAverage
+                          ).toFixed(1)}
+                          %
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -422,20 +421,18 @@ export function CandidatePerformanceDetail({
                           vs Industry Average:
                         </span>
                         <span className="font-medium text-green-600">
-                          {/* +
-                        {(
-                          candidateData.overallScore -
-                          candidateData.comparisonData.industryAverage
-                        ).toFixed(1)}
-                        % */}
-                          --
+                          +
+                          {(
+                            candidateData.overallScore -
+                            candidateData.comparisonData.industryAverage
+                          ).toFixed(1)}
+                          %
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Percentile Rank:</span>
                         <span className="font-medium text-blue-600">
-                          {/* {candidateData.comparisonData.percentileRank}th */}
-                          --
+                          {candidateData.comparisonData.percentileRank}th
                         </span>
                       </div>
                     </div>
@@ -498,71 +495,70 @@ export function CandidatePerformanceDetail({
                       Performance Breakdown
                     </h2>
                     <div className="space-y-6">
-                      {/* {[
-                    {
-                      label: "Communication Skills",
-                      score: candidateData.evaluation.communication,
-                      icon: "💬",
-                    },
-                    {
-                      label: "Technical Knowledge",
-                      score: candidateData.evaluation.technical,
-                      icon: "🔧",
-                    },
-                    {
-                      label: "Body Language",
-                      score: candidateData.evaluation.bodyLanguage,
-                      icon: "👤",
-                    },
-                    {
-                      label: "Confidence Level",
-                      score: candidateData.evaluation.confidence,
-                      icon: "💪",
-                    },
-                    {
-                      label: "Professional Attire",
-                      score: candidateData.evaluation.attire,
-                      icon: "👔",
-                    },
-                  ].map((item, index) => (
-                    <div key={index}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-2xl">{item.icon}</span>
-                          <span className="font-medium text-gray-900">
-                            {item.label}
-                          </span>
+                      {[
+                        {
+                          label: "Communication Skills",
+                          score: candidateData.evaluation.communication,
+                          icon: "💬",
+                        },
+                        {
+                          label: "Technical Knowledge",
+                          score: candidateData.evaluation.technical,
+                          icon: "🔧",
+                        },
+                        {
+                          label: "Body Language",
+                          score: candidateData.evaluation.bodyLanguage,
+                          icon: "👤",
+                        },
+                        {
+                          label: "Confidence Level",
+                          score: candidateData.evaluation.confidence,
+                          icon: "💪",
+                        },
+                        {
+                          label: "Professional Attire",
+                          score: candidateData.evaluation.attire,
+                          icon: "👔",
+                        },
+                      ].map((item, index) => (
+                        <div key={index}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-3">
+                              <span className="text-2xl">{item.icon}</span>
+                              <span className="font-medium text-gray-900">
+                                {item.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="font-bold text-gray-900">
+                                {item.score}%
+                              </span>
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
+                                  item.score
+                                )}`}
+                              >
+                                {getScoreGrade(item.score)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className={`h-3 rounded-full transition-all duration-1000 ${
+                                item.score >= 90
+                                  ? "bg-green-500"
+                                  : item.score >= 80
+                                  ? "bg-blue-500"
+                                  : item.score >= 70
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
+                              }`}
+                              style={{ width: `${item.score}%` }}
+                            ></div>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="font-bold text-gray-900">
-                            {item.score}%
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
-                              item.score
-                            )}`}
-                          >
-                            {getScoreGrade(item.score)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className={`h-3 rounded-full transition-all duration-1000 ${
-                            item.score >= 90
-                              ? "bg-green-500"
-                              : item.score >= 80
-                              ? "bg-blue-500"
-                              : item.score >= 70
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                          style={{ width: `${item.score}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))} */}
-                      --
+                      ))}
                     </div>
                   </div>
 
@@ -571,54 +567,52 @@ export function CandidatePerformanceDetail({
                     <h2 className="text-xl font-bold text-gray-900 mb-6">
                       AI Evaluation Summary
                     </h2>
-                    --
-                    {/* <div className="bg-blue-50 p-6 rounded-xl mb-6">
-                  <p className="text-gray-700 leading-relaxed">
-                    {candidateData.evaluation.feedback}
-                  </p>
-                </div>
+                    <div className="bg-blue-50 p-6 rounded-xl mb-6">
+                      <p className="text-gray-700 leading-relaxed">
+                        {candidateData.evaluation.feedback}
+                      </p>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h3 className="font-semibold text-green-800 mb-3 flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Key Strengths</span>
+                        </h3>
+                        <ul className="space-y-2">
+                          {candidateData.evaluation.strengths.map(
+                            (strength, index) => (
+                              <li
+                                key={index}
+                                className="text-sm text-gray-700 flex items-start space-x-2"
+                              >
+                                <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                <span>{strength}</span>
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-semibold text-green-800 mb-3 flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span>Key Strengths</span>
-                    </h3>
-                    <ul className="space-y-2">
-                      {candidateData.evaluation.strengths.map(
-                        (strength, index) => (
-                          <li
-                            key={index}
-                            className="text-sm text-gray-700 flex items-start space-x-2"
-                          >
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <span>{strength}</span>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-blue-800 mb-3 flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span>Areas for Growth</span>
-                    </h3>
-                    <ul className="space-y-2">
-                      {candidateData.evaluation.improvements.map(
-                        (improvement, index) => (
-                          <li
-                            key={index}
-                            className="text-sm text-gray-700 flex items-start space-x-2"
-                          >
-                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <span>{improvement}</span>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                </div> */}
+                      <div>
+                        <h3 className="font-semibold text-blue-800 mb-3 flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span>Areas for Growth</span>
+                        </h3>
+                        <ul className="space-y-2">
+                          {candidateData.evaluation.improvements.map(
+                            (improvement, index) => (
+                              <li
+                                key={index}
+                                className="text-sm text-gray-700 flex items-start space-x-2"
+                              >
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                <span>{improvement}</span>
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -676,10 +670,9 @@ export function CandidatePerformanceDetail({
                         Highly Recommended
                       </div>
                       <p className="text-sm text-gray-600">
-                        {/* Exceptional candidate with strong technical skills and
+                        Exceptional candidate with strong technical skills and
                         excellent communication. Recommended for immediate
-                        consideration. */}
-                        --
+                        consideration.
                       </p>
                     </div>
                   </div>
@@ -777,43 +770,44 @@ export function CandidatePerformanceDetail({
                     Skill Assessment
                   </h2>
                   <div className="space-y-6">
-                    {/* {Object.entries(candidateData.skillAnalysis).map(
-                  ([skill, data]) => (
-                    <div key={skill}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900">
-                            {skill}
-                          </span>
-                          {getTrendIcon(data.trend)}
+                    {Object.entries(candidateData.skillAnalysis).map(
+                      ([skill, data]) => (
+                        <div key={skill}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium text-gray-900">
+                                {skill}
+                              </span>
+                              {getTrendIcon(data.trend)}
+                            </div>
+                            <span
+                              className={`font-bold ${
+                                getScoreColor(data.score).split(" ")[0]
+                              }`}
+                            >
+                              {data.score}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div
+                              className={`h-2 rounded-full ${
+                                data.score >= 90
+                                  ? "bg-green-500"
+                                  : data.score >= 80
+                                  ? "bg-blue-500"
+                                  : data.score >= 70
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
+                              }`}
+                              style={{ width: `${data.score}%` }}
+                            ></div>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {data.details}
+                          </p>
                         </div>
-                        <span
-                          className={`font-bold ${
-                            getScoreColor(data.score).split(" ")[0]
-                          }`}
-                        >
-                          {data.score}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                        <div
-                          className={`h-2 rounded-full ${
-                            data.score >= 90
-                              ? "bg-green-500"
-                              : data.score >= 80
-                              ? "bg-blue-500"
-                              : data.score >= 70
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                          style={{ width: `${data.score}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-sm text-gray-600">{data.details}</p>
-                    </div>
-                  )
-                )} */}
-                    --
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -822,46 +816,49 @@ export function CandidatePerformanceDetail({
                     Skill Comparison
                   </h2>
                   <div className="space-y-4">
-                    {/* {Object.entries(candidateData.skillAnalysis).map(
-                  ([skill, data]) => (
-                    <div
-                      key={skill}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-gray-900">
-                          {skill}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          vs Average
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-1">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Candidate: {data.score}%</span>
-                            <span>Average: 72%</span>
+                    {Object.entries(candidateData.skillAnalysis).map(
+                      ([skill, data]) => (
+                        <div
+                          key={skill}
+                          className="border border-gray-200 rounded-lg p-4"
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-gray-900">
+                              {skill}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              vs Average
+                            </span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-blue-600 h-2 rounded-full"
-                              style={{ width: `${(data.score / 100) * 100}%` }}
-                            ></div>
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-1">
+                              <div className="flex justify-between text-sm mb-1">
+                                <span>Candidate: {data.score}%</span>
+                                <span>Average: 72%</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-blue-600 h-2 rounded-full"
+                                  style={{
+                                    width: `${(data.score / 100) * 100}%`,
+                                  }}
+                                ></div>
+                              </div>
+                            </div>
+                            <span
+                              className={`text-sm font-medium ${
+                                data.score > 72
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {data.score > 72 ? "+" : ""}
+                              {(data.score - 72).toFixed(1)}%
+                            </span>
                           </div>
                         </div>
-                        <span
-                          className={`text-sm font-medium ${
-                            data.score > 72 ? "text-green-600" : "text-red-600"
-                          }`}
-                        >
-                          {data.score > 72 ? "+" : ""}
-                          {(data.score - 72).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  )
-                )} */}
-                    --
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -874,39 +871,38 @@ export function CandidatePerformanceDetail({
                     Behavioral Analysis
                   </h2>
                   <div className="space-y-6">
-                    {/* {Object.entries(candidateData.behavioralAnalysis).map(
-                  ([behavior, score]) => (
-                    <div key={behavior}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900 capitalize">
-                          {behavior.replace(/([A-Z])/g, " $1").trim()}
-                        </span>
-                        <span
-                          className={`font-bold ${
-                            getScoreColor(score).split(" ")[0]
-                          }`}
-                        >
-                          {score}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full ${
-                            score >= 90
-                              ? "bg-green-500"
-                              : score >= 80
-                              ? "bg-blue-500"
-                              : score >= 70
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                          style={{ width: `${score}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )
-                )} */}
-                    --
+                    {Object.entries(candidateData.behavioralAnalysis).map(
+                      ([behavior, score]) => (
+                        <div key={behavior}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-gray-900 capitalize">
+                              {behavior.replace(/([A-Z])/g, " $1").trim()}
+                            </span>
+                            <span
+                              className={`font-bold ${
+                                getScoreColor(score).split(" ")[0]
+                              }`}
+                            >
+                              {score}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${
+                                score >= 90
+                                  ? "bg-green-500"
+                                  : score >= 80
+                                  ? "bg-blue-500"
+                                  : score >= 70
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
+                              }`}
+                              style={{ width: `${score}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -920,10 +916,10 @@ export function CandidatePerformanceDetail({
                         Positive Indicators
                       </h3>
                       <ul className="text-sm text-green-700 space-y-1">
-                        <li>• --</li>
-                        {/* <li>• Maintained excellent eye contact throughout</li>
-                    <li>• Appropriate facial expressions and engagement</li>
-                    <li>• Clear and well-modulated voice tone</li> */}
+                        {/* <li>• --</li> */}
+                        <li>• Maintained excellent eye contact throughout</li>
+                        <li>• Appropriate facial expressions and engagement</li>
+                        <li>• Clear and well-modulated voice tone</li>
                       </ul>
                     </div>
 
@@ -932,10 +928,12 @@ export function CandidatePerformanceDetail({
                         Areas for Improvement
                       </h3>
                       <ul className="text-sm text-blue-700 space-y-1">
-                        {/* <li>• Could use more hand gestures for emphasis</li>
-                    <li>• Occasional fidgeting during complex questions</li>
-                    <li>• Voice pace could be slightly slower for clarity</li> */}
-                        <li>• --</li>
+                        <li>• Could use more hand gestures for emphasis</li>
+                        <li>• Occasional fidgeting during complex questions</li>
+                        <li>
+                          • Voice pace could be slightly slower for clarity
+                        </li>
+                        {/* <li>• --</li> */}
                       </ul>
                     </div>
 
@@ -944,10 +942,10 @@ export function CandidatePerformanceDetail({
                         Recommendations
                       </h3>
                       <ul className="text-sm text-yellow-700 space-y-1">
-                        {/* <li>• Practice power poses before interviews</li>
-                    <li>• Use deliberate pauses for emphasis</li>
-                    <li>• Incorporate more storytelling techniques</li> */}
-                        <li>• --</li>
+                        <li>• Practice power poses before interviews</li>
+                        <li>• Use deliberate pauses for emphasis</li>
+                        <li>• Incorporate more storytelling techniques</li>
+                        {/* <li>• --</li> */}
                       </ul>
                     </div>
                   </div>
