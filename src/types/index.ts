@@ -87,7 +87,23 @@ export interface Candidate {
   location?: string;
   attemptedQuestions: number;
   JobPost?: JobPost;
-  StudentInterviewAnswer?: StudentInterviewAnswer[]
+  StudentInterviewAnswer?: StudentInterviewAnswer[];
+  aiEvaluationSummary?: {
+    summary?: string;
+    keyStrengths?: string[];
+  }
+  performanceBreakdown?: any;
+  quickStats: any;
+  recommendations?: {
+    summary?: string;
+    status?: string;
+  }
+  behavioralAnalysis: any;
+  videoAnalysisInsights?: {
+    areas_for_improvement?: string[];
+    positive_indicators?: string[];
+    recommendations?: string[];
+  }
 }
 
 export interface StudentInterviewAnswer {
