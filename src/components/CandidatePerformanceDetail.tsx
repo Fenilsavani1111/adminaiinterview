@@ -953,11 +953,11 @@ export function CandidatePerformanceDetail({
                           Positive Indicators
                         </h3>
                         <ul className="text-sm text-green-700 space-y-1">
-                          {candidateData?.video_analysis_insights?.positive_indicators?.map(
-                            (item, i) => (
+                          {candidateData?.video_analysis_insights?.positive_indicators
+                            ?.slice(1)
+                            ?.map((item, i) => (
                               <li key={i}>• {item}</li>
-                            )
-                          )}
+                            ))}
                         </ul>
                       </div>
 
@@ -966,11 +966,11 @@ export function CandidatePerformanceDetail({
                           Areas for Improvement
                         </h3>
                         <ul className="text-sm text-blue-700 space-y-1">
-                          {candidateData?.video_analysis_insights?.areas_for_improvement?.map(
-                            (item, i) => (
+                          {candidateData?.video_analysis_insights?.areas_for_improvement
+                            ?.slice(1)
+                            ?.map((item, i) => (
                               <li key={i}>• {item}</li>
-                            )
-                          )}
+                            ))}
                         </ul>
                       </div>
 
