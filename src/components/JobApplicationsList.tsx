@@ -266,18 +266,13 @@ export function JobApplicationsList({
   };
 
   const getRecommendationColor = (recommendation: string) => {
-    switch (recommendation) {
-      case "Highly Recommended":
-        return "bg-green-100 text-green-800";
-      case "Recommended":
-        return "bg-blue-100 text-blue-800";
-      case "Consider":
-        return "bg-yellow-100 text-yellow-800";
-      case "Not Recommended":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+    if (recommendation?.includes?.("Highly"))
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    else if (recommendation?.includes?.("Recommended"))
+      return "bg-blue-50 text-blue-700 border-blue-200";
+    else if (recommendation?.includes?.("Consider"))
+      return "bg-amber-50 text-amber-700 border-amber-200";
+    else return "bg-gray-50 text-gray-700 border-gray-200";
   };
 
   const toggleApplicationSelection = (applicationId: string) => {
@@ -585,7 +580,7 @@ export function JobApplicationsList({
                             {application.experienceLevel}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {application.designation} --
+                            {application.designation}
                             {/* at {application.currentCompany} */}
                           </p>
                         </div>
@@ -601,7 +596,7 @@ export function JobApplicationsList({
                             ).toLocaleDateString()}
                           </p>
                         </div>
-                        {application.overallScore && (
+                        {application.status === "completed" && (
                           <div>
                             <p className="text-sm text-gray-600">
                               Interview Score
@@ -616,13 +611,14 @@ export function JobApplicationsList({
                               >
                                 {application.overallScore}%
                               </span>
-                              {application.recommendation && (
+                              {application.recommendations && (
                                 <span
                                   className={`px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
-                                    application.recommendation
+                                    application.recommendations
+                                      ?.recommendation ?? ""
                                   )}`}
                                 >
-                                  {application.recommendation}
+                                  {application.recommendations?.recommendation}
                                 </span>
                               )}
                             </div>
@@ -652,7 +648,7 @@ export function JobApplicationsList({
                         </div>
                       </div>
 
-                      {application.interviewDate && (
+                      {application.performanceBreakdown && (
                         <div className="mb-4">
                           <p className="text-sm text-gray-600 mb-2">
                             Performance Breakdown
@@ -809,7 +805,7 @@ export function JobApplicationsList({
                     {selectedApplication.name}
                   </h2>
                   <p className="text-gray-600">
-                    {selectedApplication.designation} --
+                    {selectedApplication.designation}
                     {/* at {selectedApplication.currentCompany} */}
                   </p>
                 </div>
@@ -884,13 +880,12 @@ export function JobApplicationsList({
                         {selectedApplication.experienceLevel}
                       </p>
                     </div>
-                    <div>
+                    {/* <div>
                       <label className="text-sm font-medium text-gray-600">
                         Current Company
                       </label>
-                      {/* <p className="text-gray-900">{selectedApplication.currentCompany}</p> */}
-                      --
-                    </div>
+                      <p className="text-gray-900">{selectedApplication.currentCompany}</p>
+                    </div> */}
                     <div>
                       <label className="text-sm font-medium text-gray-600">
                         Current Role
@@ -921,19 +916,19 @@ export function JobApplicationsList({
               </div>
 
               {/* {selectedApplication.coverLetter && ( */}
-              <div className="mt-6">
+              {/* <div className="mt-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Cover Letter
                 </h3>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-700">
-                    {/* {selectedApplication.coverLetter} */} --
+                    {selectedApplication.coverLetter}
                   </p>
                 </div>
-              </div>
+              </div> */}
               {/* )} */}
 
-              {selectedApplication.interviewDate && (
+              {selectedApplication.performanceBreakdown && (
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Interview Performance

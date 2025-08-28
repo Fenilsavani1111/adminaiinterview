@@ -230,6 +230,33 @@ export function InterviewRecordingViewer({
     };
   }, []);
 
+  const renderAnalysis = (title: string, score: number) => {
+    return (
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-600 capitalize">{title}</span>
+        <div className="flex items-center space-x-2">
+          <div className="w-16 bg-gray-200 rounded-full h-1.5">
+            <div
+              className={`h-1.5 rounded-full ${
+                score >= 90
+                  ? "bg-green-500"
+                  : score >= 80
+                  ? "bg-blue-500"
+                  : score >= 70
+                  ? "bg-yellow-500"
+                  : "bg-red-500"
+              }`}
+              style={{ width: `${score}%` }}
+            ></div>
+          </div>
+          <span className="text-xs font-medium text-gray-900 w-8">
+            {score}%
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -293,7 +320,10 @@ export function InterviewRecordingViewer({
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
                   >
-                    <source src={MockInterviewData.videoUrl} type="video/mp4" />
+                    <source
+                      src={interviewData?.interviewVideoLink ?? ""}
+                      type="video/webm"
+                    />
                     Your browser does not support the video tag.
                   </video>
 
@@ -312,7 +342,7 @@ export function InterviewRecordingViewer({
                   </div>
 
                   {/* Current Question Indicator */}
-                  {currentQuestion && (
+                  {/* {currentQuestion && (
                     <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg">
                       <div className="text-sm font-medium">
                         Question{" "}
@@ -323,7 +353,7 @@ export function InterviewRecordingViewer({
                         Score: {currentQuestion.score}%
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Video Controls */}
@@ -431,7 +461,7 @@ export function InterviewRecordingViewer({
                 <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-gray-900">
-                      Live Transcript --
+                      Live Transcript
                     </h3>
                     <button
                       onClick={() => setShowTranscript(!showTranscript)}
@@ -470,22 +500,29 @@ export function InterviewRecordingViewer({
                   Interview Summary
                 </h3>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Overall Score</span>
-                    <span
-                      className={`text-lg font-bold ${getScoreColor(
-                        interviewData?.overallScore ?? 0
-                      )}`}
-                    >
-                      {interviewData?.overallScore}%
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Duration</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {Math.floor((interviewData?.duration || 0) / 60)} minutes
-                    </span>
-                  </div>
+                  {interviewData?.status === "completed" && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">
+                          Overall Score
+                        </span>
+                        <span
+                          className={`text-lg font-bold ${getScoreColor(
+                            interviewData?.overallScore ?? 0
+                          )}`}
+                        >
+                          {interviewData?.overallScore}%
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Duration</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {Math.floor((interviewData?.duration || 0) / 60)}{" "}
+                          minutes
+                        </span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Date</span>
                     <span className="text-sm font-medium text-gray-900">
@@ -494,12 +531,14 @@ export function InterviewRecordingViewer({
                       ).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Questions</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {interviewData?.attemptedQuestions}
-                    </span>
-                  </div>
+                  {interviewData?.status === "completed" && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Questions</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {interviewData?.attemptedQuestions}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -532,9 +571,9 @@ export function InterviewRecordingViewer({
                             >
                               {item.score}%
                             </span>
-                            <span className="text-xs text-gray-500">
-                              {/* {formatTime(item.startTime)} */}--
-                            </span>
+                            {/* <span className="text-xs text-gray-500">
+                              {formatTime(item.startTime)}
+                            </span> */}
                           </div>
                         </div>
                         <div className="text-sm text-gray-600 line-clamp-2">
@@ -548,50 +587,49 @@ export function InterviewRecordingViewer({
               {/* Performance Metrics */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  Performance Metrics --
+                  Performance Metrics
                 </h3>
 
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
-                      Behavioral Analysis
-                    </h4>
-                    <div className="space-y-2">
-                      {Object.entries(MockInterviewData.behavioralAnalysis).map(
-                        ([metric, score]) => (
-                          <div
-                            key={metric}
-                            className="flex items-center justify-between"
-                          >
-                            <span className="text-xs text-gray-600 capitalize">
-                              {metric.replace(/([A-Z])/g, " $1").trim()}
-                            </span>
-                            <div className="flex items-center space-x-2">
-                              <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                                <div
-                                  className={`h-1.5 rounded-full ${
-                                    score >= 90
-                                      ? "bg-green-500"
-                                      : score >= 80
-                                      ? "bg-blue-500"
-                                      : score >= 70
-                                      ? "bg-yellow-500"
-                                      : "bg-red-500"
-                                  }`}
-                                  style={{ width: `${score}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-xs font-medium text-gray-900 w-8">
-                                {score}%
-                              </span>
-                            </div>
-                          </div>
-                        )
-                      )}
+                {interviewData?.status === "completed" && (
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                        Behavioral Analysis
+                      </h4>
+                      <div className="space-y-2">
+                        {renderAnalysis(
+                          "Eye Contact",
+                          interviewData?.behavioral_analysis?.eye_contact ?? 0
+                        )}
+                        {renderAnalysis(
+                          "Posture",
+                          interviewData?.behavioral_analysis?.posture ?? 0
+                        )}
+                        {renderAnalysis(
+                          "Gestures",
+                          interviewData?.behavioral_analysis?.gestures ?? 0
+                        )}
+                        {renderAnalysis(
+                          "Face Expressions",
+                          interviewData?.behavioral_analysis
+                            ?.facial_expressions ?? 0
+                        )}
+                        {renderAnalysis(
+                          "Voice Tone",
+                          interviewData?.behavioral_analysis?.voice_tone ?? 0
+                        )}
+                        {renderAnalysis(
+                          "Confidence",
+                          interviewData?.behavioral_analysis?.confidence ?? 0
+                        )}
+                        {renderAnalysis(
+                          "Engagement",
+                          interviewData?.behavioral_analysis?.engagement ?? 0
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
+                    {/* <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-3">
                       Technical Assessment
                     </h4>
@@ -628,8 +666,9 @@ export function InterviewRecordingViewer({
                         </div>
                       ))}
                     </div>
+                  </div> */}
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

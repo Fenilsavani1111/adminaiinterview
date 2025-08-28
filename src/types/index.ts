@@ -63,6 +63,7 @@ export interface Candidate {
   email: string;
   phone: string;
   mobile?: string;
+  interviewVideoLink?: string;
   appliedDate: any;
   interviewDate: any;
   duration: number;
@@ -91,15 +92,16 @@ export interface Candidate {
   aiEvaluationSummary?: {
     summary?: string;
     keyStrengths?: string[];
+    areasOfGrowth?: string[];
   }
   performanceBreakdown?: any;
   quickStats: any;
   recommendations?: {
     summary?: string;
-    status?: string;
+    recommendation?: string;
   }
-  behavioralAnalysis: any;
-  videoAnalysisInsights?: {
+  behavioral_analysis: any;
+  video_analysis_insights?: {
     areas_for_improvement?: string[];
     positive_indicators?: string[];
     recommendations?: string[];

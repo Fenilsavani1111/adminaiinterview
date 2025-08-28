@@ -272,18 +272,13 @@ export function JobInterviewListing({
   };
 
   const getRecommendationColor = (recommendation: string) => {
-    switch (recommendation) {
-      case "Highly Recommended":
-        return "bg-green-100 text-green-800";
-      case "Recommended":
-        return "bg-blue-100 text-blue-800";
-      case "Consider":
-        return "bg-yellow-100 text-yellow-800";
-      case "Not Recommended":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+    if (recommendation?.includes?.("Highly"))
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    else if (recommendation?.includes?.("Recommended"))
+      return "bg-blue-50 text-blue-700 border-blue-200";
+    else if (recommendation?.includes?.("Consider"))
+      return "bg-amber-50 text-amber-700 border-amber-200";
+    else return "bg-gray-50 text-gray-700 border-gray-200";
   };
 
   const toggleCandidateSelection = (candidateId: string) => {
@@ -608,61 +603,65 @@ export function JobInterviewListing({
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-center">
-                        <div
-                          className={`text-2xl font-bold mb-1 ${
-                            getScoreColor(interview.overallScore ?? 0).split(
-                              " "
-                            )[0]
-                          }`}
-                        >
-                          {interview.overallScore ?? 0}%
-                        </div>
-                        <div className="flex items-center justify-center">
-                          {interview.overallScore >= 90 && (
-                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                          )}
-                          {interview.overallScore >= 85 &&
-                            interview.overallScore < 90 && (
-                              <TrendingUp className="h-4 w-4 text-green-500" />
+                      {interview?.status === "completed" && (
+                        <div className="text-center">
+                          <div
+                            className={`text-2xl font-bold mb-1 ${
+                              getScoreColor(interview.overallScore ?? 0).split(
+                                " "
+                              )[0]
+                            }`}
+                          >
+                            {interview.overallScore ?? 0}%
+                          </div>
+                          <div className="flex items-center justify-center">
+                            {interview.overallScore >= 90 && (
+                              <Star className="h-4 w-4 text-yellow-500 fill-current" />
                             )}
+                            {interview.overallScore >= 85 &&
+                              interview.overallScore < 90 && (
+                                <TrendingUp className="h-4 w-4 text-green-500" />
+                              )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="space-y-2">
-                        {Object.entries(interview.scores).map(
-                          ([skill, score]) => (
-                            <div
-                              key={skill}
-                              className="flex items-center justify-between"
-                            >
-                              <span className="text-xs text-gray-600 capitalize w-20">
-                                {skill.replace(/([A-Z])/g, " $1").trim()}
-                              </span>
-                              <div className="flex items-center space-x-2">
-                                <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                                  <div
-                                    className={`h-1.5 rounded-full ${
-                                      score >= 90
-                                        ? "bg-green-500"
-                                        : score >= 80
-                                        ? "bg-blue-500"
-                                        : score >= 70
-                                        ? "bg-yellow-500"
-                                        : "bg-red-500"
-                                    }`}
-                                    style={{ width: `${score}%` }}
-                                  ></div>
-                                </div>
-                                <span className="text-xs font-medium text-gray-900 w-8">
-                                  {score}%
+                      {interview?.performanceBreakdown && (
+                        <div className="space-y-2">
+                          {Object.entries(interview.scores).map(
+                            ([skill, score]) => (
+                              <div
+                                key={skill}
+                                className="flex items-center justify-between"
+                              >
+                                <span className="text-xs text-gray-600 capitalize w-20">
+                                  {skill.replace(/([A-Z])/g, " $1").trim()}
                                 </span>
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                                    <div
+                                      className={`h-1.5 rounded-full ${
+                                        score >= 90
+                                          ? "bg-green-500"
+                                          : score >= 80
+                                          ? "bg-blue-500"
+                                          : score >= 70
+                                          ? "bg-yellow-500"
+                                          : "bg-red-500"
+                                      }`}
+                                      style={{ width: `${score}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="text-xs font-medium text-gray-900 w-8">
+                                    {score}%
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )
-                        )}
-                      </div>
+                            )
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
@@ -695,20 +694,20 @@ export function JobInterviewListing({
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div>
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
-                            interview.recommendation ?? ""
-                          )}`}
-                        >
-                          {/* {interview.recommendation ?? ""} */}
-                          --
-                        </span>
-                        <div className="text-xs text-gray-500 mt-1 max-w-32">
-                          {/* {interview.notes} */}
-                          --
+                      {interview?.recommendations && (
+                        <div>
+                          <span
+                            className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border text-center ${getRecommendationColor(
+                              interview?.recommendations?.recommendation ?? ""
+                            )}`}
+                          >
+                            {interview.recommendations?.recommendation ?? ""}
+                          </span>
+                          <div className="text-xs text-gray-500 text-center mt-1 max-w-32">
+                            {interview.recommendations?.summary}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
@@ -817,7 +816,7 @@ export function JobInterviewListing({
                     {selectedInterview.name}
                   </h2>
                   <p className="text-gray-600">
-                    {selectedInterview.designation} --
+                    {selectedInterview.designation}
                     {/* at {selectedInterview.currentCompany} */}
                   </p>
                 </div>
@@ -890,13 +889,12 @@ export function JobInterviewListing({
                         {selectedInterview.experienceLevel}
                       </p>
                     </div>
-                    <div>
+                    {/* <div>
                       <label className="text-sm font-medium text-gray-600">
                         Current Company
                       </label>
-                      {/* <p className="text-gray-900">{selectedInterview.currentCompany}</p> */}
-                      --
-                    </div>
+                      <p className="text-gray-900">{selectedInterview.currentCompany}</p>
+                    </div> */}
                     <div>
                       <label className="text-sm font-medium text-gray-600">
                         Current Role
@@ -927,19 +925,19 @@ export function JobInterviewListing({
               </div>
 
               {/* {selectedInterview.coverLetter && ( */}
-              <div className="mt-6">
+              {/* <div className="mt-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Cover Letter
                 </h3>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-700">
-                    {/* {selectedInterview.coverLetter} */} --
+                    {selectedInterview.coverLetter} --
                   </p>
                 </div>
-              </div>
+              </div> */}
               {/* )} */}
 
-              {selectedInterview.interviewDate && (
+              {selectedInterview.performanceBreakdown && (
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Interview Performance
