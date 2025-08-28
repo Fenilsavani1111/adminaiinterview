@@ -26,6 +26,12 @@ interface CandidatePerformanceDetailProps {
   onBack: () => void;
 }
 
+const camelToLabel = (str: string) => {
+  return str
+    .replace(/([A-Z])/g, " $1") // insert space before capital letters
+    .replace(/^./, (s) => s.toUpperCase()); // capitalize first letter
+};
+
 export function CandidatePerformanceDetail({
   candidateId,
   backText = "Back",
@@ -214,6 +220,7 @@ export function CandidatePerformanceDetail({
       const data: any = await getCandidateById(candidateId);
       console.log("data", data);
       if (data?.candidate) setCandidateData(data?.candidate ?? {});
+      // setCandidateData({ ...MockcandidateData });
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -229,7 +236,7 @@ export function CandidatePerformanceDetail({
       ignore = true;
     };
   }, []);
-
+  console.log("candidateData", candidateData);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -255,7 +262,7 @@ export function CandidatePerformanceDetail({
                     </h1>
                     <p className="text-sm text-gray-600">
                       {candidateData?.designation} •{" "}
-                      {/* {candidateData?.company ?? ""} -- */}
+                      {/* {candidateData?.company ?? ""} */}
                       {candidateData?.location ?? ""}
                     </p>
                   </div>
@@ -306,60 +313,66 @@ export function CandidatePerformanceDetail({
 
               <div className="lg:col-span-3">
                 <div className="grid md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div
-                      className={`text-4xl font-bold mb-2 ${
-                        getScoreColor(candidateData?.overallScore ?? 0).split(
-                          " "
-                        )[0]
-                      }`}
-                    >
-                      {candidateData?.overallScore}%
-                    </div>
-                    <div className="text-sm text-gray-600">Overall Score</div>
-                    <div
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${getScoreColor(
-                        candidateData?.overallScore ?? 0
-                      )}`}
-                    >
-                      Grade: {getScoreGrade(candidateData?.overallScore ?? 0)}
-                    </div>
-                  </div>
+                  {candidateData?.status === "completed" && (
+                    <>
+                      <div className="text-center">
+                        <div
+                          className={`text-4xl font-bold mb-2 ${
+                            getScoreColor(
+                              candidateData?.overallScore ?? 0
+                            ).split(" ")[0]
+                          }`}
+                        >
+                          {candidateData?.overallScore}%
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Overall Score
+                        </div>
+                        <div
+                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${getScoreColor(
+                            candidateData?.overallScore ?? 0
+                          )}`}
+                        >
+                          Grade:{" "}
+                          {getScoreGrade(candidateData?.overallScore ?? 0)}
+                        </div>
+                      </div>
 
-                  <div className="text-center">
-                    <div className="text-4xl font-bold text-gray-900 mb-2">
-                      {candidateData?.duration}m
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Interview Duration
-                    </div>
-                    <div className="text-sm text-green-600 mt-2">
-                      {/* {MockcandidateData.comparisonData.percentileRank}th percentile */}
-                      --
-                    </div>
-                  </div>
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-gray-900 mb-2">
+                          {candidateData?.duration}m
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Interview Duration
+                        </div>
+                        {/* <div className="text-sm text-green-600 mt-2">
+                      {MockcandidateData.comparisonData.percentileRank}th
+                      percentile
+                    </div> */}
+                      </div>
 
-                  <div className="text-center">
-                    <div className="text-4xl font-bold text-gray-900 mb-2">
-                      {candidateData?.attemptedQuestions}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Questions Answered
-                    </div>
-                    <div className="flex justify-center mt-2">
-                      {/* {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < 4
-                            ? "text-yellow-500 fill-current"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))} */}
-                      --
-                    </div>
-                  </div>
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-gray-900 mb-2">
+                          {candidateData?.attemptedQuestions}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Questions Answered
+                        </div>
+                        <div className="flex justify-center mt-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-4 w-4 ${
+                                i < 4
+                                  ? "text-yellow-500 fill-current"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="mt-6 grid md:grid-cols-2 gap-6">
@@ -373,30 +386,31 @@ export function CandidatePerformanceDetail({
                         <span>
                           Applied:{" "}
                           {format(candidateData?.appliedDate, "dd/MM/yyyy")}
-                          {/* {new Date(
-                          candidateData.appliedDate
-                        ).toLocaleDateString()} */}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4" />
-                        <span>
-                          Interviewed:{" "}
-                          {format(candidateData?.interviewDate, "dd/MM/yyyy")}
-                        </span>
-                      </div>
+                      {candidateData?.status === "completed" && (
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4" />
+                          <span>
+                            Interviewed:{" "}
+                            {format(candidateData?.interviewDate, "dd/MM/yyyy")}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center space-x-2">
                         <Award className="h-4 w-4" />
                         <span>
                           Status:{" "}
-                          {candidateData?.status.charAt(0).toUpperCase() +
-                            candidateData.status.slice(1)}
+                          {candidateData?.status !== undefined
+                            ? candidateData?.status.charAt(0).toUpperCase() +
+                              candidateData.status.slice(1)
+                            : ""}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div>
+                  {/* <div>
                     <h3 className="font-medium text-gray-900 mb-2">
                       Performance Comparison
                     </h3>
@@ -406,13 +420,12 @@ export function CandidatePerformanceDetail({
                           vs Position Average:
                         </span>
                         <span className="font-medium text-green-600">
-                          {/* +
-                        {(
-                          candidateData.overallScore -
-                          candidateData.comparisonData.positionAverage
-                        ).toFixed(1)}
-                        % */}
-                          --
+                          +
+                          {(
+                            candidateData.overallScore -
+                            candidateData.comparisonData.positionAverage
+                          ).toFixed(1)}
+                          %
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -420,24 +433,22 @@ export function CandidatePerformanceDetail({
                           vs Industry Average:
                         </span>
                         <span className="font-medium text-green-600">
-                          {/* +
-                        {(
-                          candidateData.overallScore -
-                          candidateData.comparisonData.industryAverage
-                        ).toFixed(1)}
-                        % */}
-                          --
+                          +
+                          {(
+                            candidateData.overallScore -
+                            candidateData.comparisonData.industryAverage
+                          ).toFixed(1)}
+                          %
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Percentile Rank:</span>
                         <span className="font-medium text-blue-600">
-                          {/* {candidateData.comparisonData.percentileRank}th */}
-                          --
+                          {candidateData.comparisonData.percentileRank}th
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -446,514 +457,579 @@ export function CandidatePerformanceDetail({
         {loading ? (
           <></>
         ) : (
-          <>
-            {/* Navigation Tabs */}
-            <div className="bg-white rounded-xl shadow-sm mb-8">
-              <div className="border-b border-gray-200">
-                <nav className="flex space-x-8 px-6">
-                  {[
-                    { id: "overview", label: "Overview", icon: Award },
-                    {
-                      id: "responses",
-                      label: "Response Analysis",
-                      icon: MessageSquare,
-                    },
-                    {
-                      id: "skills",
-                      label: "Skill Breakdown",
-                      icon: TrendingUp,
-                    },
-                    {
-                      id: "behavioral",
-                      label: "Behavioral Analysis",
-                      icon: Eye,
-                    },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === tab.id
-                          ? "border-blue-500 text-blue-600"
-                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      }`}
-                    >
-                      <tab.icon className="h-4 w-4" />
-                      <span>{tab.label}</span>
-                    </button>
-                  ))}
-                </nav>
+          candidateData?.status === "completed" && (
+            <>
+              {/* Navigation Tabs */}
+              <div className="bg-white rounded-xl shadow-sm mb-8">
+                <div className="border-b border-gray-200">
+                  <nav className="flex space-x-8 px-6">
+                    {[
+                      { id: "overview", label: "Overview", icon: Award },
+                      {
+                        id: "responses",
+                        label: "Response Analysis",
+                        icon: MessageSquare,
+                      },
+                      {
+                        id: "skills",
+                        label: "Skill Breakdown",
+                        icon: TrendingUp,
+                      },
+                      {
+                        id: "behavioral",
+                        label: "Behavioral Analysis",
+                        icon: Eye,
+                      },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                          activeTab === tab.id
+                            ? "border-blue-500 text-blue-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        }`}
+                      >
+                        <tab.icon className="h-4 w-4" />
+                        <span>{tab.label}</span>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
               </div>
-            </div>
 
-            {/* Tab Content */}
-            {activeTab === "overview" && (
-              <div className="grid lg:grid-cols-3 gap-8">
-                {/* Performance Scores */}
-                <div className="lg:col-span-2">
-                  <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+              {/* Tab Content */}
+              {activeTab === "overview" && (
+                <div className="grid lg:grid-cols-3 gap-8">
+                  {/* Performance Scores */}
+                  <div className="lg:col-span-2">
+                    <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+                      <h2 className="text-xl font-bold text-gray-900 mb-6">
+                        Performance Breakdown
+                      </h2>
+                      <div className="space-y-6">
+                        {[
+                          {
+                            label: "Communication Skills",
+                            score:
+                              candidateData?.performanceBreakdown
+                                ?.communicationSkills
+                                ?.overallAveragePercentage ?? 0,
+                            icon: "💬",
+                          },
+                          {
+                            label: "Technical Knowledge",
+                            score:
+                              candidateData?.performanceBreakdown
+                                ?.technicalKnowledge
+                                ?.overallAveragePercentage ?? 0,
+                            icon: "🔧",
+                          },
+                          {
+                            label: "Body Language",
+                            score:
+                              candidateData?.performanceBreakdown?.body_language
+                                ?.overallAveragePercentage ?? 0,
+                            icon: "👤",
+                          },
+                          {
+                            label: "Confidence Level",
+                            score:
+                              candidateData?.performanceBreakdown
+                                ?.confidenceLevel?.overallAveragePercentage ??
+                              0,
+                            icon: "💪",
+                          },
+                          {
+                            label: "Professional Attire",
+                            score:
+                              candidateData?.performanceBreakdown?.culturalFit
+                                ?.overallAveragePercentage ?? 0,
+                            icon: "👔",
+                          },
+                        ].map((item, index) => (
+                          <div key={index}>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-3">
+                                <span className="text-2xl">{item.icon}</span>
+                                <span className="font-medium text-gray-900">
+                                  {item.label}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <span className="font-bold text-gray-900">
+                                  {item.score}%
+                                </span>
+                                <span
+                                  className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
+                                    item.score
+                                  )}`}
+                                >
+                                  {getScoreGrade(item.score)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-3">
+                              <div
+                                className={`h-3 rounded-full transition-all duration-1000 ${
+                                  item.score >= 90
+                                    ? "bg-green-500"
+                                    : item.score >= 80
+                                    ? "bg-blue-500"
+                                    : item.score >= 70
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                                }`}
+                                style={{ width: `${item.score}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* AI Feedback */}
+                    <div className="bg-white rounded-xl shadow-sm p-6">
+                      <h2 className="text-xl font-bold text-gray-900 mb-6">
+                        AI Evaluation Summary
+                      </h2>
+                      <div className="bg-blue-50 p-6 rounded-xl mb-6">
+                        <p className="text-gray-700 leading-relaxed">
+                          {candidateData?.aiEvaluationSummary?.summary}
+                        </p>
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="font-semibold text-green-800 mb-3 flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span>Key Strengths</span>
+                          </h3>
+                          <ul className="space-y-2">
+                            {candidateData?.aiEvaluationSummary?.keyStrengths?.map(
+                              (strength, index) => (
+                                <li
+                                  key={index}
+                                  className="text-sm text-gray-700 flex items-start space-x-2"
+                                >
+                                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span>{strength}</span>
+                                </li>
+                              )
+                            )}
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold text-blue-800 mb-3 flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <span>Areas for Growth</span>
+                          </h3>
+                          <ul className="space-y-2">
+                            {candidateData?.aiEvaluationSummary?.areasOfGrowth?.map(
+                              (improvement, index) => (
+                                <li
+                                  key={index}
+                                  className="text-sm text-gray-700 flex items-start space-x-2"
+                                >
+                                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span>{improvement}</span>
+                                </li>
+                              )
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Stats */}
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-xl shadow-sm p-6">
+                      <h3 className="font-semibold text-gray-900 mb-4">
+                        Quick Stats
+                      </h3>
+                      <div className="space-y-4">
+                        {Object.entries(candidateData?.quickStats).map(
+                          ([skill, data]: any) => (
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">
+                                {camelToLabel(skill)}
+                              </span>
+                              <span className="font-semibold text-green-600">
+                                {data}
+                              </span>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm p-6">
+                      <h3 className="font-semibold text-gray-900 mb-4">
+                        Recommendation
+                      </h3>
+                      <div className="text-center">
+                        <div className="bg-green-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                          <Award className="h-8 w-8 text-green-600" />
+                        </div>
+                        <div className="text-lg font-bold text-green-800 mb-2">
+                          {candidateData?.recommendations?.recommendation}
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {candidateData?.recommendations?.summary}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm p-6">
+                      <h3 className="font-semibold text-gray-900 mb-4">
+                        Next Steps
+                      </h3>
+                      <div className="space-y-3">
+                        <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm">
+                          Schedule Technical Round
+                        </button>
+                        <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                          Send to Hiring Manager
+                        </button>
+                        <button className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                          Request References
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "responses" && (
+                <div className="space-y-6">
+                  {candidateData?.StudentInterviewAnswer &&
+                    candidateData?.StudentInterviewAnswer?.filter(
+                      (que) => que?.answer?.length > 0
+                    ).map((response, index) => (
+                      <div
+                        key={response?.id}
+                        className="bg-white rounded-xl shadow-sm p-6"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                Question {index + 1}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                {response?.responseTime}s
+                              </span>
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
+                                  response?.score
+                                )}`}
+                              >
+                                {response?.score}%
+                              </span>
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-3">
+                              {response?.Question?.question}
+                            </h3>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                              <Video className="h-4 w-4" />
+                            </button>
+                            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                              <Mic className="h-4 w-4" />
+                            </button>
+                            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                              <Play className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                          <h4 className="font-medium text-gray-900 mb-2">
+                            Candidate Response:
+                          </h4>
+                          <p className="text-gray-700 leading-relaxed">
+                            {response?.answer}
+                          </p>
+                        </div>
+
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-blue-900 mb-2">
+                            AI Analysis:
+                          </h4>
+                          <p className="text-blue-800 text-sm">
+                            {response.aiEvaluation}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              {activeTab === "skills" && (
+                <div className="grid lg:grid-cols-2 gap-8">
+                  <div className="bg-white rounded-xl shadow-sm p-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-6">
-                      Performance Breakdown
+                      Skill Assessment
                     </h2>
                     <div className="space-y-6">
-                      {/* {[
-                    {
-                      label: "Communication Skills",
-                      score: candidateData.evaluation.communication,
-                      icon: "💬",
-                    },
-                    {
-                      label: "Technical Knowledge",
-                      score: candidateData.evaluation.technical,
-                      icon: "🔧",
-                    },
-                    {
-                      label: "Body Language",
-                      score: candidateData.evaluation.bodyLanguage,
-                      icon: "👤",
-                    },
-                    {
-                      label: "Confidence Level",
-                      score: candidateData.evaluation.confidence,
-                      icon: "💪",
-                    },
-                    {
-                      label: "Professional Attire",
-                      score: candidateData.evaluation.attire,
-                      icon: "👔",
-                    },
-                  ].map((item, index) => (
-                    <div key={index}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-2xl">{item.icon}</span>
-                          <span className="font-medium text-gray-900">
-                            {item.label}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="font-bold text-gray-900">
-                            {item.score}%
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
-                              item.score
-                            )}`}
-                          >
-                            {getScoreGrade(item.score)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className={`h-3 rounded-full transition-all duration-1000 ${
-                            item.score >= 90
-                              ? "bg-green-500"
-                              : item.score >= 80
-                              ? "bg-blue-500"
-                              : item.score >= 70
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                          style={{ width: `${item.score}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))} */}
-                      --
+                      {Object.entries(candidateData?.performanceBreakdown).map(
+                        ([skill, data]: any) => {
+                          if (
+                            [
+                              "culturalFit",
+                              "behavior",
+                              "body_language",
+                            ].includes(skill)
+                          )
+                            return;
+                          else
+                            return (
+                              <div key={skill}>
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="font-medium text-gray-900 capitalize">
+                                      {camelToLabel(skill)}
+                                    </span>
+                                    {getTrendIcon(skill)}
+                                  </div>
+                                  <span
+                                    className={`font-bold ${getScoreColor(
+                                      data.overallAveragePercentage
+                                    )}`}
+                                  >
+                                    {data.overallAveragePercentage ?? 0}%
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                  <div
+                                    className={`h-2 rounded-full ${
+                                      data.overallAveragePercentage >= 90
+                                        ? "bg-green-500"
+                                        : data.overallAveragePercentage >= 80
+                                        ? "bg-blue-500"
+                                        : data.overallAveragePercentage >= 70
+                                        ? "bg-yellow-500"
+                                        : "bg-red-500"
+                                    }`}
+                                    style={{
+                                      width: `${data.overallAveragePercentage}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                                <p className="text-sm text-gray-600">
+                                  {data.summary}
+                                </p>
+                              </div>
+                            );
+                        }
+                      )}
                     </div>
                   </div>
 
-                  {/* AI Feedback */}
                   <div className="bg-white rounded-xl shadow-sm p-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-6">
-                      AI Evaluation Summary
+                      Skill Comparison
                     </h2>
-                    --
-                    {/* <div className="bg-blue-50 p-6 rounded-xl mb-6">
-                  <p className="text-gray-700 leading-relaxed">
-                    {candidateData.evaluation.feedback}
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-semibold text-green-800 mb-3 flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span>Key Strengths</span>
-                    </h3>
-                    <ul className="space-y-2">
-                      {candidateData.evaluation.strengths.map(
-                        (strength, index) => (
-                          <li
-                            key={index}
-                            className="text-sm text-gray-700 flex items-start space-x-2"
-                          >
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <span>{strength}</span>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-blue-800 mb-3 flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span>Areas for Growth</span>
-                    </h3>
-                    <ul className="space-y-2">
-                      {candidateData.evaluation.improvements.map(
-                        (improvement, index) => (
-                          <li
-                            key={index}
-                            className="text-sm text-gray-700 flex items-start space-x-2"
-                          >
-                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <span>{improvement}</span>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                </div> */}
-                  </div>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="space-y-6">
-                  <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="font-semibold text-gray-900 mb-4">
-                      Quick Stats
-                    </h3>
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">
-                          Response Quality
-                        </span>
-                        <span className="font-semibold text-green-600">
-                          Excellent
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">
-                          Technical Depth
-                        </span>
-                        <span className="font-semibold text-green-600">
-                          Advanced
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">
-                          Communication
-                        </span>
-                        <span className="font-semibold text-blue-600">
-                          Very Good
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">
-                          Cultural Fit
-                        </span>
-                        <span className="font-semibold text-green-600">
-                          Strong Match
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="font-semibold text-gray-900 mb-4">
-                      Recommendation
-                    </h3>
-                    <div className="text-center">
-                      <div className="bg-green-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                        <Award className="h-8 w-8 text-green-600" />
-                      </div>
-                      <div className="text-lg font-bold text-green-800 mb-2">
-                        Highly Recommended
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        {/* Exceptional candidate with strong technical skills and
-                        excellent communication. Recommended for immediate
-                        consideration. */}
-                        --
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="font-semibold text-gray-900 mb-4">
-                      Next Steps
-                    </h3>
-                    <div className="space-y-3">
-                      <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm">
-                        Schedule Technical Round
-                      </button>
-                      <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                        Send to Hiring Manager
-                      </button>
-                      <button className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors text-sm">
-                        Request References
-                      </button>
+                      {Object.entries(candidateData?.performanceBreakdown).map(
+                        ([skill, data]: any) => {
+                          if (
+                            [
+                              "culturalFit",
+                              "behavior",
+                              "body_language",
+                            ].includes(skill)
+                          )
+                            return;
+                          else
+                            return (
+                              <div
+                                key={skill}
+                                className="border border-gray-200 rounded-lg p-4"
+                              >
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="font-medium text-gray-900">
+                                    {camelToLabel(skill)}
+                                  </span>
+                                  <span className="text-sm text-gray-500">
+                                    vs Average
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-4">
+                                  <div className="flex-1">
+                                    <div className="flex justify-between text-sm mb-1">
+                                      <span>
+                                        Candidate:{" "}
+                                        {data?.overallAveragePercentage}%
+                                      </span>
+                                      <span>Average: 72%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                      <div
+                                        className="bg-blue-600 h-2 rounded-full"
+                                        style={{
+                                          width: `${
+                                            (data?.overallAveragePercentage /
+                                              100) *
+                                            100
+                                          }%`,
+                                        }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={`text-sm font-medium ${
+                                      data?.overallAveragePercentage > 72
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                    }`}
+                                  >
+                                    {data?.overallAveragePercentage > 72
+                                      ? "+"
+                                      : ""}
+                                    {(
+                                      data?.overallAveragePercentage - 72
+                                    ).toFixed(1)}
+                                    %
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                        }
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {activeTab === "responses" && (
-              <div className="space-y-6">
-                {candidateData?.StudentInterviewAnswer?.filter(
-                  (que) => que?.answer?.length > 0
-                ).map((response: any, index: number) => (
-                  <div
-                    key={response.id}
-                    className="bg-white rounded-xl shadow-sm p-6"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                            Question {index + 1}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {response.responseTime}s
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${getScoreColor(
-                              response.score
-                            )}`}
-                          >
-                            {response.score}%
-                          </span>
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-3">
-                          {response.Question?.question}
+              {activeTab === "behavioral" && (
+                <div className="grid lg:grid-cols-2 gap-8">
+                  <div className="bg-white rounded-xl shadow-sm p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-6">
+                      Behavioral Analysis
+                    </h2>
+                    <div className="space-y-6">
+                      {renderAnalysis(
+                        "Eye Contact",
+                        candidateData?.behavioral_analysis?.eye_contact ?? 0
+                      )}
+                      {renderAnalysis(
+                        "Posture",
+                        candidateData?.behavioral_analysis?.posture ?? 0
+                      )}
+                      {renderAnalysis(
+                        "Gestures",
+                        candidateData?.behavioral_analysis?.gestures ?? 0
+                      )}
+                      {renderAnalysis(
+                        "Face Expressions",
+                        candidateData?.behavioral_analysis
+                          ?.facial_expressions ?? 0
+                      )}
+                      {renderAnalysis(
+                        "Voice Tone",
+                        candidateData?.behavioral_analysis?.voice_tone ?? 0
+                      )}
+                      {renderAnalysis(
+                        "Confidence",
+                        candidateData?.behavioral_analysis?.confidence ?? 0
+                      )}
+                      {renderAnalysis(
+                        "Engagement",
+                        candidateData?.behavioral_analysis?.engagement ?? 0
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl shadow-sm p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-6">
+                      Video Analysis Insights
+                    </h2>
+                    <div className="space-y-4">
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <h3 className="font-medium text-green-800 mb-2">
+                          Positive Indicators
                         </h3>
+                        <ul className="text-sm text-green-700 space-y-1">
+                          {candidateData?.video_analysis_insights?.positive_indicators
+                            ?.slice(1)
+                            ?.map((item, i) => (
+                              <li key={i}>• {item}</li>
+                            ))}
+                        </ul>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                          <Video className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                          <Mic className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                          <Play className="h-4 w-4" />
-                        </button>
+
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h3 className="font-medium text-blue-800 mb-2">
+                          Areas for Improvement
+                        </h3>
+                        <ul className="text-sm text-blue-700 space-y-1">
+                          {candidateData?.video_analysis_insights?.areas_for_improvement
+                            ?.slice(1)
+                            ?.map((item, i) => (
+                              <li key={i}>• {item}</li>
+                            ))}
+                        </ul>
                       </div>
-                    </div>
 
-                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">
-                        Candidate Response:
-                      </h4>
-                      <p className="text-gray-700 leading-relaxed">
-                        {response.answer}
-                      </p>
-                    </div>
-
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-blue-900 mb-2">
-                        AI Analysis:
-                      </h4>
-                      <p className="text-blue-800 text-sm">
-                        {response.aiEvaluation}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {activeTab === "skills" && (
-              <div className="grid lg:grid-cols-2 gap-8">
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
-                    Skill Assessment
-                  </h2>
-                  <div className="space-y-6">
-                    {/* {Object.entries(candidateData.skillAnalysis).map(
-                  ([skill, data]) => (
-                    <div key={skill}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900">
-                            {skill}
-                          </span>
-                          {getTrendIcon(data.trend)}
-                        </div>
-                        <span
-                          className={`font-bold ${
-                            getScoreColor(data.score).split(" ")[0]
-                          }`}
-                        >
-                          {data.score}%
-                        </span>
+                      <div className="bg-yellow-50 p-4 rounded-lg">
+                        <h3 className="font-medium text-yellow-800 mb-2">
+                          Recommendations
+                        </h3>
+                        <ul className="text-sm text-yellow-700 space-y-1">
+                          {candidateData?.video_analysis_insights?.recommendations?.map(
+                            (item, i) => (
+                              <li key={i}>• {item}</li>
+                            )
+                          )}
+                        </ul>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                        <div
-                          className={`h-2 rounded-full ${
-                            data.score >= 90
-                              ? "bg-green-500"
-                              : data.score >= 80
-                              ? "bg-blue-500"
-                              : data.score >= 70
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                          style={{ width: `${data.score}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-sm text-gray-600">{data.details}</p>
-                    </div>
-                  )
-                )} */}
-                    --
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
-                    Skill Comparison
-                  </h2>
-                  <div className="space-y-4">
-                    {/* {Object.entries(candidateData.skillAnalysis).map(
-                  ([skill, data]) => (
-                    <div
-                      key={skill}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-gray-900">
-                          {skill}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          vs Average
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-1">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Candidate: {data.score}%</span>
-                            <span>Average: 72%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-blue-600 h-2 rounded-full"
-                              style={{ width: `${(data.score / 100) * 100}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                        <span
-                          className={`text-sm font-medium ${
-                            data.score > 72 ? "text-green-600" : "text-red-600"
-                          }`}
-                        >
-                          {data.score > 72 ? "+" : ""}
-                          {(data.score - 72).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  )
-                )} */}
-                    --
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "behavioral" && (
-              <div className="grid lg:grid-cols-2 gap-8">
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
-                    Behavioral Analysis
-                  </h2>
-                  <div className="space-y-6">
-                    {/* {Object.entries(candidateData.behavioralAnalysis).map(
-                  ([behavior, score]) => (
-                    <div key={behavior}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900 capitalize">
-                          {behavior.replace(/([A-Z])/g, " $1").trim()}
-                        </span>
-                        <span
-                          className={`font-bold ${
-                            getScoreColor(score).split(" ")[0]
-                          }`}
-                        >
-                          {score}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full ${
-                            score >= 90
-                              ? "bg-green-500"
-                              : score >= 80
-                              ? "bg-blue-500"
-                              : score >= 70
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                          style={{ width: `${score}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )
-                )} */}
-                    --
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
-                    Video Analysis Insights
-                  </h2>
-                  <div className="space-y-4">
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-green-800 mb-2">
-                        Positive Indicators
-                      </h3>
-                      <ul className="text-sm text-green-700 space-y-1">
-                        <li>• --</li>
-                        {/* <li>• Maintained excellent eye contact throughout</li>
-                    <li>• Appropriate facial expressions and engagement</li>
-                    <li>• Clear and well-modulated voice tone</li> */}
-                      </ul>
-                    </div>
-
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-blue-800 mb-2">
-                        Areas for Improvement
-                      </h3>
-                      <ul className="text-sm text-blue-700 space-y-1">
-                        {/* <li>• Could use more hand gestures for emphasis</li>
-                    <li>• Occasional fidgeting during complex questions</li>
-                    <li>• Voice pace could be slightly slower for clarity</li> */}
-                        <li>• --</li>
-                      </ul>
-                    </div>
-
-                    <div className="bg-yellow-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-yellow-800 mb-2">
-                        Recommendations
-                      </h3>
-                      <ul className="text-sm text-yellow-700 space-y-1">
-                        {/* <li>• Practice power poses before interviews</li>
-                    <li>• Use deliberate pauses for emphasis</li>
-                    <li>• Incorporate more storytelling techniques</li> */}
-                        <li>• --</li>
-                      </ul>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </>
+              )}
+            </>
+          )
         )}
       </div>
     </div>
   );
 }
+
+const getScoreColor = (score: number) => {
+  if (score >= 90) return "text-green-600 bg-green-100";
+  if (score >= 80) return "text-blue-600 bg-blue-100";
+  if (score >= 70) return "text-yellow-600 bg-yellow-100";
+  return "text-red-600 bg-red-100";
+};
+
+const renderAnalysis = (title: string, score: number) => {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-medium text-gray-900 capitalize">{title}</span>
+        <span className={`font-bold ${getScoreColor(score).split(" ")[0]}`}>
+          {score}%
+        </span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <div
+          className={`h-2 rounded-full ${
+            score >= 90
+              ? "bg-green-500"
+              : score >= 80
+              ? "bg-blue-500"
+              : score >= 70
+              ? "bg-yellow-500"
+              : "bg-red-500"
+          }`}
+          style={{
+            width: `${score}%`,
+          }}
+        ></div>
+      </div>
+    </div>
+  );
+};

@@ -482,16 +482,16 @@ export function InterviewAnalytics() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          {/* <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Pass Rate</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {/* {mockAnalytics.overview.passRate}% */}
+                  {mockAnalytics.overview.passRate}%
                   --
                 </p>
                 <p className="text-sm text-red-600 mt-1">
-                  {/* ↓ 1.8% from last month */}
+                  ↓ 1.8% from last month
                   --
                 </p>
               </div>
@@ -499,7 +499,7 @@ export function InterviewAnalytics() {
                 <TrendingUp className="h-6 w-6 text-yellow-600" />
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between">
@@ -843,11 +843,10 @@ export function InterviewAnalytics() {
                       Top Performing Role
                     </span>
                   </div>
-                  <p className="text-sm text-green-700">
-                    {/* {mockAnalytics.overview.topPerformingJob} has the highest
-                    average score at 82.4% */}
-                    --
-                  </p>
+                  {/* <p className="text-sm text-green-700">
+                    {mockAnalytics.overview.topPerformingJob} has the highest
+                    average score at 82.4%
+                  </p> */}
                 </div>
 
                 <div className="p-3 bg-blue-50 rounded-lg">

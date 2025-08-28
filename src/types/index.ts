@@ -63,6 +63,7 @@ export interface Candidate {
   email: string;
   phone: string;
   mobile?: string;
+  interviewVideoLink?: string;
   appliedDate: any;
   interviewDate: any;
   duration: number;
@@ -87,15 +88,33 @@ export interface Candidate {
   location?: string;
   attemptedQuestions: number;
   JobPost?: JobPost;
-  StudentInterviewAnswer?: StudentInterviewAnswer[]
+  StudentInterviewAnswer?: StudentInterviewAnswer[];
+  aiEvaluationSummary?: {
+    summary?: string;
+    keyStrengths?: string[];
+    areasOfGrowth?: string[];
+  }
+  performanceBreakdown?: any;
+  quickStats: any;
+  recommendations?: {
+    summary?: string;
+    recommendation?: string;
+  }
+  behavioral_analysis: any;
+  video_analysis_insights?: {
+    areas_for_improvement?: string[];
+    positive_indicators?: string[];
+    recommendations?: string[];
+  }
 }
 
 export interface StudentInterviewAnswer {
+  id: string;
   answer: string;
   aiEvaluation: string;
   score: number;
   responseTime: number;
-  Question: InterviewQuestion[]
+  Question: InterviewQuestion
 }
 
 export interface InterviewSession {

@@ -222,7 +222,7 @@ export const useJobPosts = () => {
   // Get job description from uploaded pdf using chatgtp openai
   const getJobDescriptionFromPDf = useCallback(
     async (
-      jobDescription: string
+      pdfText: string
     ) => {
       setLoading(true);
       setError(null);
@@ -232,11 +232,19 @@ export const useJobPosts = () => {
           messages: [
             {
               role: "system",
-              content: "You are an HR assistant who extracts job descriptions.",
+              content: "You are an expert at reading job postings and extracting the actual job description text, no matter what the section heading is."
             },
             {
               role: "user",
-              content: `Extract the job description in JSON format from the following PDF content:\n\n${jobDescription}`,
+              // content: `Extract the job description as "job_description" in JSON format from the following PDF content:\n\n${pdfText}`,
+              content: `
+From the following text, find the section that describes the job role (this could be labeled as 'Overview', 'Description', 'About the Role', or similar).
+Return it in JSON with a single key: job_description.
+If there are multiple candidate sections, merge them into one continuous description.
+
+PDF text:
+"""${pdfText}"""
+`
             },
           ],
           // max_tokens: 150,
