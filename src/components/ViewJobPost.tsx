@@ -68,7 +68,8 @@ export function ViewJobPost() {
         salaryMax: job.salary?.max?.toString() || "",
         currency: job.salary?.currency || "USD",
       });
-      setQuestions([...(job.questions ?? [])]);
+      let damiquestions = job.questions?.sort((a: any, b: any) => a.id - b.id);
+      setQuestions([...damiquestions]);
     }
   }, [state.currentJobPost]);
 
