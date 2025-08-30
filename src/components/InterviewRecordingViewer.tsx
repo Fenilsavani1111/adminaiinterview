@@ -517,8 +517,7 @@ export function InterviewRecordingViewer({
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Duration</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {Math.floor((interviewData?.duration || 0) / 60)}{" "}
-                          minutes
+                          {interviewData?.duration || 0} minutes
                         </span>
                       </div>
                     </>

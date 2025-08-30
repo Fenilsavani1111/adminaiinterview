@@ -218,7 +218,6 @@ export function CandidatePerformanceDetail({
     try {
       setLoading(true);
       const data: any = await getCandidateById(candidateId);
-      console.log("data", data);
       if (data?.candidate) setCandidateData(data?.candidate ?? {});
       // setCandidateData({ ...MockcandidateData });
       setLoading(false);
@@ -236,7 +235,7 @@ export function CandidatePerformanceDetail({
       ignore = true;
     };
   }, []);
-  console.log("candidateData", candidateData);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
