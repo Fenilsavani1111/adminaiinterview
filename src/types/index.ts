@@ -115,6 +115,8 @@ export interface StudentInterviewAnswer {
   score: number;
   responseTime: number;
   Question: InterviewQuestion
+  start: number;
+  end: number;
 }
 
 export interface InterviewSession {
