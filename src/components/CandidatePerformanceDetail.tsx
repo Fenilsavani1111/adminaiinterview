@@ -402,7 +402,7 @@ export function CandidatePerformanceDetail({
                           Status:{" "}
                           {candidateData?.status !== undefined
                             ? candidateData?.status.charAt(0).toUpperCase() +
-                              candidateData.status.slice(1)
+                              candidateData?.status.slice(1)
                             : ""}
                         </span>
                       </div>

@@ -50,6 +50,7 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
   const [selectedQuestion, setSelectedQuestion] = useState(0);
   const [showTranscript, setShowTranscript] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-green-600";
@@ -113,6 +114,16 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
     const v = videoRef.current;
     if (!v) return;
     v.currentTime = time;
+  };
+
+  const handleSeek = (clientX: number) => {
+    const bar = document.getElementById("progress-bar");
+    if (!bar || !duration) return;
+
+    const rect = bar.getBoundingClientRect();
+    const pct = (clientX - rect.left) / rect.width;
+    const newTime = Math.min(Math.max(0, pct), 1) * duration;
+    seekTo(newTime);
   };
 
   const setRate = (rate: number) => {
@@ -349,7 +360,18 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
               playsInline
               preload="metadata"
               onClick={togglePlay}
+              onLoadedData={() => setIsLoadingVideo(false)}
+              onCanPlay={() => setIsLoadingVideo(false)}
+              onPlaying={() => setIsLoadingVideo(false)}
+              onWaiting={() => setIsLoadingVideo(true)}
             />
+
+            {/* Loading Overlay */}
+            {isLoadingVideo && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-30">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
+              </div>
+            )}
 
             {/* Error banner */}
             {error && (
@@ -379,24 +401,21 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
             {/* Progress bar */}
             <div
               className="relative h-2 w-full cursor-pointer rounded-full bg-white/20"
+              id="progress-bar"
               onMouseDown={(e) => {
-                const rect = (
-                  e.target as HTMLDivElement
-                ).getBoundingClientRect();
-                const pct = (e.clientX - rect.left) / rect.width;
                 setSeeking(true);
-                seekTo(pct * (duration || 0));
+                handleSeek(e.clientX);
+
+                const onMove = (ev: MouseEvent) => handleSeek(ev.clientX);
+                const onUp = () => {
+                  setSeeking(false);
+                  window.removeEventListener("mousemove", onMove);
+                  window.removeEventListener("mouseup", onUp);
+                };
+
+                window.addEventListener("mousemove", onMove);
+                window.addEventListener("mouseup", onUp);
               }}
-              onMouseMove={(e) => {
-                if (!seeking) return;
-                const rect = (
-                  e.target as HTMLDivElement
-                ).getBoundingClientRect();
-                const pct = (e.clientX - rect.left) / rect.width;
-                seekTo(Math.min(Math.max(0, pct), 1) * (duration || 0));
-              }}
-              onMouseUp={() => setSeeking(false)}
-              onMouseLeave={() => setSeeking(false)}
             >
               <div
                 className="absolute inset-y-0 left-0 rounded-full"
