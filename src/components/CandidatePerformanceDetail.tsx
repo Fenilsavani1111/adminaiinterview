@@ -358,11 +358,15 @@ export function CandidatePerformanceDetail({
                           Questions Answered
                         </div>
                         <div className="flex justify-center mt-2">
-                          {[...Array(5)].map((_, i) => (
+                          {[
+                            ...Array(
+                              candidateData?.StudentInterviewAnswer?.length
+                            ),
+                          ].map((_, i) => (
                             <Star
                               key={i}
                               className={`h-4 w-4 ${
-                                i < 4
+                                i < candidateData?.attemptedQuestions
                                   ? "text-yellow-500 fill-current"
                                   : "text-gray-300"
                               }`}
@@ -724,7 +728,7 @@ export function CandidatePerformanceDetail({
                                   response?.score
                                 )}`}
                               >
-                                {response?.score}%
+                                {response?.score} out of 10
                               </span>
                             </div>
                             <h3 className="text-lg font-medium text-gray-900 mb-3">

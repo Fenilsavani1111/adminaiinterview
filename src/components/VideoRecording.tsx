@@ -642,7 +642,7 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
                           item.score
                         )}`}
                       >
-                        {item.score}%
+                        {item.score} out of 10
                       </span>
                       {/* <span className="text-xs text-gray-500">
                               {formatTime(item.startTime)}
