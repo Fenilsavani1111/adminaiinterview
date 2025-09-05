@@ -364,7 +364,10 @@ export function CandidatePerformanceDetail({
                               className={`h-4 w-4 ${
                                 i <
                                 Math.round(
-                                  (attemptedQuestions / totalQuestions) * 5
+                                  (candidateData?.attemptedQuestions /
+                                    (candidateData?.StudentInterviewAnswer
+                                      ?.length || 0)) *
+                                    5
                                 )
                                   ? "text-yellow-500 fill-current"
                                   : "text-gray-300"
