@@ -3,7 +3,7 @@ import { JobPost } from '../types';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // Adjust this to match your server port
+  baseURL: import.meta.env.VITE_AIINTERVIEW_API_KEY, // Adjust this to match your server port
   headers: {
     'Content-Type': 'application/json',
   },

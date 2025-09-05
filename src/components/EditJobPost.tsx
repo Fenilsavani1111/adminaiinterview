@@ -16,6 +16,29 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+export let defaultQuestions: InterviewQuestion[] = [
+  {
+    id: "aboutself",
+    question: "Tell me about yourself.",
+    type: "behavioral",
+    expectedDuration: 120,
+    difficulty: "easy",
+    category: "Introduction",
+    suggestedAnswers: [
+      "Summarize professional background",
+      "Highlight key achievements",
+      "Mention career goals",
+    ],
+    evaluationCriteria: [
+      "Clarity of communication",
+      "Relevance to role",
+      "Confidence",
+    ],
+    isRequired: true,
+    order: 1,
+  },
+];
+
 export function EditJobPost() {
   const { state, dispatch } = useApp();
   const {
@@ -46,7 +69,9 @@ export function EditJobPost() {
     salaryMax: "",
     currency: "USD",
   });
-  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([
+    ...defaultQuestions,
+  ]);
   const [editingQuestion, setEditingQuestion] = useState<
     InterviewQuestion | undefined
   >(undefined);
@@ -90,7 +115,7 @@ export function EditJobPost() {
       };
       const generatedQuestions: InterviewQuestion[] =
         await getJobPostOpenaiQuestions(jobPostData);
-      setQuestions(generatedQuestions);
+      setQuestions([...defaultQuestions, ...generatedQuestions]);
       setQuestionsFromJdLoading(false);
     } catch (error) {
       setQuestionsFromJdLoading(false);
@@ -207,7 +232,8 @@ export function EditJobPost() {
         salaryMax: job.salary?.max?.toString() || "",
         currency: job.salary?.currency || "USD",
       });
-      setQuestions([...(job.questions ?? [])]);
+      let damiquestions = job.questions?.sort((a: any, b: any) => a.id - b.id);
+      setQuestions([...damiquestions]);
     }
   }, [state.currentJobPost]);
 
@@ -886,12 +912,14 @@ export function EditJobPost() {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </button>
-                                <button
-                                  onClick={() => deleteQuestion(question.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
+                                {question.id !== "aboutself" && (
+                                  <button
+                                    onClick={() => deleteQuestion(question.id)}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                )}
                               </div>
                             </div>
 

@@ -13,6 +13,7 @@ import { JobPost, InterviewQuestion } from "../types";
 import { useJobPosts } from "../hooks/useJobPosts";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
+import { defaultQuestions } from "./EditJobPost";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -45,7 +46,9 @@ export function CreateJobPost() {
     salaryMax: "",
     currency: "USD",
   });
-  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([
+    ...defaultQuestions,
+  ]);
   const [editingQuestion, setEditingQuestion] = useState<
     InterviewQuestion | undefined
   >(undefined);
@@ -89,7 +92,7 @@ export function CreateJobPost() {
       };
       const generatedQuestions: InterviewQuestion[] =
         await getJobPostOpenaiQuestions(jobPostData);
-      setQuestions(generatedQuestions);
+      setQuestions([...defaultQuestions, ...generatedQuestions]);
       setQuestionsFromJdLoading(false);
     } catch (error) {
       setQuestionsFromJdLoading(false);
@@ -849,12 +852,14 @@ export function CreateJobPost() {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </button>
-                                <button
-                                  onClick={() => deleteQuestion(question.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
+                                {question.id !== "aboutself" && (
+                                  <button
+                                    onClick={() => deleteQuestion(question.id)}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                )}
                               </div>
                             </div>
 
