@@ -519,250 +519,266 @@ export function JobApplicationsList({
 
         {/* Applications Grid */}
         <div className="grid gap-6">
-          {sortedApplications.map((application) => (
-            <div
-              key={application.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedApplications.includes(application.id)}
-                      onChange={() =>
-                        toggleApplicationSelection(application.id)
-                      }
-                      className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading data...</span>
+            </div>
+          ) : sortedApplications?.length === 0 ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="px-6 py-4 text-center">
+                No application records found.
+              </div>
+            </div>
+          ) : (
+            sortedApplications.map((application) => (
+              <div
+                key={application.id}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <div className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedApplications.includes(application.id)}
+                        onChange={() =>
+                          toggleApplicationSelection(application.id)
+                        }
+                        className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
 
-                    <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                      <span className="text-lg font-bold text-white">
-                        {application.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </span>
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-bold text-gray-900">
-                          {application.name}
-                        </h3>
-                        {application.overallScore &&
-                          application.overallScore >= 90 && (
-                            <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                          )}
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                            application.status
-                          )}`}
-                        >
-                          {application.status.charAt(0).toUpperCase() +
-                            application.status.slice(1)}
+                      <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <span className="text-lg font-bold text-white">
+                          {application.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </span>
                       </div>
 
-                      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                        <div>
-                          <p className="text-sm text-gray-600">Contact</p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {application.email}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {application.phone}
-                          </p>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h3 className="text-lg font-bold text-gray-900">
+                            {application.name}
+                          </h3>
+                          {application.overallScore &&
+                            application.overallScore >= 90 && (
+                              <Star className="h-5 w-5 text-yellow-500 fill-current" />
+                            )}
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                              application.status
+                            )}`}
+                          >
+                            {application.status.charAt(0).toUpperCase() +
+                              application.status.slice(1)}
+                          </span>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Experience</p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {application.experienceLevel}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {application.designation}
-                            {/* at {application.currentCompany} */}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Location</p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {application.location}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Applied:{" "}
-                            {new Date(
-                              application.appliedDate
-                            ).toLocaleDateString()}
-                          </p>
-                        </div>
-                        {application.status === "completed" && (
+
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                           <div>
-                            <p className="text-sm text-gray-600">
-                              Interview Score
+                            <p className="text-sm text-gray-600">Contact</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {application.email}
                             </p>
-                            <div className="flex items-center space-x-2">
-                              <span
-                                className={`text-lg font-bold ${
-                                  getScoreColor(application.overallScore).split(
-                                    " "
-                                  )[0]
-                                }`}
-                              >
-                                {application.overallScore}%
-                              </span>
-                              {application.recommendations && (
+                            <p className="text-sm text-gray-600">
+                              {application.phone}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Experience</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {application.experienceLevel}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {application.designation}
+                              {/* at {application.currentCompany} */}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Location</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {application.location}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Applied:{" "}
+                              {new Date(
+                                application.appliedDate
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                          {application.status === "completed" && (
+                            <div>
+                              <p className="text-sm text-gray-600">
+                                Interview Score
+                              </p>
+                              <div className="flex items-center space-x-2">
                                 <span
-                                  className={`px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
-                                    application.recommendations
-                                      ?.recommendation ?? ""
-                                  )}`}
+                                  className={`text-lg font-bold ${
+                                    getScoreColor(
+                                      application.overallScore
+                                    ).split(" ")[0]
+                                  }`}
                                 >
-                                  {application.recommendations?.recommendation}
+                                  {application.overallScore}%
                                 </span>
+                                {application.recommendations && (
+                                  <span
+                                    className={`px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
+                                      application.recommendations
+                                        ?.recommendation ?? ""
+                                    )}`}
+                                  >
+                                    {
+                                      application.recommendations
+                                        ?.recommendation
+                                    }
+                                  </span>
+                                )}
+                              </div>
+                              {application.interviewDate && (
+                                <p className="text-sm text-gray-600">
+                                  Interviewed:{" "}
+                                  {new Date(
+                                    application.interviewDate
+                                  ).toLocaleDateString()}
+                                </p>
                               )}
                             </div>
-                            {application.interviewDate && (
-                              <p className="text-sm text-gray-600">
-                                Interviewed:{" "}
-                                {new Date(
-                                  application.interviewDate
-                                ).toLocaleDateString()}
-                              </p>
-                            )}
+                          )}
+                        </div>
+
+                        <div className="mb-4">
+                          <p className="text-sm text-gray-600 mb-2">Skills</p>
+                          <div className="flex flex-wrap gap-2">
+                            {application.skills.map((skill, index) => (
+                              <span
+                                key={index}
+                                className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {application.performanceBreakdown && (
+                          <div className="mb-4">
+                            <p className="text-sm text-gray-600 mb-2">
+                              Performance Breakdown
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              {Object.entries(application.scores).map(
+                                ([skill, score]) => (
+                                  <div
+                                    key={skill}
+                                    className="flex items-center justify-between"
+                                  >
+                                    <span className="text-xs text-gray-600 capitalize">
+                                      {skill.replace(/([A-Z])/g, " $1").trim()}
+                                    </span>
+                                    <div className="flex items-center space-x-2">
+                                      <div className="w-12 bg-gray-200 rounded-full h-1.5">
+                                        <div
+                                          className={`h-1.5 rounded-full ${
+                                            score >= 90
+                                              ? "bg-green-500"
+                                              : score >= 80
+                                              ? "bg-blue-500"
+                                              : score >= 70
+                                              ? "bg-yellow-500"
+                                              : "bg-red-500"
+                                          }`}
+                                          style={{ width: `${score}%` }}
+                                        ></div>
+                                      </div>
+                                      <span className="text-xs font-medium text-gray-900 w-6">
+                                        {score}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {application.notes && (
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <p className="text-sm text-gray-700">
+                              {application.notes}
+                            </p>
                           </div>
                         )}
                       </div>
-
-                      <div className="mb-4">
-                        <p className="text-sm text-gray-600 mb-2">Skills</p>
-                        <div className="flex flex-wrap gap-2">
-                          {application.skills.map((skill, index) => (
-                            <span
-                              key={index}
-                              className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium"
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {application.performanceBreakdown && (
-                        <div className="mb-4">
-                          <p className="text-sm text-gray-600 mb-2">
-                            Performance Breakdown
-                          </p>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {Object.entries(application.scores).map(
-                              ([skill, score]) => (
-                                <div
-                                  key={skill}
-                                  className="flex items-center justify-between"
-                                >
-                                  <span className="text-xs text-gray-600 capitalize">
-                                    {skill.replace(/([A-Z])/g, " $1").trim()}
-                                  </span>
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-12 bg-gray-200 rounded-full h-1.5">
-                                      <div
-                                        className={`h-1.5 rounded-full ${
-                                          score >= 90
-                                            ? "bg-green-500"
-                                            : score >= 80
-                                            ? "bg-blue-500"
-                                            : score >= 70
-                                            ? "bg-yellow-500"
-                                            : "bg-red-500"
-                                        }`}
-                                        style={{ width: `${score}%` }}
-                                      ></div>
-                                    </div>
-                                    <span className="text-xs font-medium text-gray-900 w-6">
-                                      {score}%
-                                    </span>
-                                  </div>
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {application.notes && (
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <p className="text-sm text-gray-700">
-                            {application.notes}
-                          </p>
-                        </div>
-                      )}
                     </div>
-                  </div>
 
-                  <div className="flex flex-col items-end space-y-2">
-                    <div className="flex items-center space-x-2">
-                      {application.hasRecording && (
+                    <div className="flex flex-col items-end space-y-2">
+                      <div className="flex items-center space-x-2">
+                        {application.hasRecording && (
+                          <button
+                            onClick={() =>
+                              setViewingRecording({
+                                id: application.id,
+                                name: application.name,
+                              })
+                            }
+                            className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors"
+                            title="View Recording"
+                          >
+                            <Video className="h-5 w-5" />
+                          </button>
+                        )}
                         <button
-                          onClick={() =>
-                            setViewingRecording({
-                              id: application.id,
-                              name: application.name,
-                            })
-                          }
-                          className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors"
-                          title="View Recording"
+                          onClick={() => setSelectedApplication(application)}
+                          className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="View Details"
                         >
-                          <Video className="h-5 w-5" />
+                          <Eye className="h-5 w-5" />
                         </button>
-                      )}
-                      <button
-                        onClick={() => setSelectedApplication(application)}
-                        className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="View Details"
-                      >
-                        <Eye className="h-5 w-5" />
-                      </button>
-                      {application.resumeUrl && (
+                        {application.resumeUrl && (
+                          <button
+                            onClick={() =>
+                              handleDownloadResume(
+                                application.resumeUrl,
+                                application.name
+                              )
+                            }
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                            title="Download Resume"
+                          >
+                            <FileText className="h-5 w-5" />
+                          </button>
+                        )}
                         <button
-                          onClick={() =>
-                            handleDownloadResume(
-                              application.resumeUrl,
-                              application.name
-                            )
-                          }
+                          onClick={() => {
+                            //  window.location.href = `mailto:candidate@example.com?subject=Interview Opportunity&body=Hi, we’d like to connect...`
+                            window.location.href = `mailto:${application.email}`;
+                          }}
                           className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                          title="Download Resume"
+                          title="Contact Candidate"
                         >
-                          <FileText className="h-5 w-5" />
+                          <Mail className="h-5 w-5" />
                         </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          //  window.location.href = `mailto:candidate@example.com?subject=Interview Opportunity&body=Hi, we’d like to connect...`
-                          window.location.href = `mailto:${application.email}`;
-                        }}
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                        title="Contact Candidate"
-                      >
-                        <Mail className="h-5 w-5" />
-                      </button>
-                      {application?.linkedinUrl && (
-                        <button
-                          onClick={() =>
-                            window.open(application.linkedinUrl, "_blank")
-                          }
-                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                          title="View LinkedIn"
-                        >
-                          <Linkedin className="h-5 w-5" />
-                        </button>
-                      )}
+                        {application?.linkedinUrl && (
+                          <button
+                            onClick={() =>
+                              window.open(application.linkedinUrl, "_blank")
+                            }
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                            title="View LinkedIn"
+                          >
+                            <Linkedin className="h-5 w-5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Bulk Actions */}

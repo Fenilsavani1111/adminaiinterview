@@ -563,226 +563,247 @@ export function JobInterviewListing({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {sortedInterviews.map((interview: Candidate) => (
-                  <tr key={interview.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedCandidates.includes(interview.id)}
-                        onChange={() => toggleCandidateSelection(interview.id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-700">
-                            {interview.name
-                              .split(" ")
-                              .map((n: string) => n[0])
-                              .join("")}
-                          </span>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {interview.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {interview.email}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {interview.experienceLevel}
-                            {/* {interview.experience} experience */}
-                          </div>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {interview.skills
-                              .slice(0, 3)
-                              .map((skill: string, index: number) => (
-                                <span
-                                  key={index}
-                                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
-                            {interview.skills.length > 3 && (
-                              <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
-                                +{interview.skills.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {interview?.status === "completed" && (
-                        <div className="text-center">
-                          <div
-                            className={`text-2xl font-bold mb-1 ${
-                              getScoreColor(interview.overallScore ?? 0).split(
-                                " "
-                              )[0]
-                            }`}
-                          >
-                            {interview.overallScore ?? 0}%
-                          </div>
-                          <div className="flex items-center justify-center">
-                            {interview.overallScore >= 90 && (
-                              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                            )}
-                            {interview.overallScore >= 85 &&
-                              interview.overallScore < 90 && (
-                                <TrendingUp className="h-4 w-4 text-green-500" />
-                              )}
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {interview?.performanceBreakdown && (
-                        <div className="space-y-2">
-                          {Object.entries(interview.scores).map(
-                            ([skill, score]) => (
-                              <div
-                                key={skill}
-                                className="flex items-center justify-between"
-                              >
-                                <span className="text-xs text-gray-600 capitalize w-20">
-                                  {skill.replace(/([A-Z])/g, " $1").trim()}
-                                </span>
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                                    <div
-                                      className={`h-1.5 rounded-full ${
-                                        score >= 90
-                                          ? "bg-green-500"
-                                          : score >= 80
-                                          ? "bg-blue-500"
-                                          : score >= 70
-                                          ? "bg-yellow-500"
-                                          : "bg-red-500"
-                                      }`}
-                                      style={{ width: `${score}%` }}
-                                    ></div>
-                                  </div>
-                                  <span className="text-xs font-medium text-gray-900 w-8">
-                                    {score}%
-                                  </span>
-                                </div>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {interview.interviewDate === null ? (
-                          <></>
-                        ) : (
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Calendar className="h-4 w-4 text-gray-400" />
-                            <span>
-                              {new Date(
-                                interview.interviewDate
-                              ).toLocaleDateString()}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center space-x-2 mb-1">
-                          <Clock className="h-4 w-4 text-gray-400" />
-                          <span>{interview.duration ?? 0} minutes</span>
-                        </div>
-                        {interview.appliedDate === null ? (
-                          <></>
-                        ) : (
-                          <div className="text-xs text-gray-500 mt-2">
-                            Applied:{" "}
-                            {new Date(
-                              interview.appliedDate
-                            ).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {interview?.recommendations && (
-                        <div>
-                          <span
-                            className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border text-center ${getRecommendationColor(
-                              interview?.recommendations?.recommendation ?? ""
-                            )}`}
-                          >
-                            {interview.recommendations?.recommendation ?? ""}
-                          </span>
-                          <div className="text-xs text-gray-500 text-center mt-1 max-w-32">
-                            {interview.recommendations?.summary}
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-2">
-                        {interview.hasRecording && (
-                          <button
-                            onClick={() =>
-                              setViewingRecording({
-                                id: interview.id,
-                                name: interview.name,
-                              })
-                            }
-                            className="text-purple-600 hover:text-purple-900 transition-colors"
-                            title="View Recording"
-                          >
-                            <Video className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setSelectedInterview(interview)}
-                          className="text-blue-600 hover:text-blue-900 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {interview?.resumeUrl && (
-                          <button
-                            onClick={() =>
-                              handleDownloadResume(
-                                interview.resumeUrl,
-                                interview.name
-                              )
-                            }
-                            className="text-gray-600 hover:text-gray-900 transition-colors"
-                            title="Download Resume"
-                          >
-                            <FileText className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            //  window.location.href = `mailto:candidate@example.com?subject=Interview Opportunity&body=Hi, we’d like to connect...`
-                            window.location.href = `mailto:${interview.email}`;
-                          }}
-                          className="text-gray-600 hover:text-gray-900 transition-colors"
-                          title="Contact Candidate"
-                        >
-                          <Mail className="h-4 w-4" />
-                        </button>
-                        {interview.linkedinUrl && (
-                          <button
-                            onClick={() =>
-                              window.open(interview.linkedinUrl, "_blank")
-                            }
-                            className="text-gray-600 hover:text-gray-900 transition-colors"
-                            title="View LinkedIn"
-                          >
-                            <Linkedin className="h-4 w-4" />
-                          </button>
-                        )}
+                {loading ? (
+                  <tr>
+                    <td colSpan={7}>
+                      <div className="w-full flex justify-center items-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <span className="ml-3 text-gray-600">
+                          Loading data...
+                        </span>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : sortedInterviews?.length === 0 ? (
+                  <tr>
+                    <td className="px-6 py-4 text-center" colSpan={7}>
+                      No interview records found
+                    </td>
+                  </tr>
+                ) : (
+                  sortedInterviews.map((interview: Candidate) => (
+                    <tr key={interview.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedCandidates.includes(interview.id)}
+                          onChange={() =>
+                            toggleCandidateSelection(interview.id)
+                          }
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-gray-700">
+                              {interview.name
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")}
+                            </span>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {interview.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {interview.email}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {interview.experienceLevel}
+                              {/* {interview.experience} experience */}
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {interview.skills
+                                .slice(0, 3)
+                                .map((skill: string, index: number) => (
+                                  <span
+                                    key={index}
+                                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
+                              {interview.skills.length > 3 && (
+                                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                                  +{interview.skills.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {interview?.status === "completed" && (
+                          <div className="text-center">
+                            <div
+                              className={`text-2xl font-bold mb-1 ${
+                                getScoreColor(
+                                  interview.overallScore ?? 0
+                                ).split(" ")[0]
+                              }`}
+                            >
+                              {interview.overallScore ?? 0}%
+                            </div>
+                            <div className="flex items-center justify-center">
+                              {interview.overallScore >= 90 && (
+                                <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                              )}
+                              {interview.overallScore >= 85 &&
+                                interview.overallScore < 90 && (
+                                  <TrendingUp className="h-4 w-4 text-green-500" />
+                                )}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {interview?.performanceBreakdown && (
+                          <div className="space-y-2">
+                            {Object.entries(interview.scores).map(
+                              ([skill, score]) => (
+                                <div
+                                  key={skill}
+                                  className="flex items-center justify-between"
+                                >
+                                  <span className="text-xs text-gray-600 capitalize w-20">
+                                    {skill.replace(/([A-Z])/g, " $1").trim()}
+                                  </span>
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                                      <div
+                                        className={`h-1.5 rounded-full ${
+                                          score >= 90
+                                            ? "bg-green-500"
+                                            : score >= 80
+                                            ? "bg-blue-500"
+                                            : score >= 70
+                                            ? "bg-yellow-500"
+                                            : "bg-red-500"
+                                        }`}
+                                        style={{ width: `${score}%` }}
+                                      ></div>
+                                    </div>
+                                    <span className="text-xs font-medium text-gray-900 w-8">
+                                      {score}%
+                                    </span>
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {interview.interviewDate === null ? (
+                            <></>
+                          ) : (
+                            <div className="flex items-center space-x-2 mb-1">
+                              <Calendar className="h-4 w-4 text-gray-400" />
+                              <span>
+                                {new Date(
+                                  interview.interviewDate
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center space-x-2 mb-1">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <span>{interview.duration ?? 0} minutes</span>
+                          </div>
+                          {interview.appliedDate === null ? (
+                            <></>
+                          ) : (
+                            <div className="text-xs text-gray-500 mt-2">
+                              Applied:{" "}
+                              {new Date(
+                                interview.appliedDate
+                              ).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {interview?.recommendations && (
+                          <div>
+                            <span
+                              className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border text-center ${getRecommendationColor(
+                                interview?.recommendations?.recommendation ?? ""
+                              )}`}
+                            >
+                              {interview.recommendations?.recommendation ?? ""}
+                            </span>
+                            <div className="text-xs text-gray-500 text-center mt-1 max-w-32">
+                              {interview.recommendations?.summary}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-2">
+                          {interview.hasRecording && (
+                            <button
+                              onClick={() =>
+                                setViewingRecording({
+                                  id: interview.id,
+                                  name: interview.name,
+                                })
+                              }
+                              className="text-purple-600 hover:text-purple-900 transition-colors"
+                              title="View Recording"
+                            >
+                              <Video className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setSelectedInterview(interview)}
+                            className="text-blue-600 hover:text-blue-900 transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          {interview?.resumeUrl && (
+                            <button
+                              onClick={() =>
+                                handleDownloadResume(
+                                  interview.resumeUrl,
+                                  interview.name
+                                )
+                              }
+                              className="text-gray-600 hover:text-gray-900 transition-colors"
+                              title="Download Resume"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              //  window.location.href = `mailto:candidate@example.com?subject=Interview Opportunity&body=Hi, we’d like to connect...`
+                              window.location.href = `mailto:${interview.email}`;
+                            }}
+                            className="text-gray-600 hover:text-gray-900 transition-colors"
+                            title="Contact Candidate"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </button>
+                          {interview.linkedinUrl && (
+                            <button
+                              onClick={() =>
+                                window.open(interview.linkedinUrl, "_blank")
+                              }
+                              className="text-gray-600 hover:text-gray-900 transition-colors"
+                              title="View LinkedIn"
+                            >
+                              <Linkedin className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
