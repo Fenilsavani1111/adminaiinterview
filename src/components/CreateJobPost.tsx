@@ -44,7 +44,7 @@ export function CreateJobPost() {
     skills: [""],
     salaryMin: "",
     salaryMax: "",
-    currency: "USD",
+    currency: "INR",
   });
   const [questions, setQuestions] = useState<InterviewQuestion[]>([
     ...defaultQuestions,
@@ -588,7 +588,9 @@ export function CreateJobPost() {
                   }
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
+                  <option value="INR">INR</option>
                   <option value="USD">USD</option>
+                  <option value="SR">SR</option>
                   <option value="EUR">EUR</option>
                   <option value="GBP">GBP</option>
                 </select>
