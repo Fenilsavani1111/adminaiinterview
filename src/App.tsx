@@ -1,3 +1,4 @@
+// adminaiinterview/src/App.tsx
 import React, { useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { LandingPage } from './components/LandingPage';
@@ -13,6 +14,9 @@ import { CandidateInterview } from './components/CandidateInterview';
 import { InterviewAnalytics } from './components/InterviewAnalytics';
 import { EditJobPost } from './components/EditJobPost';
 import { ViewJobPost } from './components/ViewJobPost';
+import { Login } from './components/Login';
+import { Register } from './components/Register';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -21,6 +25,39 @@ function AppContent() {
     dispatch({ type: 'LOAD_DATA' });
   }, [dispatch]);
 
+  // ============================================
+  // AUTH VIEWS (Public - No Protection)
+  // ============================================
+  
+  if (state.currentView === 'login') {
+    return <Login />;
+  }
+
+  if (state.currentView === 'register') {
+    return <Register />;
+  }
+
+  // ============================================
+  // PROTECTED ADMIN VIEWS (Require Admin Auth)
+  // ============================================
+  
+  if (['admin', 'job-posts', 'create-job', 'edit-job', 'view-job', 'interview-analytics'].includes(state.currentView)) {
+    return (
+      <ProtectedRoute requireAdmin={true}>
+        {state.currentView === 'admin' && <AdminDashboard />}
+        {state.currentView === 'job-posts' && <JobPostManager />}
+        {state.currentView === 'create-job' && <CreateJobPost />}
+        {state.currentView === 'edit-job' && <EditJobPost />}
+        {state.currentView === 'view-job' && <ViewJobPost />}
+        {state.currentView === 'interview-analytics' && <InterviewAnalytics />}
+      </ProtectedRoute>
+    );
+  }
+
+  // ============================================
+  // PUBLIC CANDIDATE VIEWS (No Protection)
+  // ============================================
+  
   switch (state.currentView) {
     case 'job-selection':
       return <JobSelection />;
@@ -34,18 +71,6 @@ function AppContent() {
       return <JobApplication />;
     case 'results':
       return <ResultsPage />;
-    case 'admin':
-      return <AdminDashboard />;
-    case 'job-posts':
-      return <JobPostManager />;
-    case 'create-job':
-      return <CreateJobPost />;
-    case 'edit-job':
-      return <EditJobPost />;
-    case 'view-job':
-      return <ViewJobPost />;
-    case 'interview-analytics':
-      return <InterviewAnalytics />;
     default:
       return <LandingPage />;
   }
