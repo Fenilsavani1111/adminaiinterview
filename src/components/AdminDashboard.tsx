@@ -22,10 +22,12 @@ import {
   FileText,
   Mail,
   TrendingDown,
+  LogOut,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Candidate } from "../types";
 import { useJobPosts } from "../hooks/useJobPosts";
+import { userAPI } from "../services/api";
 import { CandidatePerformanceDetail } from "./CandidatePerformanceDetail";
 
 type SkillType = {
@@ -53,7 +55,6 @@ export function AdminDashboard() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [summaryStates, setSummaryStates] = useState<SummaryStats>({
     total_interview: 0,
-    // completedInterviews
     average_score: 0,
     active_jobs: 0,
     inactive_jobs: 0,
@@ -66,6 +67,110 @@ export function AdminDashboard() {
     null
   );
   let ignore = false;
+
+  // ✅ CHECK AUTHENTICATION ON MOUNT (FIX PAGE REFRESH ISSUE)
+  useEffect(() => {
+    const checkAuth = async () => {
+      console.log('🔍 AdminDashboard - Checking authentication on mount');
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+
+      console.log('  - Token exists:', !!token);
+      console.log('  - User exists:', !!userStr);
+
+      // If there is no token, force login
+      if (!token) {
+        console.log('❌ No token found - redirecting to login');
+        dispatch({ type: 'SET_VIEW', payload: 'login' });
+        return;
+      }
+
+      // If user is present in localStorage, use it
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          console.log('✅ User authenticated:', user.username);
+          console.log('  - isAdmin:', user.isAdmin);
+
+          const isAdmin = user.isAdmin === true || user.isAdmin === 'true' || Number(user.isAdmin) === 1;
+          if (!isAdmin) {
+            console.log('❌ User is not admin - redirecting to landing');
+            dispatch({ type: 'SET_VIEW', payload: 'landing' });
+            return;
+          }
+
+          // Ensure app context also knows current user
+          dispatch({ type: 'SET_CURRENT_USER', payload: user });
+          console.log('✅ Admin authentication verified - staying on dashboard');
+          return;
+        } catch (error) {
+          console.error('❌ Error parsing user data:', error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          dispatch({ type: 'SET_VIEW', payload: 'login' });
+          return;
+        }
+      }
+
+      // No user in storage but token exists — try to fetch profile
+      try {
+        console.log('ℹ️ Token present but no user in storage — fetching profile');
+        const profileResp = await userAPI.getProfile();
+        if (profileResp?.success && profileResp.user) {
+          const fetchedUser = profileResp.user;
+          const storedToken = localStorage.getItem('token');
+
+          const normalizedUser = { ...fetchedUser, access_token: storedToken || fetchedUser.access_token };
+          localStorage.setItem('user', JSON.stringify(normalizedUser));
+
+          // Set current user in app context
+          dispatch({ type: 'SET_CURRENT_USER', payload: normalizedUser });
+
+          const isAdmin = normalizedUser.isAdmin === true || normalizedUser.isAdmin === 'true' || Number(normalizedUser.isAdmin) === 1;
+          if (!isAdmin) {
+            console.log('❌ Fetched user is not admin - redirecting to landing');
+            dispatch({ type: 'SET_VIEW', payload: 'landing' });
+            return;
+          }
+
+          console.log('✅ Admin authentication verified via profile fetch');
+          return;
+        } else {
+          console.log('❌ Profile fetch did not return a valid user - redirecting to login');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          dispatch({ type: 'SET_VIEW', payload: 'login' });
+          return;
+        }
+      } catch (err) {
+        console.error('❌ Error fetching profile:', err);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        dispatch({ type: 'SET_VIEW', payload: 'login' });
+        return;
+      }
+    };
+
+    checkAuth();
+  }, [dispatch]);
+
+  // ✅ LOGOUT HANDLER WITH CONSOLE LOGS
+  const handleLogout = () => {
+    console.log('🚪 LOGOUT CLICKED FROM ADMIN DASHBOARD');
+    console.log('Before logout:');
+    console.log('  - Token:', localStorage.getItem('token')?.substring(0, 50) + '...');
+    console.log('  - User:', localStorage.getItem('user'));
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
+    console.log('After clearing localStorage:');
+    console.log('  - Token:', localStorage.getItem('token'));
+    console.log('  - User:', localStorage.getItem('user'));
+    console.log('✅ Logout complete - redirecting to landing');
+
+    dispatch({ type: 'SET_VIEW', payload: 'landing' });
+  };
 
   const filteredInterviews = candidates.filter((interview) => {
     const matchesSearch =
@@ -114,21 +219,17 @@ export function AdminDashboard() {
       setCandidates(data?.recentCandidates ?? []);
       let candidates = data?.candidates ?? [];
 
-      // 1. Flatten all skills
       const allSkills: string[] = candidates.flatMap((item: Candidate) =>
         item.skills.map((skill) => skill.trim())
       );
 
-      // 2. Count occurrences
       const skillCounts: Record<string, number> = {};
       for (const skill of allSkills) {
         skillCounts[skill] = (skillCounts[skill] || 0) + 1;
       }
 
-      // 3. Get total number of skills
       const totalSkills = allSkills.length;
 
-      // 3. Convert to array and sort by count
       const topFiveSkills: SkillType[] = Object.entries(skillCounts)
         .map(([skill, count]) => ({
           skill,
@@ -136,7 +237,7 @@ export function AdminDashboard() {
           percentage: parseFloat(((count / totalSkills) * 100).toFixed(2)),
         }))
         .sort((a, b) => b.count - a.count)
-        .slice(0, 5); // Top 5
+        .slice(0, 5);
       setSummaryStates({ ...data?.summary, top_skills: topFiveSkills });
     } catch (error) {
       console.log("error", error);
@@ -152,7 +253,6 @@ export function AdminDashboard() {
     };
   }, []);
 
-  // If a candidate is selected, show their detailed performance
   if (selectedCandidate) {
     return (
       <CandidatePerformanceDetail
@@ -165,7 +265,7 @@ export function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Modern Header */}
+      {/* Modern Header with Logout Button */}
       <header className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
@@ -211,6 +311,14 @@ export function AdminDashboard() {
               <button className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2.5 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                 <Download className="h-4 w-4" />
                 <span className="font-medium">Export Data</span>
+              </button>
+              {/* ✅ LOGOUT BUTTON */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2.5 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="font-medium">Logout</span>
               </button>
             </div>
           </div>
@@ -338,7 +446,7 @@ export function AdminDashboard() {
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8">
-              {/* Enhanced Interview List */}
+              {/* Interview List - Rest of your existing code remains the same */}
               <div className="lg:col-span-2">
                 <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden">
                   <div className="p-6 border-b border-gray-100">
@@ -513,9 +621,9 @@ export function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Enhanced Side Panel */}
+              {/* Side Panel - Your existing code for skills, activity, and quick actions */}
               <div className="space-y-6">
-                {/* Top Skills with Enhanced Design */}
+                {/* Top Skills */}
                 <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-bold text-gray-900">
@@ -526,32 +634,30 @@ export function AdminDashboard() {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    {summaryStates.top_skills.map((item, index) => {
-                      return (
-                        <div key={index} className="group">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">
-                              {item.skill}
-                            </span>
-                            <span className="text-sm font-bold text-gray-900">
-                              {Math.floor(item?.percentage)}%
-                            </span>
-                          </div>
-                          <div className="relative">
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                              <div
-                                className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-1000 group-hover:from-purple-500 group-hover:to-blue-600"
-                                style={{ width: `${item?.percentage}%` }}
-                              ></div>
-                            </div>
+                    {summaryStates.top_skills.map((item, index) => (
+                      <div key={index} className="group">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            {item.skill}
+                          </span>
+                          <span className="text-sm font-bold text-gray-900">
+                            {Math.floor(item?.percentage)}%
+                          </span>
+                        </div>
+                        <div className="relative">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-1000 group-hover:from-purple-500 group-hover:to-blue-600"
+                              style={{ width: `${item?.percentage}%` }}
+                            ></div>
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Enhanced Recent Activity */}
+                {/* Recent Activity */}
                 <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-bold text-gray-900">
@@ -609,7 +715,7 @@ export function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Enhanced Quick Actions */}
+                {/* Quick Actions */}
                 <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-bold text-gray-900">

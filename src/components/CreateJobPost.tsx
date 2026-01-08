@@ -7,6 +7,9 @@ import {
   Trash2,
   Edit,
   Save,
+  Download,
+  FileSpreadsheet,
+  AlertCircle,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { JobPost, InterviewQuestion } from "../types";
@@ -14,6 +17,7 @@ import { useJobPosts } from "../hooks/useJobPosts";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
 import { defaultQuestions } from "./EditJobPost";
+import { downloadSampleExcel, parseExcelFile, validateExcelStructure } from "../utils/excelUtils";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -30,6 +34,9 @@ export function CreateJobPost() {
   const [jdFromPdfLoading, setJdFromPdfLoading] = useState(false);
   const [continueLoading, setContinueLoading] = useState(false);
   const [questionsFromJdLoading, setQuestionsFromJdLoading] = useState(false);
+  const [excelUploadLoading, setExcelUploadLoading] = useState(false);
+  const [excelError, setExcelError] = useState<string>("");
+  const [excelSuccess, setExcelSuccess] = useState<string>("");
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     title: "",
@@ -66,6 +73,8 @@ export function CreateJobPost() {
   const generateQuestionsFromJD = async () => {
     try {
       setQuestionsFromJdLoading(true);
+      setExcelError("");
+      setExcelSuccess("");
       // Simulate AI question generation based on job description
       const jobPostData: Omit<
         JobPost,
@@ -97,6 +106,59 @@ export function CreateJobPost() {
     } catch (error) {
       setQuestionsFromJdLoading(false);
       console.log("generateQuestionsFromJD error", error);
+    }
+  };
+
+  const handleDownloadSampleExcel = () => {
+    try {
+      setExcelError("");
+      downloadSampleExcel();
+      setExcelSuccess("Sample Excel template downloaded successfully!");
+      setTimeout(() => setExcelSuccess(""), 3000);
+    } catch (error) {
+      setExcelError("Failed to download sample template");
+      console.error("Download sample error:", error);
+    }
+  };
+
+  const handleExcelUpload = async (file: File) => {
+    try {
+      setExcelUploadLoading(true);
+      setExcelError("");
+      setExcelSuccess("");
+
+      // Validate file type
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        throw new Error('Please upload an Excel file (.xlsx or .xls)');
+      }
+
+      // Validate file structure
+      const isValid = await validateExcelStructure(file);
+      if (!isValid) {
+        throw new Error('Invalid Excel structure. Please download and use the sample template.');
+      }
+
+      // Parse Excel file
+      const parsedQuestions = await parseExcelFile(file);
+
+      // Add parsed questions to existing questions
+      const updatedQuestions = [...questions];
+      
+      // Update order for new questions
+      parsedQuestions.forEach((q, index) => {
+        q.order = updatedQuestions.length + index + 1;
+      });
+
+      setQuestions([...updatedQuestions, ...parsedQuestions]);
+      setExcelSuccess(`Successfully imported ${parsedQuestions.length} questions from Excel!`);
+      setTimeout(() => setExcelSuccess(""), 5000);
+
+      setExcelUploadLoading(false);
+    } catch (error) {
+      setExcelUploadLoading(false);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload Excel file';
+      setExcelError(errorMessage);
+      console.error("Excel upload error:", error);
     }
   };
 
@@ -622,19 +684,90 @@ export function CreateJobPost() {
                 <h2 className="text-2xl font-bold text-gray-900">
                   Interview Questions
                 </h2>
-                <button
-                  onClick={generateQuestionsFromJD}
-                  disabled={questionsFromJdLoading}
-                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Wand2 className="h-4 w-4" />
-                  <span>Generate from JD</span>
-                </button>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={generateQuestionsFromJD}
+                    disabled={questionsFromJdLoading}
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    <span>Generate from JD</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Excel Upload Section */}
+              <div className="mb-8 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+                <div className="flex items-start space-x-3">
+                  <FileSpreadsheet className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Upload Questions from Excel
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Upload an Excel file with interview questions. Download the sample template to see the required format.
+                    </p>
+                    
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={handleDownloadSampleExcel}
+                        className="flex items-center space-x-2 bg-white border-2 border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span>Download Sample Template</span>
+                      </button>
+
+                      <label
+                        htmlFor="excel-upload"
+                        className={`flex items-center space-x-2 cursor-pointer bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors ${
+                          excelUploadLoading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        <Upload className="h-4 w-4" />
+                        <span>
+                          {excelUploadLoading ? 'Uploading...' : 'Upload Excel File'}
+                        </span>
+                      </label>
+                      <input
+                        id="excel-upload"
+                        type="file"
+                        accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                        className="hidden"
+                        disabled={excelUploadLoading}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleExcelUpload(file);
+                            e.target.value = ''; // Reset input
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Success Message */}
+                    {excelSuccess && (
+                      <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg flex items-start space-x-2">
+                        <AlertCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-green-800">{excelSuccess}</p>
+                      </div>
+                    )}
+
+                    {/* Error Message */}
+                    {excelError && (
+                      <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg flex items-start space-x-2">
+                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-sm text-red-800 whitespace-pre-line">{excelError}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {questionsFromJdLoading ? (
                 <div className="flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white-600"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                   <span className="ml-3 text-gray-600">
                     Generating questions...
                   </span>
@@ -643,7 +776,7 @@ export function CreateJobPost() {
                 <div className="text-center py-8 text-gray-500">
                   <p>
                     No questions added yet. Generate questions from job
-                    description or add manually.
+                    description, upload Excel file, or add manually.
                   </p>
                 </div>
               ) : (
@@ -653,7 +786,7 @@ export function CreateJobPost() {
                     {questions.map((question, index) => (
                       <div
                         key={question.id}
-                        className="border border-gray-200 rounded-lg p-4"
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                       >
                         {editingQuestion?.id === question.id ? (
                           <div className="">
@@ -815,8 +948,7 @@ export function CreateJobPost() {
                                 </button>
                                 <button
                                   onClick={() => setEditingQuestion(undefined)}
-                                  disabled={!editingQuestion.question.trim()}
-                                  className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:bg-gray-400"
+                                  className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                                 >
                                   Cancel
                                 </button>
@@ -891,7 +1023,7 @@ export function CreateJobPost() {
               {/* Add New Question */}
               <div className="border-t pt-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Add New Question
+                  Add New Question Manually
                 </h3>
                 <div className="space-y-4">
                   <textarea

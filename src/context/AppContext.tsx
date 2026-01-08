@@ -138,6 +138,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, [state.users, state.sessions, state.jobPosts, state.applications, state.adminStats]);
 
+  // Restore authentication and view on app start (so refresh keeps admin view)
+  React.useEffect(() => {
+    try {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      if (token && userStr) {
+        const user = JSON.parse(userStr);
+        dispatch({ type: 'SET_CURRENT_USER', payload: user });
+        const isAdmin = user.isAdmin === true || user.isAdmin === 'true' || Number(user.isAdmin) === 1;
+        if (isAdmin) {
+          dispatch({ type: 'SET_VIEW', payload: 'admin' });
+        }
+      }
+    } catch (e) {
+      console.error('❌ Error restoring auth state from localStorage', e);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+  }, []);
+
   // Handle URL routing for job applications
   React.useEffect(() => {
     const path = window.location.pathname;
