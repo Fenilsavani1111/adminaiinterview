@@ -18,8 +18,17 @@ export function LandingPage() {
               <span className="text-xl font-bold text-gray-900">InterviewAI</span>
             </div>
             <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin' })}
+              <button
+                onClick={() => {
+                  const stored = localStorage.getItem('user');
+                  const user = stored ? JSON.parse(stored) : null;
+                  // If user is admin, go to admin dashboard; otherwise go to register (new users should register first)
+                  if (user && user.isAdmin) {
+                    dispatch({ type: 'SET_VIEW', payload: 'admin' });
+                  } else {
+                    dispatch({ type: 'SET_VIEW', payload: 'register' });
+                  }
+                }}
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
                 Admin

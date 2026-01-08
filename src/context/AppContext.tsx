@@ -1,3 +1,4 @@
+// adminaiinterview/src/context/AppContext.tsx
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { User, InterviewSession, AdminStats, JobPost, JobApplication } from '../types';
 
@@ -11,7 +12,22 @@ interface AppState {
   jobPosts: JobPost[];
   applications: JobApplication[];
   adminStats: AdminStats;
-  currentView: 'landing' | 'profile' | 'interview' | 'results' | 'admin' | 'job-posts' | 'create-job' | 'edit-job' | 'view-job' | 'job-selection' | 'job-application' | 'candidate-interview' | 'interview-analytics';
+  currentView: 
+    | 'landing' 
+    | 'login'              // ✅ ADDED
+    | 'register'           // ✅ ADDED
+    | 'profile' 
+    | 'interview' 
+    | 'results' 
+    | 'admin' 
+    | 'job-posts' 
+    | 'create-job' 
+    | 'edit-job' 
+    | 'view-job' 
+    | 'job-selection' 
+    | 'job-application' 
+    | 'candidate-interview' 
+    | 'interview-analytics';
 }
 
 type AppAction =
