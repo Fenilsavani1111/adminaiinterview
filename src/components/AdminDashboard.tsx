@@ -1,3 +1,4 @@
+// adminaiinterview/src/components/AdminDashboard.tsx
 import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -68,10 +69,10 @@ export function AdminDashboard() {
   );
   let ignore = false;
 
-  // ✅ CHECK AUTHENTICATION ON MOUNT (FIX PAGE REFRESH ISSUE)
+  // ✅ CHECK AUTHENTICATION ON MOUNT
   useEffect(() => {
     const checkAuth = async () => {
-      console.log('🔍 AdminDashboard - Checking authentication on mount');
+      console.log('🔍 Dashboard - Checking authentication on mount');
       const token = localStorage.getItem('token');
       const userStr = localStorage.getItem('user');
 
@@ -89,19 +90,11 @@ export function AdminDashboard() {
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
-          console.log('✅ User authenticated:', user.username);
-          console.log('  - isAdmin:', user.isAdmin);
-
-          const isAdmin = user.isAdmin === true || user.isAdmin === 'true' || Number(user.isAdmin) === 1;
-          if (!isAdmin) {
-            console.log('❌ User is not admin - redirecting to landing');
-            dispatch({ type: 'SET_VIEW', payload: 'landing' });
-            return;
-          }
+          console.log('✅ User authenticated:', user.email);
 
           // Ensure app context also knows current user
           dispatch({ type: 'SET_CURRENT_USER', payload: user });
-          console.log('✅ Admin authentication verified - staying on dashboard');
+          console.log('✅ Authentication verified - staying on dashboard');
           return;
         } catch (error) {
           console.error('❌ Error parsing user data:', error);
@@ -120,20 +113,15 @@ export function AdminDashboard() {
           const fetchedUser = profileResp.user;
           const storedToken = localStorage.getItem('token');
 
-          const normalizedUser = { ...fetchedUser, access_token: storedToken || fetchedUser.access_token };
+          const normalizedUser = { 
+            ...fetchedUser, 
+            access_token: storedToken || fetchedUser.access_token 
+          };
           localStorage.setItem('user', JSON.stringify(normalizedUser));
 
           // Set current user in app context
           dispatch({ type: 'SET_CURRENT_USER', payload: normalizedUser });
-
-          const isAdmin = normalizedUser.isAdmin === true || normalizedUser.isAdmin === 'true' || Number(normalizedUser.isAdmin) === 1;
-          if (!isAdmin) {
-            console.log('❌ Fetched user is not admin - redirecting to landing');
-            dispatch({ type: 'SET_VIEW', payload: 'landing' });
-            return;
-          }
-
-          console.log('✅ Admin authentication verified via profile fetch');
+          console.log('✅ Authentication verified via profile fetch');
           return;
         } else {
           console.log('❌ Profile fetch did not return a valid user - redirecting to login');
@@ -154,9 +142,9 @@ export function AdminDashboard() {
     checkAuth();
   }, [dispatch]);
 
-  // ✅ LOGOUT HANDLER WITH CONSOLE LOGS
+  // ✅ LOGOUT HANDLER
   const handleLogout = () => {
-    console.log('🚪 LOGOUT CLICKED FROM ADMIN DASHBOARD');
+    console.log('🚪 LOGOUT CLICKED FROM DASHBOARD');
     console.log('Before logout:');
     console.log('  - Token:', localStorage.getItem('token')?.substring(0, 50) + '...');
     console.log('  - User:', localStorage.getItem('user'));
@@ -257,7 +245,7 @@ export function AdminDashboard() {
     return (
       <CandidatePerformanceDetail
         candidateId={selectedCandidate}
-        backText="Back to Admin Dashboard"
+        backText="Back to Dashboard"
         onBack={() => setSelectedCandidate(null)}
       />
     );
@@ -282,7 +270,7 @@ export function AdminDashboard() {
               <div className="h-8 w-px bg-gray-300"></div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                  Admin Dashboard
+                  Dashboard
                 </h1>
                 <p className="text-sm text-gray-500">
                   Manage interviews and analyze performance
@@ -446,7 +434,7 @@ export function AdminDashboard() {
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8">
-              {/* Interview List - Rest of your existing code remains the same */}
+              {/* Interview List */}
               <div className="lg:col-span-2">
                 <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden">
                   <div className="p-6 border-b border-gray-100">
@@ -621,7 +609,7 @@ export function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Side Panel - Your existing code for skills, activity, and quick actions */}
+              {/* Side Panel */}
               <div className="space-y-6">
                 {/* Top Skills */}
                 <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">

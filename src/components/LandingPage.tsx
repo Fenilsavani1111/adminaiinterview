@@ -1,9 +1,24 @@
+// adminaiinterview/src/components/LandingPage.tsx
 import React from 'react';
 import { Brain, Video, Award, Users, ArrowRight, CheckCircle, Briefcase } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export function LandingPage() {
   const { dispatch } = useApp();
+
+  const handleGetStarted = () => {
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+
+    if (token && userStr) {
+      // User is logged in, go to dashboard
+      dispatch({ type: 'SET_VIEW', payload: 'admin' });
+    } else {
+      // Not logged in, go to register
+      dispatch({ type: 'SET_VIEW', payload: 'register' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50">
@@ -20,21 +35,21 @@ export function LandingPage() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => {
-                  const stored = localStorage.getItem('user');
-                  const user = stored ? JSON.parse(stored) : null;
-                  // If user is admin, go to admin dashboard; otherwise go to register (new users should register first)
-                  if (user && user.isAdmin) {
+                  const token = localStorage.getItem('token');
+                  if (token) {
+                    // Already logged in, go to dashboard
                     dispatch({ type: 'SET_VIEW', payload: 'admin' });
                   } else {
-                    dispatch({ type: 'SET_VIEW', payload: 'register' });
+                    // Not logged in, go to login
+                    dispatch({ type: 'SET_VIEW', payload: 'login' });
                   }
                 }}
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
-                Admin
+                Login
               </button>
               <button 
-                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'job-selection' })}
+                onClick={handleGetStarted}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 Get Started
@@ -58,7 +73,7 @@ export function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button 
-                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'job-selection' })}
+                onClick={handleGetStarted}
                 className="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg flex items-center justify-center space-x-2"
               >
                 <span>Start Interview Practice</span>
@@ -193,7 +208,7 @@ export function LandingPage() {
             Join thousands of professionals who have improved their interview performance with InterviewAI
           </p>
           <button 
-            onClick={() => dispatch({ type: 'SET_VIEW', payload: 'job-selection' })}
+            onClick={handleGetStarted}
             className="bg-white text-blue-600 px-8 py-4 rounded-lg hover:bg-gray-100 transition-colors font-semibold text-lg"
           >
             Start Your Free Practice Session

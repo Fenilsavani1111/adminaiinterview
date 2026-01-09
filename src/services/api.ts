@@ -1,24 +1,21 @@
-// adminaiinterview/src/api/api.ts
+// adminaiinterview/src/services/api.ts
 import axios from 'axios';
 import { JobPost } from '../types';
 
-// User interface for type safety
+// User interface for type safety (NO USERNAME)
 export interface User {
   id: number;
-  username: string;
   email: string;
   name?: string;
   phoneNumber?: string;
-  isAdmin: boolean;
   access_token?: string;
-  refresh_token?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_AIINTERVIEW_API_KEY, // Adjust this to match your server port
+  baseURL: import.meta.env.VITE_AIINTERVIEW_API_KEY || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -38,16 +35,23 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and token storage
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Store token if present in response (from login/register)
+    if (response.data?.user?.access_token) {
+      const token = response.data.user.access_token;
+      localStorage.setItem('token', token);
+      console.log('✅ Token stored in localStorage from response');
+    }
+    return response;
+  },
   (error) => {
     // Handle 401 (unauthorized) - clear token and redirect to login
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // Optionally trigger a global event or use router to redirect
-      // window.location.href = '/'; // Will trigger login view
+      console.log('❌ 401 Unauthorized - Clearing auth data');
     }
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
@@ -59,32 +63,29 @@ api.interceptors.response.use(
 // ============================================
 
 export const userAPI = {
-  // Login user - NOW USES EMAIL INSTEAD OF LOGIN
+  // Login user - USES EMAIL ONLY (NO USERNAME)
   login: async (email: string, password: string) => {
     const response = await api.post('/login', { email, password });
     
-    // Store token and user info in localStorage
+    // Store user info in localStorage (token is stored by interceptor)
     if (response.data.success && response.data.user) {
-      localStorage.setItem('token', response.data.user.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
     
     return response.data;
   },
 
-  // Register new user (accepts payload: { name, username, email, phoneNumber, password })
+  // Register new user - NO USERNAME REQUIRED
   register: async (payload: { 
-    name?: string; 
-    username: string; 
+    name: string; 
     email: string; 
     phoneNumber?: string; 
     password: string 
   }) => {
     const response = await api.post('/register', payload);
     
-    // Store token and user info in localStorage
+    // Store user info in localStorage (token is stored by interceptor)
     if (response.data.success && response.data.user) {
-      localStorage.setItem('token', response.data.user.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
     
@@ -130,17 +131,11 @@ export const userAPI = {
     return localStorage.getItem('token');
   },
 
-  // Check if user is admin
-  isAdmin: (): boolean => {
-    const user = userAPI.getStoredUser();
-    return user?.isAdmin || false;
-  },
-
   // ============================================
-  // ADMIN USER CRUD OPERATIONS
+  // USER CRUD OPERATIONS
   // ============================================
 
-  // Get all users (Admin only)
+  // Get all users (with pagination and search)
   getAllUsers: async (params?: { page?: number; limit?: number; search?: string }) => {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append('page', params.page.toString());
@@ -151,29 +146,27 @@ export const userAPI = {
     return response.data;
   },
 
-  // Get user by ID (Admin only)
+  // Get user by ID
   getUserById: async (id: number | string): Promise<{ success: boolean; user: User }> => {
     const response = await api.get(`/users/${id}`);
     return response.data;
   },
 
-  // Update user (Admin only)
+  // Update user (NO USERNAME)
   updateUser: async (
     id: number | string, 
     userData: Partial<{ 
       name: string; 
-      username: string; 
       email: string; 
       phoneNumber: string; 
-      password: string; 
-      isAdmin: boolean 
+      password: string
     }>
   ): Promise<{ success: boolean; message: string; user: User }> => {
     const response = await api.put(`/users/${id}`, userData);
     return response.data;
   },
 
-  // Delete user (Admin only)
+  // Delete user
   deleteUser: async (id: number | string): Promise<{ success: boolean; message: string }> => {
     const response = await api.delete(`/users/${id}`);
     return response.data;
@@ -185,7 +178,7 @@ export const userAPI = {
 // ============================================
 
 export const jobPostAPI = {
-  // Create a new job post (Admin only)
+  // Create a new job post
   create: async (jobPostData: Omit<JobPost, 'id' | 'createdAt' | 'updatedAt'>): Promise<JobPost> => {
     const response = await api.post('/jobposts', jobPostData);
     return response.data;
@@ -203,13 +196,13 @@ export const jobPostAPI = {
     return response.data;
   },
 
-  // Update job post (Admin only)
+  // Update job post
   update: async (id: string, jobPostData: Partial<JobPost>): Promise<JobPost> => {
     const response = await api.put(`/jobposts/${id}`, jobPostData);
     return response.data;
   },
 
-  // Delete job post (Admin only)
+  // Delete job post
   delete: async (id: string): Promise<void> => {
     await api.delete(`/jobposts/${id}`);
   },
@@ -237,19 +230,19 @@ export const jobPostAPI = {
     return response.data;
   },
 
-  // Get recent candidates (Admin only)
+  // Get recent candidates
   getRecentCandidates: async () => {
     const response = await api.post('/jobposts/get-recent-candidates');
     return response.data;
   },
 
-  // Get admin dashboard (Admin only)
+  // Get admin dashboard
   getAdminDashboard: async () => {
     const response = await api.post('/jobposts/get-admin-dashboard');
     return response.data;
   },
 
-  // Get analytics dashboard (Admin only)
+  // Get analytics dashboard
   getAnalyticsDashboard: async () => {
     const response = await api.post('/jobposts/get-analytics-dashboard');
     return response.data;

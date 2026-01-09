@@ -1,3 +1,4 @@
+// adminaiinterview/src/components/Login.tsx
 import React, { useState } from 'react';
 import { LogIn, AlertCircle } from 'lucide-react';
 import { userAPI } from '../services/api';
@@ -33,13 +34,22 @@ export function Login() {
 
       console.log('👤 User Data:', {
         id: user.id,
-        username: user.username,
         email: user.email,
-        isAdmin: user.isAdmin,
         hasToken: !!user.access_token,
       });
 
-      // ✅ Check if token is stored (done automatically in api.ts)
+      // Store user data (token is already stored by api.ts interceptor)
+      localStorage.setItem('user', JSON.stringify({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phoneNumber: user.phoneNumber
+      }));
+
+      // Set current user in app context
+      dispatch({ type: 'SET_CURRENT_USER', payload: user });
+
+      // Check localStorage after login
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
 
@@ -48,20 +58,10 @@ export function Login() {
       console.log('  - Token length:', storedToken?.length || 0);
       console.log('  - User stored:', !!storedUser);
       console.log('  - Token preview:', storedToken?.substring(0, 50) + '...');
-      console.log('  - Full token:', storedToken);
 
-      // Admin-only access
-      if (user.isAdmin) {
-        console.log('✅ Admin user - redirecting to dashboard');
-        dispatch({ type: 'SET_VIEW', payload: 'admin' });
-      } else {
-        console.log('❌ Not an admin user');
-        setError('Access denied. Admin privileges required.');
-        // Clear auth if not admin
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        console.log('🗑️ LocalStorage cleared (non-admin)');
-      }
+      // Redirect to dashboard (all authenticated users can access)
+      console.log('✅ Redirecting to dashboard');
+      dispatch({ type: 'SET_VIEW', payload: 'admin' });
     } catch (err: any) {
       console.error('❌ LOGIN ERROR:', err);
       console.error('Error details:', {
@@ -89,10 +89,10 @@ export function Login() {
         </div>
 
         <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">
-          Admin Login
+          Login
         </h1>
         <p className="text-center text-gray-600 mb-8">
-          Sign in to access the admin dashboard
+          Sign in to access your dashboard
         </p>
 
         {error && (

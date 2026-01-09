@@ -36,20 +36,13 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
         const profile = response.user;
         
-        // Check admin requirement
-        if (requireAdmin && !profile.isAdmin) {
-          console.error('Admin access required but user is not admin');
-          localStorage.clear();
-          dispatch({ type: 'SET_VIEW', payload: 'login' });
-          setIsVerifying(false);
-          return;
-        }
-
         // Update local storage with fresh profile data
         localStorage.setItem('user', JSON.stringify({
           id: profile.id,
           username: profile.username,
-          isAdmin: profile.isAdmin
+          email: profile.email,
+          name: profile.name,
+          phoneNumber: profile.phoneNumber,
         }));
 
         console.log('Auth verified successfully');
