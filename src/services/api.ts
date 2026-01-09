@@ -1,6 +1,10 @@
-// adminaiinterview/src/services/api.ts
+// adminaiinterview/src/services/api.ts - COMPLETE FIXED VERSION
 import axios from 'axios';
 import { JobPost } from '../types';
+
+// ============================================
+// INTERFACES
+// ============================================
 
 // User interface for type safety (NO USERNAME)
 export interface User {
@@ -12,6 +16,25 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Student interface for type safety
+export interface Student {
+  id?: number;
+  studentId: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  mobile?: string;
+  jobPostId?: string;
+  uploadSource?: 'excel' | 'manual' | 'job_application';
+  isFromExcelUpload?: boolean;
+  status?: string;
+  createdAt?: string;
+}
+
+// ============================================
+// AXIOS INSTANCE
+// ============================================
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -251,6 +274,48 @@ export const jobPostAPI = {
   // Get candidate by ID (Public)
   getCandidateById: async (id: string): Promise<JobPost> => {
     const response = await api.get(`/jobposts/get-candidate-byid/${id}`);
+    return response.data;
+  },
+};
+
+// ============================================
+// STUDENT API FUNCTIONS
+// ============================================
+
+export const studentAPI = {
+  // Create multiple students for a job post
+  createStudents: async (jobPostId: string, students: Student[]) => {
+    const response = await api.post('/students', { jobPostId, students });
+    return response.data;
+  },
+
+  // Get all students for a job post
+  getStudentsByJobPost: async (jobPostId: string) => {
+    const response = await api.get(`/students/jobpost/${jobPostId}`);
+    return response.data;
+  },
+
+  // Get student count for a job post
+  getStudentCount: async (jobPostId: string) => {
+    const response = await api.get(`/students/jobpost/${jobPostId}/count`);
+    return response.data;
+  },
+
+  // Delete all students for a job post
+  deleteStudentsByJobPost: async (jobPostId: string) => {
+    const response = await api.delete(`/students/jobpost/${jobPostId}`);
+    return response.data;
+  },
+
+  // Update students for a job post (replace all)
+  updateStudents: async (jobPostId: string, students: Student[]) => {
+    const response = await api.put(`/students/jobpost/${jobPostId}`, { students });
+    return response.data;
+  },
+
+  // Delete a single student
+  deleteStudent: async (id: number) => {
+    const response = await api.delete(`/students/${id}`);
     return response.data;
   },
 };

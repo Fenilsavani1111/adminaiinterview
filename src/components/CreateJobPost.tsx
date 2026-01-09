@@ -10,6 +10,8 @@ import {
   Download,
   FileSpreadsheet,
   AlertCircle,
+  Users,
+  X,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { JobPost, InterviewQuestion } from "../types";
@@ -18,6 +20,12 @@ import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
 import { defaultQuestions } from "./EditJobPost";
 import { downloadSampleExcel, parseExcelFile, validateExcelStructure } from "../utils/excelUtils";
+import { 
+  downloadSampleStudentExcel, 
+  parseStudentExcelFile, 
+  validateStudentExcelStructure 
+} from "../utils/studentExcelUtils";
+import type { Student } from "../utils/studentExcelUtils";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -37,6 +45,14 @@ export function CreateJobPost() {
   const [excelUploadLoading, setExcelUploadLoading] = useState(false);
   const [excelError, setExcelError] = useState<string>("");
   const [excelSuccess, setExcelSuccess] = useState<string>("");
+  
+  // Student List State
+  const [studentListModal, setStudentListModal] = useState(false);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [studentUploadLoading, setStudentUploadLoading] = useState(false);
+  const [studentError, setStudentError] = useState<string>("");
+  const [studentSuccess, setStudentSuccess] = useState<string>("");
+  
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     title: "",
@@ -75,7 +91,6 @@ export function CreateJobPost() {
       setQuestionsFromJdLoading(true);
       setExcelError("");
       setExcelSuccess("");
-      // Simulate AI question generation based on job description
       const jobPostData: Omit<
         JobPost,
         "id" | "createdAt" | "updatedAt" | "questions" | "status" | "createdBy"
@@ -127,24 +142,19 @@ export function CreateJobPost() {
       setExcelError("");
       setExcelSuccess("");
 
-      // Validate file type
       if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
         throw new Error('Please upload an Excel file (.xlsx or .xls)');
       }
 
-      // Validate file structure
       const isValid = await validateExcelStructure(file);
       if (!isValid) {
         throw new Error('Invalid Excel structure. Please download and use the sample template.');
       }
 
-      // Parse Excel file
       const parsedQuestions = await parseExcelFile(file);
 
-      // Add parsed questions to existing questions
       const updatedQuestions = [...questions];
       
-      // Update order for new questions
       parsedQuestions.forEach((q, index) => {
         q.order = updatedQuestions.length + index + 1;
       });
@@ -160,6 +170,52 @@ export function CreateJobPost() {
       setExcelError(errorMessage);
       console.error("Excel upload error:", error);
     }
+  };
+
+  // Student List Functions
+  const handleDownloadStudentTemplate = () => {
+    try {
+      setStudentError("");
+      downloadSampleStudentExcel();
+      setStudentSuccess("Sample student list template downloaded successfully!");
+      setTimeout(() => setStudentSuccess(""), 3000);
+    } catch (error) {
+      setStudentError("Failed to download sample template");
+      console.error("Download student template error:", error);
+    }
+  };
+
+  const handleStudentExcelUpload = async (file: File) => {
+    try {
+      setStudentUploadLoading(true);
+      setStudentError("");
+      setStudentSuccess("");
+
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        throw new Error('Please upload an Excel file (.xlsx or .xls)');
+      }
+
+      const isValid = await validateStudentExcelStructure(file);
+      if (!isValid) {
+        throw new Error('Invalid Excel structure. Please download and use the sample template.');
+      }
+
+      const parsedStudents = await parseStudentExcelFile(file);
+      setStudents(parsedStudents);
+      setStudentSuccess(`Successfully imported ${parsedStudents.length} students from Excel!`);
+      setTimeout(() => setStudentSuccess(""), 5000);
+
+      setStudentUploadLoading(false);
+    } catch (error) {
+      setStudentUploadLoading(false);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload Excel file';
+      setStudentError(errorMessage);
+      console.error("Student Excel upload error:", error);
+    }
+  };
+
+  const handleRemoveStudent = (index: number) => {
+    setStudents(students.filter((_, i) => i !== index));
   };
 
   const addQuestion = () => {
@@ -273,6 +329,7 @@ export function CreateJobPost() {
         questions: questions,
         status: isDraft ? ("draft" as const) : ("active" as const),
         createdBy: "admin",
+        students: students, // Include students in job post data
       };
 
       await createJobPost(jobPostData);
@@ -298,9 +355,9 @@ export function CreateJobPost() {
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span>Back to Job Posts</span>
+                <span className="hidden sm:inline">Back to Job Posts</span>
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Create Job Post
               </h1>
             </div>
@@ -323,12 +380,12 @@ export function CreateJobPost() {
         </div>
 
         {step === 1 && (
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
               Job Details
             </h2>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Job Title *
@@ -437,7 +494,7 @@ export function CreateJobPost() {
                 Job Description *
               </label>
               <div className="mb-4">
-                <div className="flex items-center space-x-4 mb-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-2">
                   <label
                     htmlFor="file-upload"
                     className="flex items-center space-x-2 cursor-pointer text-blue-600 hover:text-blue-700 text-sm"
@@ -445,7 +502,7 @@ export function CreateJobPost() {
                     <Upload className="h-4 w-4" />
                     <span>
                       {jdFromPdfLoading
-                        ? "Extracting Text from File..."
+                        ? "Extracting Text..."
                         : "Upload JD File"}
                     </span>
                   </label>
@@ -511,8 +568,8 @@ export function CreateJobPost() {
         )}
 
         {step === 2 && (
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
               Requirements & Details
             </h2>
 
@@ -624,7 +681,7 @@ export function CreateJobPost() {
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 Salary Range (Optional)
               </label>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <input
                   type="number"
                   value={formData.salaryMin}
@@ -659,7 +716,7 @@ export function CreateJobPost() {
               </div>
             </div>
 
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row justify-between gap-4">
               <button
                 onClick={() => setStep(1)}
                 className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
@@ -679,21 +736,19 @@ export function CreateJobPost() {
         {step === 3 && (
           <div className="space-y-8">
             {/* AI Question Generation */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                   Interview Questions
                 </h2>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={generateQuestionsFromJD}
-                    disabled={questionsFromJdLoading}
-                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    <Wand2 className="h-4 w-4" />
-                    <span>Generate from JD</span>
-                  </button>
-                </div>
+                <button
+                  onClick={generateQuestionsFromJD}
+                  disabled={questionsFromJdLoading}
+                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  <span>Generate from JD</span>
+                </button>
               </div>
 
               {/* Excel Upload Section */}
@@ -701,30 +756,30 @@ export function CreateJobPost() {
                 <div className="flex items-start space-x-3">
                   <FileSpreadsheet className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                       Upload Questions from Excel
                     </h3>
                     <p className="text-sm text-gray-600 mb-4">
                       Upload an Excel file with interview questions. Download the sample template to see the required format.
                     </p>
                     
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
                       <button
                         onClick={handleDownloadSampleExcel}
-                        className="flex items-center space-x-2 bg-white border-2 border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors"
+                        className="flex items-center justify-center space-x-2 bg-white border-2 border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors"
                       >
                         <Download className="h-4 w-4" />
-                        <span>Download Sample Template</span>
+                        <span className="text-sm sm:text-base">Download Sample Template</span>
                       </button>
 
                       <label
                         htmlFor="excel-upload"
-                        className={`flex items-center space-x-2 cursor-pointer bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors ${
+                        className={`flex items-center justify-center space-x-2 cursor-pointer bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors ${
                           excelUploadLoading ? 'opacity-50 cursor-not-allowed' : ''
                         }`}
                       >
                         <Upload className="h-4 w-4" />
-                        <span>
+                        <span className="text-sm sm:text-base">
                           {excelUploadLoading ? 'Uploading...' : 'Upload Excel File'}
                         </span>
                       </label>
@@ -738,13 +793,12 @@ export function CreateJobPost() {
                           const file = e.target.files?.[0];
                           if (file) {
                             handleExcelUpload(file);
-                            e.target.value = ''; // Reset input
+                            e.target.value = '';
                           }
                         }}
                       />
                     </div>
 
-                    {/* Success Message */}
                     {excelSuccess && (
                       <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg flex items-start space-x-2">
                         <AlertCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -752,7 +806,6 @@ export function CreateJobPost() {
                       </div>
                     )}
 
-                    {/* Error Message */}
                     {excelError && (
                       <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg flex items-start space-x-2">
                         <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -761,6 +814,33 @@ export function CreateJobPost() {
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Student List Upload Section */}
+              <div className="mb-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                <div className="flex items-start space-x-3">
+                  <Users className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                      Upload Student List (Optional)
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Pre-upload a list of students who will be taking this interview. {students.length > 0 && `(${students.length} student${students.length !== 1 ? 's' : ''} added)`}
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+                      <button
+                        onClick={() => setStudentListModal(true)}
+                        className="flex items-center justify-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        <Users className="h-4 w-4" />
+                        <span className="text-sm sm:text-base">
+                          {students.length > 0 ? `Manage Students (${students.length})` : 'Upload Student List'}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -807,7 +887,7 @@ export function CreateJobPost() {
                                 placeholder="Enter your interview question..."
                               />
 
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                                 <select
                                   value={editingQuestion.type}
                                   onChange={(e) =>
@@ -933,7 +1013,7 @@ export function CreateJobPost() {
                                   <span>Add Answer Point</span>
                                 </button>
                               </div>
-                              <div className="flex space-x-4 items-center">
+                              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 items-stretch sm:items-center">
                                 <button
                                   onClick={() =>
                                     updateQuestion(
@@ -959,7 +1039,7 @@ export function CreateJobPost() {
                           <>
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1">
-                                <div className="flex items-center space-x-2 mb-2">
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
                                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
                                     {question.type}
                                   </span>
@@ -979,7 +1059,7 @@ export function CreateJobPost() {
                                   </p>
                                 )}
                               </div>
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2 ml-2">
                                 <button
                                   onClick={() => setEditingQuestion(question)}
                                   className="text-gray-600 hover:text-gray-900"
@@ -1022,7 +1102,7 @@ export function CreateJobPost() {
 
               {/* Add New Question */}
               <div className="border-t pt-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">
                   Add New Question Manually
                 </h3>
                 <div className="space-y-4">
@@ -1039,7 +1119,7 @@ export function CreateJobPost() {
                     placeholder="Enter your interview question..."
                   />
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <select
                       value={newQuestion.type}
                       onChange={(e) =>
@@ -1166,16 +1246,16 @@ export function CreateJobPost() {
             </div>
 
             {/* Final Actions */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex justify-between">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
                 <button
                   onClick={() => setStep(2)}
                   disabled={continueLoading}
-                  className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors order-2 sm:order-1"
                 >
                   Back
                 </button>
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 order-1 sm:order-2">
                   <button
                     disabled={continueLoading}
                     onClick={() => handleSubmit(true)}
@@ -1200,6 +1280,152 @@ export function CreateJobPost() {
           </div>
         )}
       </div>
+
+      {/* Student List Modal */}
+      {studentListModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center px-4 sm:px-6 py-4 border-b sticky top-0 bg-white z-10">
+              <div className="flex items-center space-x-3">
+                <Users className="h-6 w-6 text-purple-600" />
+                <h2 className="text-lg sm:text-xl font-bold">Student List</h2>
+              </div>
+              <button
+                onClick={() => setStudentListModal(false)}
+                className="text-gray-500 hover:text-gray-800 p-1"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              {/* Step 1: Download Template */}
+              <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-start space-x-3">
+                  <Download className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                      Step 1: Download Template
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Download the Excel template, fill in student details (name, email, phone number), and save it.
+                    </p>
+                    <button
+                      onClick={handleDownloadStudentTemplate}
+                      className="flex items-center justify-center space-x-2 bg-white border-2 border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors w-full sm:w-auto"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span className="text-sm sm:text-base">Download Sample Template</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2: Upload Student List */}
+              <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="flex items-start space-x-3">
+                  <Upload className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                      Step 2: Upload Student List
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      This will add new students to the existing list.
+                    </p>
+                    
+                    <label
+                      htmlFor="student-excel-upload"
+                      className={`flex items-center justify-center space-x-2 cursor-pointer bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors w-full sm:w-auto ${
+                        studentUploadLoading ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span className="text-sm sm:text-base">
+                        {studentUploadLoading ? 'Uploading...' : 'Upload Excel File'}
+                      </span>
+                    </label>
+                    <input
+                      id="student-excel-upload"
+                      type="file"
+                      accept=".xlsx,.xls"
+                      className="hidden"
+                      disabled={studentUploadLoading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleStudentExcelUpload(file);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Success Message */}
+              {studentSuccess && (
+                <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg flex items-start space-x-2">
+                  <AlertCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-green-800">{studentSuccess}</p>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {studentError && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg flex items-start space-x-2">
+                  <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-red-800 whitespace-pre-line">{studentError}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Student List */}
+              {students.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
+                    Uploaded Students ({students.length})
+                  </h3>
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {students.map((student, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 gap-2"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {student.name}
+                          </p>
+                          <p className="text-xs text-gray-600 truncate">{student.email}</p>
+                          <p className="text-xs text-gray-600">{student.phoneNumber}</p>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveStudent(index)}
+                          className="text-red-600 hover:text-red-700 flex-shrink-0 self-end sm:self-center"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t p-4 sm:p-6 bg-gray-50 sticky bottom-0">
+              <button
+                onClick={() => setStudentListModal(false)}
+                className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

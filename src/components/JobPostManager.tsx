@@ -1,9 +1,9 @@
-import React, { Fragment, useState } from "react";
+// adminaiinterview/src/components/JobPostManager.tsx - COMPLETE WITH STUDENT LIST
+import React, { Fragment, useState, useEffect } from "react";
 import {
   ArrowLeft,
   Plus,
   Search,
-  Filter,
   Edit,
   Trash2,
   Eye,
@@ -12,16 +12,15 @@ import {
   Briefcase,
   Share2,
   Copy,
-  Mail,
   CheckCircle,
-  Linkedin,
-  Link,
+  Upload as UploadIcon,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { JobApplicationsList } from "./JobApplicationsList";
 import { useJobPosts } from "../hooks/useJobPosts";
-import { jobPostAPI } from "../services/api";
+import { jobPostAPI, studentAPI } from "../services/api";
 import { JobInterviewListing } from "./JobInterviewListing";
+import { StudentListManager } from "./StudentListManager";
 
 export function JobPostManager() {
   const { state, dispatch } = useApp();
@@ -39,11 +38,24 @@ export function JobPostManager() {
     title: string;
     company: string;
   } | null>(null);
+  
+  // Student List Modal State
+  const [studentListModal, setStudentListModal] = useState<{
+    isOpen: boolean;
+    jobId: string;
+    jobTitle: string;
+  }>({
+    isOpen: false,
+    jobId: "",
+    jobTitle: "",
+  });
+  
+  const [studentCounts, setStudentCounts] = useState<Record<string, number>>({});
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
   const phoneRegex = /^(?:\+91|91)?[6-9]\d{9}$/;
   const [shareModalData, setShareModalData] = useState<{
     isOpenModal: boolean;
-    activeTab: "Email" | "Whatsapp" | "Linkedin" | "Monstar";
+    activeTab: "Email" | "Whatsapp" | "Linkedin";
     jobId: string;
     data: string;
     isValid: boolean;
@@ -57,22 +69,60 @@ export function JobPostManager() {
     loading: false,
   });
 
-  // Add dummy values for missing fields from API
   const processedJobPosts = jobPosts;
-  // .map((job) => ({
-  //   ...job,
-  //   // Add dummy values for missing fields
-  //   applicants: job.applicants,
-  //   interviews: job.interviews,
-  //   shareableUrl: job.shareableUrl || `${window.location.origin}/job/${job.id}`,
-  //   department: job.department || "General",
-  //   experience: job.experience || "mid",
-  //   type: job.type || "full-time",
-  //   status: job.status || "active",
-  //   createdAt: job.createdAt || new Date(),
-  //   updatedAt: job.updatedAt || new Date(),
-  //   createdBy: job.createdBy || "admin",
-  // }));
+
+  // Load student counts for all job posts
+  useEffect(() => {
+    const loadStudentCounts = async () => {
+      const counts: Record<string, number> = {};
+      for (const job of jobPosts) {
+        try {
+          const response = await studentAPI.getStudentCount(job.id);
+          counts[job.id] = response.count || 0;
+        } catch (err) {
+          console.error(`Failed to fetch student count for job ${job.id}:`, err);
+          counts[job.id] = 0;
+        }
+      }
+      setStudentCounts(counts);
+    };
+
+    if (jobPosts.length > 0) {
+      loadStudentCounts();
+    }
+  }, [jobPosts]);
+
+  // Handle opening student list modal
+  const handleOpenStudentList = (jobId: string, jobTitle: string) => {
+    setStudentListModal({
+      isOpen: true,
+      jobId,
+      jobTitle,
+    });
+  };
+
+  // Handle closing student list modal and refresh count
+  const handleCloseStudentList = async () => {
+    const jobId = studentListModal.jobId;
+    setStudentListModal({
+      isOpen: false,
+      jobId: "",
+      jobTitle: "",
+    });
+
+    // Refresh student count for the job
+    if (jobId) {
+      try {
+        const response = await studentAPI.getStudentCount(jobId);
+        setStudentCounts(prev => ({
+          ...prev,
+          [jobId]: response.count || 0
+        }));
+      } catch (err) {
+        console.error('Failed to refresh student count:', err);
+      }
+    }
+  };
 
   // If viewing applications for a specific job, show the applications list
   if (selectedJobForApplications) {
@@ -133,20 +183,10 @@ export function JobPostManager() {
     return colors[type] || "bg-gray-100 text-gray-800";
   };
 
-  const copyToClipboard = async (url: string, jobId: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedUrl(jobId);
-      setTimeout(() => setCopiedUrl(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy URL:", err);
-    }
-  };
-
   // share or open job post interview links
   const getJobLink = async (
     jobId: string,
-    type: "open" | "whatsapp" | "linkedin" | "monstar" | "copy"
+    type: "open" | "whatsapp" | "linkedin" | "copy"
   ) => {
     try {
       if (type === "whatsapp") {
@@ -155,27 +195,18 @@ export function JobPostManager() {
           return;
         }
       }
-      // generate job post token interview link to send
       let response = await jobPostAPI.generateTokenForJobInterviewLink(jobId);
       if (response?.token?.length > 0) {
         let interviewlink = `https://aiinterview.deepvox.ai/?token=${response?.token}`;
-        // let interviewlink = `http://localhost:5173/?token=${response?.token}`;
         if (type === "copy") {
           await navigator.clipboard.writeText(interviewlink);
           setCopiedUrl(jobId);
           setTimeout(() => setCopiedUrl(null), 2000);
         } else if (type === "open") {
-          // open link
           window.open(interviewlink, "_blank");
         } else if (type === "whatsapp") {
-          setShareModalData({
-            ...shareModalData,
-            loading: true,
-          });
-          // share job interview link in whatsapp
-          const whatsappURL = `https://wa.me/${
-            shareModalData?.data
-          }?text=${encodeURIComponent(
+          setShareModalData({ ...shareModalData, loading: true });
+          const whatsappURL = `https://wa.me/${shareModalData?.data}?text=${encodeURIComponent(
             `Hi! Here is a link for interview: ${interviewlink}`
           )}`;
           window.open(whatsappURL, "_blank");
@@ -188,11 +219,7 @@ export function JobPostManager() {
             loading: false,
           });
         } else if (type === "linkedin") {
-          setShareModalData({
-            ...shareModalData,
-            loading: true,
-          });
-          // share job interview link in linkedin as post
+          setShareModalData({ ...shareModalData, loading: true });
           const linkedinURL = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
             interviewlink
           )}`;
@@ -213,27 +240,6 @@ export function JobPostManager() {
     }
   };
 
-  const shareViaEmail = (job: any) => {
-    const subject = encodeURIComponent(
-      `Job Opportunity: ${job.title} at ${job.company}`
-    );
-    const body = encodeURIComponent(`Hi,
-
-I wanted to share this exciting job opportunity with you:
-
-Position: ${job.title}
-Company: ${job.company}
-Location: ${job.location}
-
-This position includes an AI-powered interview process that provides immediate feedback and evaluation.
-
-Apply here: ${job.shareableUrl}
-
-Best regards`);
-
-    window.open(`mailto:?subject=${subject}&body=${body}`);
-  };
-
   const handleDeleteJob = async (jobId: string) => {
     if (
       window.confirm(
@@ -252,15 +258,14 @@ Best regards`);
   };
 
   const handleEditJob = (jobId: string) => {
-    // Navigate to edit job post view
     dispatch({ type: "SET_VIEW", payload: "edit-job" });
     const job = jobPosts.find((j) => j.id === jobId);
     if (job) {
       dispatch({ type: "SET_CURRENT_JOB_POST", payload: job });
     }
   };
+
   const handleViewJob = (jobId: string) => {
-    // Navigate to edit job post view
     dispatch({ type: "SET_VIEW", payload: "view-job" });
     const job = jobPosts.find((j) => j.id === jobId);
     if (job) {
@@ -274,10 +279,7 @@ Best regards`);
       return;
     }
     try {
-      setShareModalData({
-        ...shareModalData,
-        loading: true,
-      });
+      setShareModalData({ ...shareModalData, loading: true });
       let emails = shareModalData.data?.split(",");
       await jobPostAPI.sendJobLink(shareModalData.jobId, emails);
       alert("Job link sent successfully!");
@@ -320,9 +322,7 @@ Best regards`);
               <h1 className="text-2xl font-bold text-gray-900">Job Posts</h1>
             </div>
             <button
-              onClick={() =>
-                dispatch({ type: "SET_VIEW", payload: "create-job" })
-              }
+              onClick={() => dispatch({ type: "SET_VIEW", payload: "create-job" })}
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-5 w-5" />
@@ -338,16 +338,8 @@ Best regards`);
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
@@ -364,9 +356,7 @@ Best regards`);
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Jobs</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {processedJobPosts.length}
-                </p>
+                <p className="text-3xl font-bold text-gray-900">{processedJobPosts.length}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-lg">
                 <Briefcase className="h-6 w-6 text-blue-600" />
@@ -379,10 +369,7 @@ Best regards`);
               <div>
                 <p className="text-sm text-gray-600 mb-1">Active Jobs</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {
-                    processedJobPosts.filter((job) => job.status === "draft")
-                      .length
-                  }
+                  {processedJobPosts.filter((job) => job.status === "draft").length}
                 </p>
               </div>
               <div className="bg-green-100 p-3 rounded-lg">
@@ -396,10 +383,7 @@ Best regards`);
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Applicants</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {processedJobPosts.reduce(
-                    (sum, job) => sum + (job.applicants || 0),
-                    0
-                  )}
+                  {processedJobPosts.reduce((sum, job) => sum + (job.applicants || 0), 0)}
                 </p>
               </div>
               <div className="bg-purple-100 p-3 rounded-lg">
@@ -413,10 +397,7 @@ Best regards`);
               <div>
                 <p className="text-sm text-gray-600 mb-1">Interviews</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {processedJobPosts.reduce(
-                    (sum, job) => sum + (job.interviews || 0),
-                    0
-                  )}
+                  {processedJobPosts.reduce((sum, job) => sum + (job.interviews || 0), 0)}
                 </p>
               </div>
               <div className="bg-yellow-100 p-3 rounded-lg">
@@ -497,35 +478,21 @@ Best regards`);
                     <tr key={job.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {job.title}
-                          </div>
+                          <div className="text-sm font-medium text-gray-900">{job.title}</div>
                           <div className="text-sm text-gray-500">
                             {job.company} • {job.department}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {job.location}
-                          </div>
+                          <div className="text-sm text-gray-500">{job.location}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-2">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(
-                              job.type
-                            )}`}
-                          >
-                            {job.type.charAt(0).toUpperCase() +
-                              job.type.slice(1).replace("-", " ")}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(job.type)}`}>
+                            {job.type.charAt(0).toUpperCase() + job.type.slice(1).replace("-", " ")}
                           </span>
                           <br />
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                              job.status
-                            )}`}
-                          >
-                            {job.status.charAt(0).toUpperCase() +
-                              job.status.slice(1)}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}>
+                            {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                           </span>
                         </div>
                       </td>
@@ -558,47 +525,54 @@ Best regards`);
                         </button>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex flex-col space-y-2">
+                          {/* Copy URL / Share buttons */}
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => getJobLink(job.id, "copy")}
+                              className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-xs"
+                            >
+                              {copiedUrl === job.id ? (
+                                <>
+                                  <CheckCircle className="h-3 w-3" />
+                                  <span>Copied!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-3 w-3" />
+                                  <span>Copy URL</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShareModalData({
+                                  isOpenModal: true,
+                                  activeTab: "Email",
+                                  jobId: job.id,
+                                  data: "",
+                                  isValid: true,
+                                  loading: false,
+                                });
+                              }}
+                              title="Share"
+                              className="text-gray-600 hover:text-gray-900"
+                            >
+                              <Share2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                          
+                          {/* Student List Upload Button */}
                           <button
-                            onClick={() => getJobLink(job.id, "copy")}
-                            className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+                            onClick={() => handleOpenStudentList(job.id, job.title)}
+                            className="flex items-center space-x-1 text-purple-600 hover:text-purple-700 text-xs font-medium"
                           >
-                            {copiedUrl === job.id ? (
-                              <>
-                                <CheckCircle className="h-4 w-4" />
-                                <span>Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="h-4 w-4" />
-                                <span>Copy URL</span>
-                              </>
-                            )}
-                          </button>
-                          {/* <button
-                            onClick={() => {
-                              getJobLink(job.id, "open");
-                            }}
-                            title="Open Link"
-                            className="text-gray-600 hover:text-gray-900"
-                          >
-                            <Link className="h-4 w-4" />
-                          </button> */}
-                          <button
-                            onClick={() => {
-                              setShareModalData({
-                                isOpenModal: true,
-                                activeTab: "Email",
-                                jobId: job.id,
-                                data: "",
-                                isValid: true,
-                                loading: false,
-                              });
-                            }}
-                            title="Share"
-                            className="text-gray-600 hover:text-gray-900"
-                          >
-                            <Share2 className="h-4 w-4" />
+                            <UploadIcon className="h-3 w-3" />
+                            <span>
+                              {studentCounts[job.id] > 0 
+                                ? `${studentCounts[job.id]} Student${studentCounts[job.id] !== 1 ? 's' : ''}`
+                                : 'Upload List'}
+                            </span>
                           </button>
                         </div>
                       </td>
@@ -641,9 +615,7 @@ Best regards`);
         {!loading && filteredJobs.length === 0 && (
           <div className="text-center py-12">
             <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
-              No job posts found
-            </h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No job posts found</h3>
             <p className="mt-1 text-sm text-gray-500">
               {searchTerm || filterStatus !== "all"
                 ? "Try adjusting your search or filter criteria."
@@ -652,9 +624,7 @@ Best regards`);
             {!searchTerm && filterStatus === "all" && (
               <div className="mt-6">
                 <button
-                  onClick={() =>
-                    dispatch({ type: "SET_VIEW", payload: "create-job" })
-                  }
+                  onClick={() => dispatch({ type: "SET_VIEW", payload: "create-job" })}
                   className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -665,6 +635,14 @@ Best regards`);
           </div>
         )}
       </div>
+
+      {/* Student List Manager Modal */}
+      <StudentListManager
+        jobPostId={studentListModal.jobId}
+        jobTitle={studentListModal.jobTitle}
+        isOpen={studentListModal.isOpen}
+        onClose={handleCloseStudentList}
+      />
 
       {/* Share Modal */}
       {shareModalData.isOpenModal && (
@@ -691,7 +669,6 @@ Best regards`);
 
             {/* Share Tabs */}
             <div className="flex border-b">
-              {/* {["Email", "Whatsapp", "Linkedin", "Monstar"].map((tab: any) => ( */}
               {["Email", "Whatsapp", "Linkedin"].map((tab: any) => (
                 <button
                   key={tab}
@@ -717,25 +694,17 @@ Best regards`);
               {shareModalData.activeTab === "Email" && (
                 <Fragment>
                   {(() => {
-                    const job = processedJobPosts.find(
-                      (j) => j.id === shareModalData.jobId
-                    );
+                    const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
                     if (!job) return null;
 
                     return (
                       <div className="space-y-4">
                         <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-gray-900">
-                            {job.title}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {job.company} • {job.location}
-                          </p>
+                          <h4 className="font-medium text-gray-900">{job.title}</h4>
+                          <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Email *
-                          </label>
+                          <label className="block text-sm font-medium text-gray-700">Email *</label>
                           <input
                             type="text"
                             value={shareModalData.data}
@@ -744,15 +713,13 @@ Best regards`);
                               setShareModalData({
                                 ...shareModalData,
                                 data: value,
-                                // isValid: phoneRegex.test(value),
                               });
                             }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Example@gmail.com"
                           />
                           <p className="text-gray-500 text-sm">
-                            Note: Add emails separated by commas (e.g.,
-                            user1@example.com, user2@example.com)
+                            Note: Add emails separated by commas (e.g., user1@example.com, user2@example.com)
                           </p>
                         </div>
                         {shareModalData.loading ? (
@@ -792,25 +759,17 @@ Best regards`);
               {shareModalData.activeTab === "Whatsapp" && (
                 <Fragment>
                   {(() => {
-                    const job = processedJobPosts.find(
-                      (j) => j.id === shareModalData.jobId
-                    );
+                    const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
                     if (!job) return null;
 
                     return (
                       <div className="space-y-4">
                         <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-gray-900">
-                            {job.title}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {job.company} • {job.location}
-                          </p>
+                          <h4 className="font-medium text-gray-900">{job.title}</h4>
+                          <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Phone Number *
-                          </label>
+                          <label className="block text-sm font-medium text-gray-700">Phone Number *</label>
                           <input
                             type="text"
                             value={shareModalData.data}
@@ -827,9 +786,7 @@ Best regards`);
                             placeholder="Enter Mobile number"
                           />
                           {!shareModalData.isValid && (
-                            <p className="text-red-500 text-sm">
-                              Please enter valid phone number
-                            </p>
+                            <p className="text-red-500 text-sm">Please enter valid phone number</p>
                           )}
                         </div>
                         {shareModalData.loading ? (
@@ -871,20 +828,14 @@ Best regards`);
               {shareModalData.activeTab === "Linkedin" && (
                 <Fragment>
                   {(() => {
-                    const job = processedJobPosts.find(
-                      (j) => j.id === shareModalData.jobId
-                    );
+                    const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
                     if (!job) return null;
 
                     return (
                       <div className="space-y-4">
                         <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-gray-900">
-                            {job.title}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {job.company} • {job.location}
-                          </p>
+                          <h4 className="font-medium text-gray-900">{job.title}</h4>
+                          <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
                         </div>
                         {shareModalData.loading ? (
                           <div className="flex justify-center mt-4">
@@ -922,60 +873,6 @@ Best regards`);
                   })()}
                 </Fragment>
               )}
-              {/* {shareModalData.activeTab === "Monstar" && (
-                <Fragment>
-                  {(() => {
-                    const job = processedJobPosts.find(
-                      (j) => j.id === shareModalData.jobId
-                    );
-                    if (!job) return null;
-
-                    return (
-                      <div className="space-y-4">
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-gray-900">
-                            {job.title}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {job.company} • {job.location}
-                          </p>
-                        </div>
-                        {shareModalData.loading ? (
-                          <div className="flex justify-center mt-4">
-                            <div className="h-6 w-6 border-4 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button
-                              onClick={() => {
-                                getJobLink(shareModalData.jobId, "monstar");
-                              }}
-                              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            >
-                              Submit
-                            </button>
-                            <button
-                              onClick={() => {
-                                setShareModalData({
-                                  isOpenModal: false,
-                                  activeTab: "Email",
-                                  jobId: "",
-                                  data: "",
-                                  isValid: true,
-                                  loading: false,
-                                });
-                              }}
-                              className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              Close
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </Fragment>
-              )} */}
             </div>
           </div>
         </div>
