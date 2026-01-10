@@ -1,4 +1,4 @@
-// adminaiinterview/src/services/api.ts - COMPLETE FIXED VERSION
+// adminaiinterview/src/services/api.ts - COMPLETE WITH STUDENT EXAM LINK
 import axios from 'axios';
 import { JobPost } from '../types';
 
@@ -245,6 +245,21 @@ export const jobPostAPI = {
   // Send job link to email (Public)
   sendJobLink: async (jobId: string, email: string[]): Promise<void> => {
     await api.post('/jobposts/send-job-link', { jobId, email });
+  },
+
+  // Send student exam link to emails (NEW)
+  sendStudentExamLink: async (
+    jobId: string, 
+    emails: string[], 
+    messageTemplate?: string,
+    students?: Array<{ name: string; email: string }>
+  ): Promise<void> => {
+    await api.post('/jobposts/send-student-exam-link', { 
+      jobId, 
+      emails,
+      messageTemplate,
+      students 
+    });
   },
 
   // Generate token for job post interview link (Public)

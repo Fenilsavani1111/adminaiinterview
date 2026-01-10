@@ -1,4 +1,4 @@
-// adminaiinterview/src/components/JobPostManager.tsx - COMPLETE WITH STUDENT LIST
+// adminaiinterview/src/components/JobPostManager.tsx - COMPLETE FIXED VERSION
 import React, { Fragment, useState, useEffect } from "react";
 import {
   ArrowLeft,
@@ -14,11 +14,14 @@ import {
   Copy,
   CheckCircle,
   Upload as UploadIcon,
+  Send,
+  X,
+  AlertCircle,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { JobApplicationsList } from "./JobApplicationsList";
 import { useJobPosts } from "../hooks/useJobPosts";
-import { jobPostAPI, studentAPI } from "../services/api";
+import { jobPostAPI, studentAPI, Student } from "../services/api";
 import { JobInterviewListing } from "./JobInterviewListing";
 import { StudentListManager } from "./StudentListManager";
 
@@ -39,8 +42,8 @@ export function JobPostManager() {
     company: string;
   } | null>(null);
   
-  // Student List Modal State
-  const [studentListModal, setStudentListModal] = useState<{
+  // Candidate List Modal State (renamed from Student List)
+  const [candidateListModal, setCandidateListModal] = useState<{
     isOpen: boolean;
     jobId: string;
     jobTitle: string;
@@ -50,16 +53,21 @@ export function JobPostManager() {
     jobTitle: "",
   });
   
-  const [studentCounts, setStudentCounts] = useState<Record<string, number>>({});
+  const [candidateCounts, setCandidateCounts] = useState<Record<string, number>>({});
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
   const phoneRegex = /^(?:\+91|91)?[6-9]\d{9}$/;
+  
   const [shareModalData, setShareModalData] = useState<{
     isOpenModal: boolean;
-    activeTab: "Email" | "Whatsapp" | "Linkedin";
+    activeTab: "Email" | "Whatsapp" | "Linkedin" | "CandidateList";
     jobId: string;
     data: string;
     isValid: boolean;
     loading: boolean;
+    jobToken: string;
+    students: Student[];
+    loadingStudents: boolean;
+    emailMessage: string;
   }>({
     isOpenModal: false,
     activeTab: "Email",
@@ -67,60 +75,116 @@ export function JobPostManager() {
     data: "",
     isValid: true,
     loading: false,
+    jobToken: "",
+    students: [],
+    loadingStudents: false,
+    emailMessage: "",
   });
+
+  // Helper function to reset share modal
+  const resetShareModal = () => {
+    setShareModalData({
+      isOpenModal: false,
+      activeTab: "Email",
+      jobId: "",
+      data: "",
+      isValid: true,
+      loading: false,
+      jobToken: "",
+      students: [],
+      loadingStudents: false,
+      emailMessage: "",
+    });
+  };
 
   const processedJobPosts = jobPosts;
 
-  // Load student counts for all job posts
+  // Load candidate counts for all job posts
   useEffect(() => {
-    const loadStudentCounts = async () => {
+    const loadCandidateCounts = async () => {
       const counts: Record<string, number> = {};
       for (const job of jobPosts) {
         try {
           const response = await studentAPI.getStudentCount(job.id);
           counts[job.id] = response.count || 0;
         } catch (err) {
-          console.error(`Failed to fetch student count for job ${job.id}:`, err);
+          console.error(`Failed to fetch candidate count for job ${job.id}:`, err);
           counts[job.id] = 0;
         }
       }
-      setStudentCounts(counts);
+      setCandidateCounts(counts);
     };
 
     if (jobPosts.length > 0) {
-      loadStudentCounts();
+      loadCandidateCounts();
     }
   }, [jobPosts]);
 
-  // Handle opening student list modal
-  const handleOpenStudentList = (jobId: string, jobTitle: string) => {
-    setStudentListModal({
+  // Handle opening candidate list modal
+  const handleOpenCandidateList = (jobId: string, jobTitle: string) => {
+    setCandidateListModal({
       isOpen: true,
       jobId,
       jobTitle,
     });
   };
 
-  // Handle closing student list modal and refresh count
-  const handleCloseStudentList = async () => {
-    const jobId = studentListModal.jobId;
-    setStudentListModal({
+  // Handle closing candidate list modal and refresh count
+  const handleCloseCandidateList = async () => {
+    const jobId = candidateListModal.jobId;
+    setCandidateListModal({
       isOpen: false,
       jobId: "",
       jobTitle: "",
     });
 
-    // Refresh student count for the job
+    // Refresh candidate count for the job
     if (jobId) {
       try {
         const response = await studentAPI.getStudentCount(jobId);
-        setStudentCounts(prev => ({
+        setCandidateCounts(prev => ({
           ...prev,
           [jobId]: response.count || 0
         }));
       } catch (err) {
-        console.error('Failed to refresh student count:', err);
+        console.error('Failed to refresh candidate count:', err);
       }
+    }
+  };
+
+  // Load candidates when Candidate List tab is opened
+  const loadCandidatesForJob = async (jobId: string) => {
+    try {
+      setShareModalData(prev => ({ ...prev, loadingStudents: true }));
+      const response = await studentAPI.getStudentsByJobPost(jobId);
+      setShareModalData(prev => ({ 
+        ...prev, 
+        students: response.students || [],
+        loadingStudents: false 
+      }));
+    } catch (err) {
+      console.error('Failed to load candidates:', err);
+      setShareModalData(prev => ({ 
+        ...prev, 
+        students: [],
+        loadingStudents: false 
+      }));
+    }
+  };
+
+  // Generate token when share modal opens
+  const generateJobToken = async (jobId: string) => {
+    try {
+      console.log('🔑 Generating token for job:', jobId);
+      const response = await jobPostAPI.generateTokenForJobInterviewLink(jobId);
+      console.log('✅ Token response:', response);
+      if (response?.token) {
+        return response.token;
+      }
+      return null;
+    } catch (err) {
+      console.error('❌ Failed to generate token:', err);
+      return null;
     }
   };
 
@@ -210,28 +274,14 @@ export function JobPostManager() {
             `Hi! Here is a link for interview: ${interviewlink}`
           )}`;
           window.open(whatsappURL, "_blank");
-          setShareModalData({
-            isOpenModal: false,
-            activeTab: "Email",
-            jobId: "",
-            data: "",
-            isValid: true,
-            loading: false,
-          });
+          resetShareModal();
         } else if (type === "linkedin") {
           setShareModalData({ ...shareModalData, loading: true });
           const linkedinURL = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
             interviewlink
           )}`;
           window.open(linkedinURL, "_blank");
-          setShareModalData({
-            isOpenModal: false,
-            activeTab: "Email",
-            jobId: "",
-            data: "",
-            isValid: true,
-            loading: false,
-          });
+          resetShareModal();
         }
       }
     } catch (error) {
@@ -283,25 +333,62 @@ export function JobPostManager() {
       let emails = shareModalData.data?.split(",");
       await jobPostAPI.sendJobLink(shareModalData.jobId, emails);
       alert("Job link sent successfully!");
-      setShareModalData({
-        isOpenModal: false,
-        activeTab: "Email",
-        jobId: "",
-        data: "",
-        isValid: true,
-        loading: false,
-      });
+      resetShareModal();
     } catch (error) {
       console.log("Failed to send mail:", error);
-      setShareModalData({
-        isOpenModal: false,
-        activeTab: "Email",
-        jobId: "",
-        data: "",
-        isValid: true,
-        loading: false,
-      });
+      resetShareModal();
       alert("Failed to send job link. Please try again.");
+    }
+  };
+
+  // Handle sending candidate list emails
+  const handleSendCandidateEmails = async () => {
+    if (shareModalData.students.length === 0) {
+      alert("No candidates found to send emails.");
+      return;
+    }
+
+    if (!window.confirm(`Send examination link to ${shareModalData.students.length} candidate(s)?`)) {
+      return;
+    }
+
+    try {
+      setShareModalData(prev => ({ ...prev, loading: true }));
+      
+      // Get the custom message template or use default
+      const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
+      const interviewLink = shareModalData.jobToken 
+        ? `https://aiinterview.deepvox.ai/?token=${shareModalData.jobToken}`
+        : '';
+      
+      const messageTemplate = shareModalData.emailMessage || `Dear {studentName},
+
+You have been invited to participate in an interview for the position of ${job?.title} at ${job?.company}.
+
+Please use the examination link provided to access the interview. This link is unique to you and should not be shared with others.
+
+Interview Link: ${interviewLink}
+
+Please complete the interview at your earliest convenience. If you have any questions, please contact the HR department.
+
+Best regards,
+HR Team`;
+      
+      // Send emails with candidate data for personalization
+      await jobPostAPI.sendStudentExamLink(
+        shareModalData.jobId, 
+        shareModalData.students.map(s => s.email),
+        messageTemplate,
+        shareModalData.students.map(s => ({ name: s.name, email: s.email }))
+      );
+      
+      alert(`Examination link sent successfully to ${shareModalData.students.length} candidate(s)!`);
+      
+      resetShareModal();
+    } catch (error: any) {
+      console.error("Failed to send candidate emails:", error);
+      alert(error?.response?.data?.message || "Failed to send emails. Please try again.");
+      setShareModalData(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -545,7 +632,8 @@ export function JobPostManager() {
                               )}
                             </button>
                             <button
-                              onClick={() => {
+                              onClick={async () => {
+                                // Open modal with loading state
                                 setShareModalData({
                                   isOpenModal: true,
                                   activeTab: "Email",
@@ -553,7 +641,23 @@ export function JobPostManager() {
                                   data: "",
                                   isValid: true,
                                   loading: false,
+                                  jobToken: "",
+                                  students: [],
+                                  loadingStudents: false,
+                                  emailMessage: "",
                                 });
+                                
+                                // Generate token and load candidates in background
+                                const token = await generateJobToken(job.id);
+                                await loadCandidatesForJob(job.id);
+                                
+                                // Update with token
+                                if (token) {
+                                  setShareModalData(prev => ({
+                                    ...prev,
+                                    jobToken: token
+                                  }));
+                                }
                               }}
                               title="Share"
                               className="text-gray-600 hover:text-gray-900"
@@ -562,15 +666,15 @@ export function JobPostManager() {
                             </button>
                           </div>
                           
-                          {/* Student List Upload Button */}
+                          {/* Candidate List Upload Button */}
                           <button
-                            onClick={() => handleOpenStudentList(job.id, job.title)}
+                            onClick={() => handleOpenCandidateList(job.id, job.title)}
                             className="flex items-center space-x-1 text-purple-600 hover:text-purple-700 text-xs font-medium"
                           >
                             <UploadIcon className="h-3 w-3" />
                             <span>
-                              {studentCounts[job.id] > 0 
-                                ? `${studentCounts[job.id]} Student${studentCounts[job.id] !== 1 ? 's' : ''}`
+                              {candidateCounts[job.id] > 0 
+                                ? `${candidateCounts[job.id]} Candidate${candidateCounts[job.id] !== 1 ? 's' : ''}`
                                 : 'Upload List'}
                             </span>
                           </button>
@@ -681,14 +785,14 @@ export function JobPostManager() {
                       )}
                     </button>
                     <button
-                      onClick={() => handleOpenStudentList(job.id, job.title)}
+                      onClick={() => handleOpenCandidateList(job.id, job.title)}
                       className="flex items-center justify-center space-x-2 text-purple-600 hover:text-purple-700 text-sm font-medium"
                     >
                       <UploadIcon className="h-4 w-4" />
                       <span>
-                        {studentCounts[job.id] > 0 
-                          ? `${studentCounts[job.id]} Student${studentCounts[job.id] !== 1 ? 's' : ''}`
-                          : 'Upload Student List'}
+                        {candidateCounts[job.id] > 0 
+                          ? `${candidateCounts[job.id]} Candidate${candidateCounts[job.id] !== 1 ? 's' : ''}`
+                          : 'Upload Candidate List'}
                       </span>
                     </button>
                 </div>
@@ -722,61 +826,60 @@ export function JobPostManager() {
         )}
       </div>
 
-      {/* Student List Manager Modal */}
+      {/* Candidate List Manager Modal */}
       <StudentListManager
-        jobPostId={studentListModal.jobId}
-        jobTitle={studentListModal.jobTitle}
-        isOpen={studentListModal.isOpen}
-        onClose={handleCloseStudentList}
+        jobPostId={candidateListModal.jobId}
+        jobTitle={candidateListModal.jobTitle}
+        isOpen={candidateListModal.isOpen}
+        onClose={handleCloseCandidateList}
       />
 
-      {/* Share Modal */}
+      {/* Share Modal - FIXED TABS */}
       {shareModalData.isOpenModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-md shadow-lg">
-            <div className="flex justify-between items-center px-4 py-2 border-b">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-2xl shadow-lg max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center px-4 py-3 border-b">
               <h2 className="text-lg font-bold">Share Job Post</h2>
               <button
-                onClick={() => {
-                  setShareModalData({
-                    isOpenModal: false,
-                    activeTab: "Email",
-                    jobId: "",
-                    data: "",
-                    isValid: true,
-                    loading: false,
-                  });
-                }}
+                onClick={resetShareModal}
                 className="text-gray-500 hover:text-gray-800"
               >
-                ✕
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Share Tabs */}
-            <div className="flex border-b">
-              {["Email", "Whatsapp", "Linkedin"].map((tab: any) => (
+            {/* FIXED Share Tabs - Now properly visible */}
+            <div className="flex border-b bg-gray-50">
+              {[
+                { id: "Email", label: "Email" },
+                { id: "Whatsapp", label: "WhatsApp" },
+                { id: "Linkedin", label: "LinkedIn" },
+                { id: "CandidateList", label: "Candidate List" }
+              ].map((tab) => (
                 <button
-                  key={tab}
-                  className={`flex-1 py-2 text-sm font-medium ${
-                    shareModalData.activeTab === tab
-                      ? "border-b-2 border-blue-600 text-blue-600"
-                      : "text-gray-700 hover:text-blue-700"
+                  key={tab.id}
+                  className={`flex-1 py-3 px-3 text-sm font-medium transition-all ${
+                    shareModalData.activeTab === tab.id
+                      ? "border-b-2 border-blue-600 text-blue-600 bg-white"
+                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-100"
                   }`}
                   onClick={() => {
                     setShareModalData({
                       ...shareModalData,
-                      activeTab: tab,
+                      activeTab: tab.id as any,
                     });
+                    if (tab.id === "CandidateList") {
+                      loadCandidatesForJob(shareModalData.jobId);
+                    }
                   }}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab.label}
                 </button>
               ))}
             </div>
 
             {/* Tab Content */}
-            <div className="p-4 space-y-5">
+            <div className="p-4 space-y-4 overflow-y-auto flex-1">
               {shareModalData.activeTab === "Email" && (
                 <Fragment>
                   {(() => {
@@ -821,16 +924,7 @@ export function JobPostManager() {
                               Submit
                             </button>
                             <button
-                              onClick={() => {
-                                setShareModalData({
-                                  isOpenModal: false,
-                                  activeTab: "Email",
-                                  jobId: "",
-                                  data: "",
-                                  isValid: true,
-                                  loading: false,
-                                });
-                              }}
+                              onClick={resetShareModal}
                               className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                               Close
@@ -842,6 +936,7 @@ export function JobPostManager() {
                   })()}
                 </Fragment>
               )}
+              
               {shareModalData.activeTab === "Whatsapp" && (
                 <Fragment>
                   {(() => {
@@ -890,16 +985,7 @@ export function JobPostManager() {
                               Submit
                             </button>
                             <button
-                              onClick={() => {
-                                setShareModalData({
-                                  isOpenModal: false,
-                                  activeTab: "Email",
-                                  jobId: "",
-                                  data: "",
-                                  isValid: true,
-                                  loading: false,
-                                });
-                              }}
+                              onClick={resetShareModal}
                               className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                               Close
@@ -911,6 +997,7 @@ export function JobPostManager() {
                   })()}
                 </Fragment>
               )}
+              
               {shareModalData.activeTab === "Linkedin" && (
                 <Fragment>
                   {(() => {
@@ -938,16 +1025,7 @@ export function JobPostManager() {
                               Submit
                             </button>
                             <button
-                              onClick={() => {
-                                setShareModalData({
-                                  isOpenModal: false,
-                                  activeTab: "Email",
-                                  jobId: "",
-                                  data: "",
-                                  isValid: true,
-                                  loading: false,
-                                });
-                              }}
+                              onClick={resetShareModal}
                               className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                               Close
@@ -958,6 +1036,160 @@ export function JobPostManager() {
                     );
                   })()}
                 </Fragment>
+              )}
+
+              {/* Candidate List Tab */}
+              {shareModalData.activeTab === "CandidateList" && (
+                <div className="space-y-4">
+                  {(() => {
+                    const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
+                    if (!job) return null;
+
+                    const interviewLink = shareModalData.jobToken 
+                      ? `https://aiinterview.deepvox.ai/?token=${shareModalData.jobToken}`
+                      : 'Loading token...';
+
+                    return (
+                      <>
+                        {/* Job Details */}
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+                          <h4 className="font-bold text-gray-900 text-lg">{job.title}</h4>
+                          <p className="text-sm text-gray-700 mt-1">{job.company} • {job.location}</p>
+                          <div className="mt-3 pt-3 border-t border-blue-200">
+                            <p className="text-xs font-medium text-gray-600 mb-1">Interview Link:</p>
+                            <div className="flex items-center space-x-2">
+                              {shareModalData.jobToken ? (
+                                <>
+                                  <code className="flex-1 text-xs bg-white px-2 py-1 rounded border border-gray-300 overflow-x-auto">
+                                    {interviewLink}
+                                  </code>
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(interviewLink);
+                                      alert('Link copied!');
+                                    }}
+                                    className="text-blue-600 hover:text-blue-700"
+                                    title="Copy link"
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </button>
+                                </>
+                              ) : (
+                                <div className="flex items-center space-x-2 text-gray-500">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                  <span className="text-xs">Generating link...</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Email Description - Editable */}
+                        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                          <h5 className="font-semibold text-gray-900 mb-2 flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-2 text-yellow-600" />
+                            Email Description (Editable)
+                          </h5>
+                          <textarea
+                            value={shareModalData.emailMessage || `Dear {studentName},
+
+You have been invited to participate in an interview for the position of ${job.title} at ${job.company}.
+
+Please use the examination link provided to access the interview. This link is unique to you and should not be shared with others.
+
+Interview Link: ${interviewLink}
+
+Please complete the interview at your earliest convenience. If you have any questions, please contact the HR department.
+
+Best regards,
+HR Team`}
+                            onChange={(e) => setShareModalData(prev => ({ ...prev, emailMessage: e.target.value }))}
+                            className="w-full min-h-[300px] px-3 py-2 text-sm text-gray-700 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent resize-y"
+                            placeholder="Enter email message..."
+                          />
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs text-gray-600">
+                              ℹ️ You can edit this message before sending. Use <code className="bg-gray-200 px-1 rounded">{'{studentName}'}</code> to personalize with each candidate's name.
+                            </p>
+                            <p className="text-xs text-blue-600">
+                               Example: "Dear {'{studentName}'}" will become "Dear John" for each candidate.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Candidate List */}
+                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                            <h5 className="font-semibold text-gray-900 flex items-center">
+                              <Users className="h-4 w-4 mr-2" />
+                              Candidate List ({shareModalData.students.length})
+                            </h5>
+                          </div>
+                          
+                          {shareModalData.loadingStudents ? (
+                            <div className="flex justify-center items-center py-8">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                              <span className="ml-3 text-gray-600 text-sm">Loading candidates...</span>
+                            </div>
+                          ) : shareModalData.students.length === 0 ? (
+                            <div className="text-center py-8">
+                              <Users className="mx-auto h-8 w-8 text-gray-300" />
+                              <p className="mt-2 text-sm text-gray-500">No candidates uploaded yet</p>
+                              <p className="text-xs text-gray-400 mt-1">Upload candidate list to send exam links</p>
+                            </div>
+                          ) : (
+                            <div className="max-h-64 overflow-y-auto">
+                              <table className="w-full">
+                                <thead className="bg-gray-50 sticky top-0">
+                                  <tr>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">#</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Name</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Email</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Phone</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                  {shareModalData.students.map((student, index) => (
+                                    <tr key={student.id || index} className="hover:bg-gray-50">
+                                      <td className="px-4 py-2 text-sm text-gray-500">{index + 1}</td>
+                                      <td className="px-4 py-2 text-sm text-gray-900">{student.name}</td>
+                                      <td className="px-4 py-2 text-sm text-gray-600">{student.email}</td>
+                                      <td className="px-4 py-2 text-sm text-gray-600">{student.phoneNumber || student.mobile}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        {shareModalData.loading ? (
+                          <div className="flex justify-center py-4">
+                            <div className="h-6 w-6 border-4 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button
+                              onClick={handleSendCandidateEmails}
+                              disabled={shareModalData.students.length === 0}
+                              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                            >
+                              <Send className="h-4 w-4" />
+                              <span>Send to {shareModalData.students.length} Candidate{shareModalData.students.length !== 1 ? 's' : ''}</span>
+                            </button>
+                            <button
+                              onClick={resetShareModal}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
               )}
             </div>
           </div>
