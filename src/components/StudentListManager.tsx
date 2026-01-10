@@ -203,7 +203,7 @@ export function StudentListManager({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b">
+        <div className="flex flex-col sm:flex-row border-b">
           <button
             onClick={() => setViewMode('list')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
@@ -233,7 +233,7 @@ export function StudentListManager({
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+        <div className="p-4 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 180px)' }}>
           {/* Success/Error Messages */}
           {success && (
             <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg flex items-start space-x-2">
@@ -259,8 +259,8 @@ export function StudentListManager({
                 </div>
               ) : students.length === 0 ? (
                 <div className="text-center py-12">
-                  <FileSpreadsheet className="mx-auto h-16 w-16 text-gray-300" />
-                  <h3 className="mt-4 text-lg font-medium text-gray-900">No Students Uploaded</h3>
+                  <FileSpreadsheet className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-gray-300" />
+                  <h3 className="mt-4 text-md sm:text-lg font-medium text-gray-900">No Students Uploaded</h3>
                   <p className="mt-2 text-sm text-gray-600">
                     Upload an Excel file to add students to this job post
                   </p>
@@ -274,7 +274,7 @@ export function StudentListManager({
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
                     <h3 className="text-lg font-semibold text-gray-900">
                       {students.length} Student{students.length !== 1 ? 's' : ''}
                     </h3>
@@ -287,7 +287,8 @@ export function StudentListManager({
                     </button>
                   </div>
 
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  {/* Desktop Table */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden hidden md:block">
                     <table className="w-full">
                       <thead className="bg-gray-50">
                         <tr>
@@ -302,8 +303,8 @@ export function StudentListManager({
                         {students.map((student, index) => (
                           <tr key={student.id} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm text-gray-500">{index + 1}</td>
-                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{student.name}</td>
-                            <td className="px-4 py-3 text-sm text-gray-600">{student.email}</td>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900 truncate max-w-xs">{student.name}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-xs">{student.email}</td>
                             <td className="px-4 py-3 text-sm text-gray-600">{student.phoneNumber || student.mobile}</td>
                             <td className="px-4 py-3 text-sm text-right">
                               <button
@@ -318,6 +319,31 @@ export function StudentListManager({
                         ))}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* Mobile Card List */}
+                  <div className="space-y-3 md:hidden">
+                    {students.map((student, index) => (
+                      <div key={student.id} className="bg-white p-3 border border-gray-200 rounded-lg shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center">
+                              <span className="text-gray-500 text-sm mr-2">{index + 1}.</span>
+                              <p className="text-sm font-bold text-gray-900 truncate">{student.name}</p>
+                            </div>
+                            <p className="text-sm text-gray-600 truncate ml-5">{student.email}</p>
+                            <p className="text-sm text-gray-600 ml-5">{student.phoneNumber || student.mobile}</p>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveStudent(student.id!)}
+                            className="text-red-600 hover:text-red-700 p-1 ml-2"
+                            title="Remove student"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </>
               )}

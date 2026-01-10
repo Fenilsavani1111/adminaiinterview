@@ -510,9 +510,9 @@ export function AdminDashboard() {
                                   {item?.JobPost?.company}
                                 </p>
                                 <div className="flex items-center space-x-2 mt-2">
-                                  {item.skills
-                                    .slice(0, 3)
-                                    .map((skill, index) => (
+                                  {item?.skills
+                                    ?.slice(0, 3)
+                                    ?.map((skill, index) => (
                                       <span
                                         key={index}
                                         className="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg text-xs font-medium border border-blue-200"

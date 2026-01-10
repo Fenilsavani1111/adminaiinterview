@@ -347,7 +347,7 @@ export function CreateJobPost() {
       <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={() =>
                   dispatch({ type: "SET_VIEW", payload: "job-posts" })
@@ -357,7 +357,7 @@ export function CreateJobPost() {
                 <ArrowLeft className="h-5 w-5" />
                 <span className="hidden sm:inline">Back to Job Posts</span>
               </button>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                 Create Job Post
               </h1>
             </div>
@@ -368,9 +368,9 @@ export function CreateJobPost() {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Progress Bar */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
@@ -519,7 +519,7 @@ export function CreateJobPost() {
                       }
                     }}
                   />
-                  <span className="text-gray-400">or</span>
+                  <span className="text-gray-400 hidden sm:inline">or</span>
                   <span className="text-sm text-gray-600">
                     Type/paste description below
                   </span>
@@ -549,7 +549,7 @@ export function CreateJobPost() {
                   setStep(2);
                   setContinueLoading(false);
                 }}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
                 disabled={
                   jdFromPdfLoading ||
                   !formData.title ||
@@ -558,7 +558,7 @@ export function CreateJobPost() {
                 }
               >
                 {continueLoading ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white-600 mx-5"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mx-auto"></div>
                 ) : (
                   <>Continue</>
                 )}
@@ -719,13 +719,13 @@ export function CreateJobPost() {
             <div className="flex flex-col sm:flex-row justify-between gap-4">
               <button
                 onClick={() => setStep(1)}
-                className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Back
               </button>
               <button
                 onClick={() => setStep(3)}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Continue
               </button>
@@ -734,7 +734,7 @@ export function CreateJobPost() {
         )}
 
         {step === 3 && (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* AI Question Generation */}
             <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -744,7 +744,7 @@ export function CreateJobPost() {
                 <button
                   onClick={generateQuestionsFromJD}
                   disabled={questionsFromJdLoading}
-                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
+                  className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto"
                 >
                   <Wand2 className="h-4 w-4" />
                   <span>Generate from JD</span>
@@ -753,8 +753,8 @@ export function CreateJobPost() {
 
               {/* Excel Upload Section */}
               <div className="mb-8 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-                <div className="flex items-start space-x-3">
-                  <FileSpreadsheet className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex flex-col sm:flex-row items-start space-x-0 sm:space-x-3">
+                  <FileSpreadsheet className="h-5 w-5 text-green-600 mt-1 flex-shrink-0 hidden sm:block" />
                   <div className="flex-1">
                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                       Upload Questions from Excel
@@ -769,7 +769,7 @@ export function CreateJobPost() {
                         className="flex items-center justify-center space-x-2 bg-white border-2 border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors"
                       >
                         <Download className="h-4 w-4" />
-                        <span className="text-sm sm:text-base">Download Sample Template</span>
+                        <span className="text-sm sm:text-base">Download Template</span>
                       </button>
 
                       <label
@@ -780,7 +780,7 @@ export function CreateJobPost() {
                       >
                         <Upload className="h-4 w-4" />
                         <span className="text-sm sm:text-base">
-                          {excelUploadLoading ? 'Uploading...' : 'Upload Excel File'}
+                          {excelUploadLoading ? 'Uploading...' : 'Upload File'}
                         </span>
                       </label>
                       <input
@@ -820,8 +820,8 @@ export function CreateJobPost() {
 
               {/* Student List Upload Section */}
               <div className="mb-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                <div className="flex items-start space-x-3">
-                  <Users className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
+                <div className="flex flex-col sm:flex-row items-start space-x-0 sm:space-x-3">
+                  <Users className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0 hidden sm:block" />
                   <div className="flex-1">
                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                       Upload Student List (Optional)
@@ -833,7 +833,7 @@ export function CreateJobPost() {
                     <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
                       <button
                         onClick={() => setStudentListModal(true)}
-                        className="flex items-center justify-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                        className="flex items-center justify-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors w-full sm:w-auto"
                       >
                         <Users className="h-4 w-4" />
                         <span className="text-sm sm:text-base">
@@ -1022,13 +1022,13 @@ export function CreateJobPost() {
                                     )
                                   }
                                   disabled={!editingQuestion.question.trim()}
-                                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                                  className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
                                 >
                                   Update Question
                                 </button>
                                 <button
                                   onClick={() => setEditingQuestion(undefined)}
-                                  className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                                  className="w-full sm:w-auto border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                                 >
                                   Cancel
                                 </button>
@@ -1237,7 +1237,7 @@ export function CreateJobPost() {
                   <button
                     onClick={addQuestion}
                     disabled={!newQuestion.question.trim()}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                    className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
                   >
                     Add Question
                   </button>
@@ -1251,25 +1251,25 @@ export function CreateJobPost() {
                 <button
                   onClick={() => setStep(2)}
                   disabled={continueLoading}
-                  className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors order-2 sm:order-1"
+                  className="w-full sm:w-auto border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors order-2 sm:order-1"
                 >
                   Back
                 </button>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 order-1 sm:order-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 order-1 sm:order-2 w-full sm:w-auto">
                   <button
                     disabled={continueLoading}
                     onClick={() => handleSubmit(true)}
-                    className="border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors"
+                    className="w-full sm:w-auto border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors"
                   >
                     Save as Draft
                   </button>
                   <button
                     disabled={continueLoading}
                     onClick={() => handleSubmit(false)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     {continueLoading ? (
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white-600 mx-[45px]"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mx-auto"></div>
                     ) : (
                       <>Publish Job Post</>
                     )}
@@ -1303,7 +1303,7 @@ export function CreateJobPost() {
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               {/* Step 1: Download Template */}
               <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-start space-x-3">
+                <div className="flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-3">
                   <Download className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
                   <div className="flex-1">
                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
@@ -1317,7 +1317,7 @@ export function CreateJobPost() {
                       className="flex items-center justify-center space-x-2 bg-white border-2 border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors w-full sm:w-auto"
                     >
                       <Download className="h-4 w-4" />
-                      <span className="text-sm sm:text-base">Download Sample Template</span>
+                      <span className="text-sm sm:text-base">Download Template</span>
                     </button>
                   </div>
                 </div>
@@ -1325,7 +1325,7 @@ export function CreateJobPost() {
 
               {/* Step 2: Upload Student List */}
               <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex items-start space-x-3">
+                <div className="flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-3">
                   <Upload className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
                   <div className="flex-1">
                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
@@ -1388,7 +1388,7 @@ export function CreateJobPost() {
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
                     Uploaded Students ({students.length})
                   </h3>
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                     {students.map((student, index) => (
                       <div
                         key={index}
@@ -1403,7 +1403,7 @@ export function CreateJobPost() {
                         </div>
                         <button
                           onClick={() => handleRemoveStudent(index)}
-                          className="text-red-600 hover:text-red-700 flex-shrink-0 self-end sm:self-center"
+                          className="text-red-600 hover:text-red-700 flex-shrink-0 self-end sm:self-center p-1"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

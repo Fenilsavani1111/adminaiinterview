@@ -317,16 +317,16 @@ export function JobPostManager() {
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span>Back to Dashboard</span>
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">Job Posts</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Job Posts</h1>
             </div>
             <button
               onClick={() => dispatch({ type: "SET_VIEW", payload: "create-job" })}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-5 w-5" />
-              <span>Create Job Post</span>
+              <span className="hidden sm:inline">Create Job Post</span>
             </button>
           </div>
         </div>
@@ -446,9 +446,9 @@ export function JobPostManager() {
           </div>
         )}
 
-        {/* Job Posts Table */}
+        {/* Job Posts Table - Desktop */}
         {!loading && (
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
@@ -608,6 +608,92 @@ export function JobPostManager() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Job Posts List - Mobile */}
+        {!loading && (
+          <div className="md:hidden space-y-4">
+            {filteredJobs.map(job => (
+              <div key={job.id} className="bg-white rounded-xl shadow-sm p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="text-md font-bold text-gray-900">{job.title}</div>
+                    <div className="text-sm text-gray-600">{job.company} • {job.department}</div>
+                    <div className="text-sm text-gray-500 mt-1">{job.location}</div>
+                  </div>
+                  <div className="flex items-center space-x-2 ml-2">
+                    <button onClick={() => handleViewJob(job.id)} className="p-2 text-blue-600"><Eye className="h-5 w-5" /></button>
+                    <button onClick={() => handleEditJob(job.id)} className="p-2 text-gray-600"><Edit className="h-5 w-5" /></button>
+                    <button onClick={() => handleDeleteJob(job.id)} disabled={deletingJobId === job.id} className="p-2 text-red-600 disabled:opacity-50">
+                      {deletingJobId === job.id ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                      ) : (
+                        <Trash2 className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(job.type)}`}>
+                      {job.type.charAt(0).toUpperCase() + job.type.slice(1).replace("-", " ")}
+                    </span>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}>
+                      {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-center">
+                  <button
+                    onClick={() => setSelectedJobForApplications({ id: job.id, title: job.title, company: job.company })}
+                    className="bg-gray-50 p-2 rounded-lg"
+                  >
+                    <div className="font-bold text-blue-600">{job.applicants}</div>
+                    <div className="text-xs text-gray-600">Applicants</div>
+                  </button>
+                  <button
+                    onClick={() => setSelectedJobForInterviews({ id: job.id, title: job.title, company: job.company })}
+                    className="bg-gray-50 p-2 rounded-lg"
+                  >
+                    <div className="font-bold text-purple-600">{job.interviews}</div>
+                    <div className="text-xs text-gray-600">Interviews</div>
+                  </button>
+                </div>
+                
+                <div className="mt-4 border-t pt-4 flex flex-col space-y-3">
+                   <button
+                      onClick={() => getJobLink(job.id, "copy")}
+                      className="flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
+                    >
+                      {copiedUrl === job.id ? (
+                        <>
+                          <CheckCircle className="h-4 w-4" />
+                          <span>Copied Interview URL!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4" />
+                          <span>Copy Interview URL</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleOpenStudentList(job.id, job.title)}
+                      className="flex items-center justify-center space-x-2 text-purple-600 hover:text-purple-700 text-sm font-medium"
+                    >
+                      <UploadIcon className="h-4 w-4" />
+                      <span>
+                        {studentCounts[job.id] > 0 
+                          ? `${studentCounts[job.id]} Student${studentCounts[job.id] !== 1 ? 's' : ''}`
+                          : 'Upload Student List'}
+                      </span>
+                    </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
