@@ -36,7 +36,10 @@ export interface JobPost {
   shareableUrl?: string;
   applicants?: number;
   interviews?: number;
-  candidates?: []
+  candidates?: [];
+  // When true, candidates can record both video and audio responses.
+  // When false or undefined, interviews are audio-only for this job.
+  enableVideoRecording?: boolean;
 }
 
 export interface JobApplication {

@@ -68,6 +68,7 @@ export function EditJobPost() {
     salaryMin: "",
     salaryMax: "",
     currency: "INR",
+    enableVideoRecording: false,
   });
   const [questions, setQuestions] = useState<InterviewQuestion[]>([
     ...defaultQuestions,
@@ -231,6 +232,7 @@ export function EditJobPost() {
         salaryMin: job.salary?.min?.toString() || "",
         salaryMax: job.salary?.max?.toString() || "",
         currency: job.salary?.currency || "INR",
+        enableVideoRecording: job.enableVideoRecording ?? false,
       });
       let damiquestions = job.questions?.sort((a: any, b: any) => a.id - b.id);
       setQuestions([...damiquestions]);
@@ -262,6 +264,7 @@ export function EditJobPost() {
               }
             : undefined,
         status: jobPost.status,
+        enableVideoRecording: formData.enableVideoRecording,
         questions: questions,
       };
 
@@ -658,6 +661,36 @@ export function EditJobPost() {
                   <option value="GBP">GBP</option>
                 </select>
               </div>
+            </div>
+
+            {/* Interview Recording Options */}
+            <div className="mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                Interview Recording Options
+              </h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Choose whether candidates record <strong>video + audio</strong> during the interview.
+              </p>
+              <label className="inline-flex items-start space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                  checked={formData.enableVideoRecording}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      enableVideoRecording: e.target.checked,
+                    })
+                  }
+                />
+                <span className="text-sm text-gray-700">
+                  <span className="font-medium">Enable Video Recording</span>
+                  <span className="block text-xs text-gray-500 mt-1">
+                    When enabled, candidates will record both video and audio. When
+                    disabled, they will only record audio responses.
+                  </span>
+                </span>
+              </label>
             </div>
 
             <div className="flex justify-between">

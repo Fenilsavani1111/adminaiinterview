@@ -547,6 +547,9 @@ HR Team`;
                       Type & Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Recording
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Applicants
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -582,6 +585,17 @@ HR Team`;
                             {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            job.enableVideoRecording
+                              ? "bg-indigo-100 text-indigo-800"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {job.enableVideoRecording ? "Video + Audio" : "Audio Only"}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <button
