@@ -147,7 +147,11 @@ export function JobSelection() {
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center space-x-2 text-gray-600">
                     <MapPin className="h-4 w-4" />
-                    <span className="text-sm">{job.location}</span>
+                    <span className="text-sm">
+                      {Array.isArray(job.location) 
+                        ? job.location.join(", ") 
+                        : job.location || "Not specified"}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Clock className="h-4 w-4" />

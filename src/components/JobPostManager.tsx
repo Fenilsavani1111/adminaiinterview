@@ -572,7 +572,11 @@ HR Team`;
                           <div className="text-sm text-gray-500">
                             {job.company} • {job.department}
                           </div>
-                          <div className="text-sm text-gray-500">{job.location}</div>
+                          <div className="text-sm text-gray-500">
+                            {Array.isArray(job.location) 
+                              ? job.location.join(", ") 
+                              : job.location || "Not specified"}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">

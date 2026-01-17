@@ -16,7 +16,7 @@ export interface JobPost {
   title: string;
   company: string;
   department: string;
-  location: string;
+  location: string[];
   type: 'full-time' | 'part-time' | 'contract' | 'internship';
   experience: string;
   description: string;
@@ -70,7 +70,7 @@ export interface Candidate {
   appliedDate: any;
   interviewDate: any;
   duration: number;
-  status: "completed" | "inprogress" | "scheduled",
+  status: 'completed' | 'inprogress' | 'scheduled';
   overallScore: number;
   scores: {
     communication: number;
@@ -79,7 +79,7 @@ export interface Candidate {
     leadership: number;
     bodyLanguage: number;
     confidence: number;
-  },
+  };
   experienceLevel: string;
   skills: string[];
   resumeUrl: string;
@@ -96,19 +96,19 @@ export interface Candidate {
     summary?: string;
     keyStrengths?: string[];
     areasOfGrowth?: string[];
-  }
+  };
   performanceBreakdown?: any;
   quickStats: any;
   recommendations?: {
     summary?: string;
     recommendation?: string;
-  }
+  };
   behavioral_analysis: any;
   video_analysis_insights?: {
     areas_for_improvement?: string[];
     positive_indicators?: string[];
     recommendations?: string[];
-  }
+  };
 }
 
 export interface StudentInterviewAnswer {
@@ -117,7 +117,7 @@ export interface StudentInterviewAnswer {
   aiEvaluation: string;
   score: number;
   responseTime: number;
-  Question: InterviewQuestion
+  Question: InterviewQuestion;
   start: number;
   end: number;
 }

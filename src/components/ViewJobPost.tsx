@@ -25,7 +25,7 @@ export function ViewJobPost() {
     title: "",
     company: "",
     department: "",
-    location: "",
+    location: [""],
     type: "full-time" as "full-time" | "part-time" | "contract" | "internship",
     experience: "",
     description: "",
@@ -56,7 +56,7 @@ export function ViewJobPost() {
         title: job.title,
         company: job.company,
         department: job.department,
-        location: job.location,
+        location: Array.isArray(job.location) ? (job.location.length > 0 ? job.location : [""]) : (job.location ? [job.location] : [""]),
         type: job.type,
         experience: job.experience,
         description: job.description,
@@ -171,19 +171,19 @@ export function ViewJobPost() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location *
+                  Locations *
                 </label>
-                <input
-                  type="text"
-                  required
-                  disabled={true}
-                  value={formData.location}
-                  onChange={(e) =>
-                    setFormData({ ...formData, location: e.target.value })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., San Francisco, CA or Remote"
-                />
+                {formData.location.map((loc, index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    required
+                    disabled={true}
+                    value={loc}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+                    placeholder="e.g., San Francisco, CA or Remote"
+                  />
+                ))}
               </div>
 
               <div>

@@ -131,7 +131,11 @@ export function JobApplication() {
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <MapPin className="h-5 w-5 text-gray-400" />
-                  <span className="text-gray-700">{jobPost.location}</span>
+                  <span className="text-gray-700">
+                    {Array.isArray(jobPost.location) 
+                      ? jobPost.location.join(", ") 
+                      : jobPost.location || "Not specified"}
+                  </span>
                 </div>
                 
                 <div className="flex items-center space-x-3">
