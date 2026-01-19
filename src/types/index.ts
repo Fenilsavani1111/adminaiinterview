@@ -90,6 +90,17 @@ export interface Candidate {
   designation?: string;
   location?: string;
   attemptedQuestions: number;
+  photoUrl?: string;
+  highestQualification?: string;
+  educations?: Array<{
+    degree?: string;
+    institution?: string;
+    fieldOfStudy?: string;
+    startDate?: string;
+    endDate?: string;
+    grade?: string;
+    description?: string;
+  }>;
   JobPost?: JobPost;
   StudentInterviewAnswer?: StudentInterviewAnswer[];
   aiEvaluationSummary?: {
@@ -143,6 +154,7 @@ export interface InterviewQuestion {
   difficulty: 'easy' | 'medium' | 'hard';
   category: string;
   suggestedAnswers?: string[];
+  options?: string[];
   evaluationCriteria?: string[];
   isRequired: boolean;
   order: number;

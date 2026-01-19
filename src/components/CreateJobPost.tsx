@@ -87,6 +87,7 @@ export function CreateJobPost() {
     difficulty: 'medium' as const,
     category: '',
     suggestedAnswers: [''],
+    options: [] as string[],
     evaluationCriteria: [''],
     isRequired: true,
   });
@@ -113,10 +114,10 @@ export function CreateJobPost() {
         salary:
           formData.salaryMin && formData.salaryMax
             ? {
-                min: parseInt(formData.salaryMin),
-                max: parseInt(formData.salaryMax),
-                currency: formData.currency,
-              }
+              min: parseInt(formData.salaryMin),
+              max: parseInt(formData.salaryMax),
+              currency: formData.currency,
+            }
             : undefined,
       };
       const generatedQuestions: InterviewQuestion[] =
@@ -249,6 +250,7 @@ export function CreateJobPost() {
       difficulty: 'medium',
       category: '',
       suggestedAnswers: [''],
+      options: [],
       evaluationCriteria: [''],
       isRequired: true,
     });
@@ -338,10 +340,10 @@ export function CreateJobPost() {
         salary:
           formData.salaryMin && formData.salaryMax
             ? {
-                min: parseInt(formData.salaryMin),
-                max: parseInt(formData.salaryMax),
-                currency: formData.currency,
-              }
+              min: parseInt(formData.salaryMin),
+              max: parseInt(formData.salaryMax),
+              currency: formData.currency,
+            }
             : undefined,
         // pass flag to backend so candidate app knows whether to record video
         enableVideoRecording: formData.enableVideoRecording,
@@ -860,11 +862,10 @@ export function CreateJobPost() {
 
                       <label
                         htmlFor='excel-upload'
-                        className={`flex items-center justify-center space-x-2 cursor-pointer bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors ${
-                          excelUploadLoading
-                            ? 'opacity-50 cursor-not-allowed'
-                            : ''
-                        }`}
+                        className={`flex items-center justify-center space-x-2 cursor-pointer bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors ${excelUploadLoading
+                          ? 'opacity-50 cursor-not-allowed'
+                          : ''
+                          }`}
                       >
                         <Upload className='h-4 w-4' />
                         <span className='text-sm sm:text-base'>
@@ -920,8 +921,7 @@ export function CreateJobPost() {
                       Pre-upload a list of students who will be taking this
                       interview.{' '}
                       {students.length > 0 &&
-                        `(${students.length} student${
-                          students.length !== 1 ? 's' : ''
+                        `(${students.length} student${students.length !== 1 ? 's' : ''
                         } added)`}
                     </p>
 
@@ -1110,6 +1110,86 @@ export function CreateJobPost() {
                                   <span>Add Answer Point</span>
                                 </button>
                               </div>
+
+                              <div>
+                                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                  Options for multiple choice (optional, non-communication only)
+                                </label>
+                                {(editingQuestion?.options || []).length ===
+                                  0 ? (
+                                  <button
+                                    onClick={() => {
+                                      setEditingQuestion({
+                                        ...editingQuestion,
+                                        options: [''],
+                                      });
+                                    }}
+                                    className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                                  >
+                                    <Plus className='h-4 w-4' />
+                                    <span>Add options to show as MCQs</span>
+                                  </button>
+                                ) : (
+                                  <>
+                                    {(editingQuestion?.options || []).map(
+                                      (opt, index) => (
+                                        <div
+                                          key={index}
+                                          className='flex items-center space-x-2 mb-2'
+                                        >
+                                          <input
+                                            type='text'
+                                            value={opt}
+                                            onChange={(e) => {
+                                              const arr = [
+                                                ...(editingQuestion?.options ||
+                                                  []),
+                                              ];
+                                              arr[index] = e.target.value;
+                                              setEditingQuestion({
+                                                ...editingQuestion,
+                                                options: arr,
+                                              });
+                                            }}
+                                            className='flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                            placeholder={`Option ${index + 1}`}
+                                          />
+                                          <button
+                                            onClick={() => {
+                                              const arr = (
+                                                editingQuestion?.options || []
+                                              ).filter((_, i) => i !== index);
+                                              setEditingQuestion({
+                                                ...editingQuestion,
+                                                options: arr,
+                                              });
+                                            }}
+                                            className='text-red-600 hover:text-red-700'
+                                          >
+                                            <Trash2 className='h-4 w-4' />
+                                          </button>
+                                        </div>
+                                      )
+                                    )}
+                                    <button
+                                      onClick={() => {
+                                        setEditingQuestion({
+                                          ...editingQuestion,
+                                          options: [
+                                            ...(editingQuestion?.options || []),
+                                            '',
+                                          ],
+                                        });
+                                      }}
+                                      className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                                    >
+                                      <Plus className='h-4 w-4' />
+                                      <span>Add option</span>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+
                               <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 items-stretch sm:items-center'>
                                 <button
                                   onClick={() =>
@@ -1186,6 +1266,19 @@ export function CreateJobPost() {
                                         <li key={idx}>{answer}</li>
                                       )
                                     )}
+                                  </ul>
+                                </div>
+                              )}
+                            {question.options &&
+                              question.options.length > 0 && (
+                                <div className='mt-3'>
+                                  <p className='text-sm font-medium text-gray-700 mb-1'>
+                                    Options (MCQ):
+                                  </p>
+                                  <ul className='text-sm text-gray-600 list-disc list-inside'>
+                                    {question.options.map((opt, idx) => (
+                                      <li key={idx}>{opt}</li>
+                                    ))}
                                   </ul>
                                 </div>
                               )}
@@ -1331,6 +1424,80 @@ export function CreateJobPost() {
                     </button>
                   </div>
 
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Options for multiple choice (optional, non-communication
+                      only)
+                    </label>
+                    {(newQuestion.options || []).length === 0 ? (
+                      <button
+                        onClick={() =>
+                          setNewQuestion({
+                            ...newQuestion,
+                            options: [''],
+                          })
+                        }
+                        className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                      >
+                        <Plus className='h-4 w-4' />
+                        <span>Add options to show as MCQs</span>
+                      </button>
+                    ) : (
+                      <>
+                        {(newQuestion.options || []).map((opt, index) => (
+                          <div
+                            key={index}
+                            className='flex items-center space-x-2 mb-2'
+                          >
+                            <input
+                              type='text'
+                              value={opt}
+                              onChange={(e) => {
+                                const arr = [...(newQuestion.options || [])];
+                                arr[index] = e.target.value;
+                                setNewQuestion({
+                                  ...newQuestion,
+                                  options: arr,
+                                });
+                              }}
+                              className='flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                              placeholder={`Option ${index + 1} (e.g. A) First choice)`}
+                            />
+                            <button
+                              onClick={() => {
+                                const arr = (newQuestion.options || []).filter(
+                                  (_, i) => i !== index
+                                );
+                                setNewQuestion({
+                                  ...newQuestion,
+                                  options: arr,
+                                });
+                              }}
+                              className='text-red-600 hover:text-red-700'
+                            >
+                              <Trash2 className='h-4 w-4' />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() =>
+                            setNewQuestion({
+                              ...newQuestion,
+                              options: [
+                                ...(newQuestion.options || []),
+                                '',
+                              ],
+                            })
+                          }
+                          className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                        >
+                          <Plus className='h-4 w-4' />
+                          <span>Add option</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+
                   <button
                     onClick={addQuestion}
                     disabled={!newQuestion.question.trim()}
@@ -1437,11 +1604,10 @@ export function CreateJobPost() {
 
                     <label
                       htmlFor='student-excel-upload'
-                      className={`flex items-center justify-center space-x-2 cursor-pointer bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors w-full sm:w-auto ${
-                        studentUploadLoading
-                          ? 'opacity-50 cursor-not-allowed'
-                          : ''
-                      }`}
+                      className={`flex items-center justify-center space-x-2 cursor-pointer bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors w-full sm:w-auto ${studentUploadLoading
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                        }`}
                     >
                       <Upload className='h-4 w-4' />
                       <span className='text-sm sm:text-base'>

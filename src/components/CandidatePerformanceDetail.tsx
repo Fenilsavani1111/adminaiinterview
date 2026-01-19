@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   User,
@@ -14,8 +14,12 @@ import {
   MessageSquare,
   Video,
   Mic,
+  GraduationCap,
+  MapPin,
+  Mail,
+  Phone,
+  X,
 } from "lucide-react";
-import { useApp } from "../context/AppContext";
 import { Candidate } from "../types";
 import { useJobPosts } from "../hooks/useJobPosts";
 import { format } from "date-fns";
@@ -37,151 +41,13 @@ export function CandidatePerformanceDetail({
   backText = "Back",
   onBack,
 }: CandidatePerformanceDetailProps) {
-  const { dispatch } = useApp();
-  const { getCandidateById, error } = useJobPosts();
+  const { getCandidateById } = useJobPosts();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [candidateData, setCandidateData] = useState<Candidate>();
+  const [photoError, setPhotoError] = useState(false);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   let ignore = false;
-
-  // Mock detailed candidate data
-  const MockcandidateData = {
-    id: candidateId,
-    name: "Alice Johnson",
-    email: "alice.johnson@email.com",
-    phone: "+1 (555) 123-4567",
-    position: "Senior Frontend Developer",
-    company: "TechCorp Inc.",
-    appliedDate: "2024-01-10",
-    interviewDate: "2024-01-15",
-    duration: 22,
-    status: "completed",
-    overallScore: 92,
-    evaluation: {
-      overall: 92,
-      communication: 90,
-      technical: 95,
-      bodyLanguage: 88,
-      confidence: 94,
-      attire: 96,
-      feedback:
-        "Exceptional performance with strong technical knowledge and excellent communication skills. Demonstrated clear problem-solving approach and leadership potential. Minor areas for improvement in handling complex system design questions.",
-      strengths: [
-        "Outstanding technical expertise in React and TypeScript",
-        "Clear and articulate communication style",
-        "Strong problem-solving methodology",
-        "Excellent professional presentation",
-        "Good eye contact and confident body language",
-        "Relevant industry experience and examples",
-      ],
-      improvements: [
-        "Could elaborate more on system design approaches",
-        "Consider providing more specific metrics in examples",
-        "Opportunity to discuss team collaboration in more detail",
-      ],
-    },
-    responses: [
-      {
-        questionId: "1",
-        question: "Tell me about yourself and your professional background.",
-        response:
-          "I am a Senior Frontend Developer with 6 years of experience specializing in React, TypeScript, and modern web technologies. I have led multiple projects at my current company, including a complete redesign of our customer portal that increased user engagement by 40%.",
-        duration: 180,
-        score: 88,
-        feedback:
-          "Well-structured response with specific examples and metrics. Good professional summary.",
-        timestamp: "2024-01-15T10:05:00Z",
-        audioUrl: "/mock-audio-1.mp3",
-        videoUrl: "/mock-video-1.mp4",
-      },
-      {
-        questionId: "2",
-        question:
-          "Describe a challenging technical problem you solved recently.",
-        response:
-          "Recently, I tackled a performance issue where our React application was experiencing slow rendering with large datasets. I implemented virtualization using react-window and optimized our state management with useMemo and useCallback hooks, resulting in a 60% improvement in rendering performance.",
-        duration: 210,
-        score: 95,
-        feedback:
-          "Excellent technical depth with specific solutions and measurable outcomes. Demonstrates strong problem-solving skills.",
-        timestamp: "2024-01-15T10:08:00Z",
-        audioUrl: "/mock-audio-2.mp3",
-        videoUrl: "/mock-video-2.mp4",
-      },
-      {
-        questionId: "3",
-        question: "How do you handle working in a team environment?",
-        response:
-          "I believe in collaborative development and clear communication. I regularly conduct code reviews, mentor junior developers, and use tools like Slack and Jira for project coordination. I also advocate for pair programming sessions to share knowledge and maintain code quality.",
-        duration: 165,
-        score: 85,
-        feedback:
-          "Good team collaboration examples. Could provide more specific scenarios of conflict resolution or leadership.",
-        timestamp: "2024-01-15T10:12:00Z",
-        audioUrl: "/mock-audio-3.mp3",
-        videoUrl: "/mock-video-3.mp4",
-      },
-      {
-        questionId: "4",
-        question: "Where do you see yourself in 5 years?",
-        response:
-          "In 5 years, I see myself in a technical leadership role, possibly as a Staff Engineer or Engineering Manager, where I can influence technical decisions and mentor a larger team. I want to continue growing my expertise in emerging technologies while contributing to strategic product decisions.",
-        duration: 145,
-        score: 90,
-        feedback:
-          "Clear career vision with realistic goals. Shows ambition and leadership potential.",
-        timestamp: "2024-01-15T10:15:00Z",
-        audioUrl: "/mock-audio-4.mp3",
-        videoUrl: "/mock-video-4.mp4",
-      },
-    ],
-    skillAnalysis: {
-      "Technical Knowledge": {
-        score: 95,
-        details:
-          "Demonstrated exceptional understanding of React, TypeScript, and performance optimization. Provided specific examples with measurable outcomes.",
-        trend: "excellent",
-      },
-      "Communication Skills": {
-        score: 90,
-        details:
-          "Clear, articulate responses with good structure. Maintained professional tone throughout the interview.",
-        trend: "excellent",
-      },
-      "Problem Solving": {
-        score: 88,
-        details:
-          "Showed systematic approach to problem-solving with concrete examples. Could elaborate more on complex scenarios.",
-        trend: "good",
-      },
-      "Leadership Potential": {
-        score: 85,
-        details:
-          "Demonstrated mentoring experience and team collaboration. Shows potential for growth into leadership roles.",
-        trend: "good",
-      },
-      "Cultural Fit": {
-        score: 92,
-        details:
-          "Values align well with company culture. Shows enthusiasm for collaboration and continuous learning.",
-        trend: "excellent",
-      },
-    },
-    behavioralAnalysis: {
-      eyeContact: 88,
-      posture: 92,
-      gestures: 85,
-      facialExpressions: 90,
-      voiceTone: 87,
-      confidence: 94,
-      engagement: 91,
-    },
-    comparisonData: {
-      positionAverage: 76.8,
-      industryAverage: 72.3,
-      percentileRank: 95,
-    },
-  };
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-green-600 bg-green-100";
@@ -219,7 +85,6 @@ export function CandidatePerformanceDetail({
       setLoading(true);
       const data: any = await getCandidateById(candidateId);
       if (data?.candidate) setCandidateData(data?.candidate ?? {});
-      // setCandidateData({ ...MockcandidateData });
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -236,6 +101,10 @@ export function CandidatePerformanceDetail({
     };
   }, []);
 
+  useEffect(() => {
+    setPhotoError(false);
+  }, [candidateData?.photoUrl]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -251,17 +120,32 @@ export function CandidatePerformanceDetail({
                 <span>{backText}</span>
               </button>
               <div className="flex items-center space-x-3">
-                <div className="bg-blue-600 p-2 rounded-lg">
-                  <User className="h-5 w-5 text-white" />
-                </div>
+                {!loading && candidateData?.photoUrl && !photoError ? (
+                  <img
+                    src={candidateData.photoUrl}
+                    alt={candidateData?.name}
+                    className="w-10 h-10 rounded-lg object-cover border-2 border-blue-100 shadow-sm"
+                    onError={() => setPhotoError(true)}
+                  />
+                ) : (
+                  !loading && (
+                    <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-lg">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                  )
+                )}
                 {!loading && (
                   <div>
                     <h1 className="text-xl font-bold text-gray-900">
                       {candidateData?.name}
                     </h1>
                     <p className="text-sm text-gray-600">
-                      {candidateData?.designation} •{" "}
-                      {/* {candidateData?.company ?? ""} */}
+                      {candidateData?.designation && (
+                        <>
+                          {candidateData.designation}
+                          {candidateData?.location && " • "}
+                        </>
+                      )}
                       {candidateData?.location ?? ""}
                     </p>
                   </div>
@@ -294,19 +178,72 @@ export function CandidatePerformanceDetail({
             <div className="grid lg:grid-cols-4 gap-8">
               <div className="lg:col-span-1">
                 <div className="text-center">
-                  <div className="bg-gray-200 rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                    <span className="text-2xl font-bold text-gray-700">
-                      {candidateData?.name
-                        ?.split(" ")
-                        ?.map((n: string) => n[0])
-                        ?.join("")}
-                    </span>
+                  {/* Photo Display */}
+                  <div className="relative mb-4">
+                    {candidateData?.photoUrl && !photoError ? (
+                      <div className="relative w-32 h-32 mx-auto cursor-pointer group" onClick={() => setIsPhotoModalOpen(true)}>
+                        <img
+                          src={candidateData.photoUrl}
+                          alt={candidateData?.name}
+                          className="w-32 h-32 rounded-full object-cover border-4 border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105"
+                          onError={() => setPhotoError(true)}
+                         
+                        />
+                        <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                          <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+                        {/* Status Badge */}
+                        {/* {candidateData?.status === "completed" && (
+                          <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-2 border-4 border-white shadow-md">
+                            <div className="w-3 h-3 bg-white rounded-full"></div>
+                          </div>
+                        )} */}
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-full w-32 h-32 mx-auto flex items-center justify-center shadow-lg border-4 border-blue-100 hover:shadow-xl transition-shadow">
+                          <span className="text-3xl font-bold text-white">
+                            {candidateData?.name
+                              ?.split(" ")
+                              ?.map((n: string) => n[0])
+                              ?.join("")}
+                          </span>
+                        </div>
+                        {/* Status Badge */}
+                        {candidateData?.status === "completed" && (
+                          <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-2 border-4 border-white shadow-md">
+                            <div className="w-3 h-3 bg-white rounded-full"></div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
                     {candidateData?.name}
                   </h2>
-                  <p className="text-gray-600 mb-2">{candidateData?.email}</p>
-                  <p className="text-gray-600">{candidateData?.mobile}</p>
+                  {candidateData?.designation && (
+                    <p className="text-sm font-medium text-blue-600 mb-3">
+                      {candidateData.designation}
+                    </p>
+                  )}
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div className="flex items-center justify-center space-x-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      <span className="truncate">{candidateData?.email}</span>
+                    </div>
+                    {(candidateData?.mobile || candidateData?.phone) && (
+                      <div className="flex items-center justify-center space-x-2">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        <span>{candidateData?.mobile || candidateData?.phone}</span>
+                      </div>
+                    )}
+                    {candidateData?.location && (
+                      <div className="flex items-center justify-center space-x-2">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <span>{candidateData.location}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -344,10 +281,6 @@ export function CandidatePerformanceDetail({
                         <div className="text-sm text-gray-600">
                           Interview Duration
                         </div>
-                        {/* <div className="text-sm text-green-600 mt-2">
-                      {MockcandidateData.comparisonData.percentileRank}th
-                      percentile
-                    </div> */}
                       </div>
 
                       <div className="text-center">
@@ -415,45 +348,98 @@ export function CandidatePerformanceDetail({
                     </div>
                   </div>
 
-                  {/* <div>
-                    <h3 className="font-medium text-gray-900 mb-2">
-                      Performance Comparison
+                  {/* Education Section */}
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+                      <div className="bg-blue-100 p-1.5 rounded-lg">
+                        <GraduationCap className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <span>Education</span>
                     </h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">
-                          vs Position Average:
-                        </span>
-                        <span className="font-medium text-green-600">
-                          +
-                          {(
-                            candidateData.overallScore -
-                            candidateData.comparisonData.positionAverage
-                          ).toFixed(1)}
-                          %
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">
-                          vs Industry Average:
-                        </span>
-                        <span className="font-medium text-green-600">
-                          +
-                          {(
-                            candidateData.overallScore -
-                            candidateData.comparisonData.industryAverage
-                          ).toFixed(1)}
-                          %
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Percentile Rank:</span>
-                        <span className="font-medium text-blue-600">
-                          {candidateData.comparisonData.percentileRank}th
-                        </span>
-                      </div>
+                    <div className="space-y-3">
+                      {candidateData?.highestQualification && (
+                        <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 p-4 rounded-xl border-l-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <Award className="h-4 w-4 text-blue-600" />
+                            <div className="text-sm font-bold text-gray-900">
+                              Highest Qualification
+                            </div>
+                          </div>
+                          <div className="text-base font-semibold text-gray-800 ml-6">
+                            {candidateData.highestQualification}
+                          </div>
+                        </div>
+                      )}
+                      {candidateData?.educations &&
+                        candidateData.educations.length > 0 && (
+                          <div className="space-y-3">
+                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                              Education History
+                            </div>
+                            {candidateData.educations.map((edu, index) => (
+                              <div
+                                key={index}
+                                className="bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all group"
+                              >
+                                <div className="flex items-start space-x-3">
+                                  <div className="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-200 transition-colors flex-shrink-0">
+                                    <GraduationCap className="h-4 w-4 text-blue-600" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    {edu.degree && (
+                                      <div className="font-semibold text-gray-900 text-sm mb-1">
+                                        {edu.degree}
+                                        {edu.fieldOfStudy &&
+                                          ` - ${edu.fieldOfStudy}`}
+                                      </div>
+                                    )}
+                                    {edu.institution && (
+                                      <div className="text-sm text-gray-700 mb-2 flex items-center space-x-1">
+                                        <MapPin className="h-3 w-3 text-gray-400" />
+                                        <span>{edu.institution}</span>
+                                      </div>
+                                    )}
+                                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                                      {(edu.startDate || edu.endDate) && (
+                                        <div className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-md">
+                                          <Calendar className="h-3 w-3" />
+                                          <span>
+                                            {edu.startDate && edu.endDate
+                                              ? `${edu.startDate} - ${edu.endDate}`
+                                              : edu.startDate || edu.endDate}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {edu.grade && (
+                                        <div className="flex items-center space-x-1 bg-green-100 text-green-700 px-2 py-1 rounded-md font-medium">
+                                          <Star className="h-3 w-3" />
+                                          <span>Grade: {edu.grade}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    {edu.description && (
+                                      <div className="mt-2 text-xs text-gray-600 italic">
+                                        {edu.description}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      {!candidateData?.highestQualification &&
+                        (!candidateData?.educations ||
+                          candidateData.educations.length === 0) && (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                            <GraduationCap className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                            <div className="text-sm text-gray-500">
+                              No education details available
+                            </div>
+                          </div>
+                        )}
                     </div>
-                  </div> */}
+                  </div>
                 </div>
               </div>
             </div>
@@ -654,7 +640,7 @@ export function CandidatePerformanceDetail({
                         Quick Stats
                       </h3>
                       <div className="space-y-4">
-                        {Object.entries(candidateData?.quickStats).map(
+                        {candidateData?.quickStats&&Object.entries(candidateData?.quickStats ?? {}).map(
                           ([skill, data]: any) => (
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-gray-600">
@@ -999,6 +985,80 @@ export function CandidatePerformanceDetail({
           )
         )}
       </div>
+
+      {/* Photo Modal */}
+      {isPhotoModalOpen && candidateData?.photoUrl && !photoError && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
+          onClick={() => setIsPhotoModalOpen(false)}
+        >
+          <div
+            className="relative max-w-4xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-purple-600">
+              <div className="flex items-center space-x-3">
+                <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                  <User className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">
+                    {candidateData?.name}
+                  </h3>
+                  {candidateData?.designation && (
+                    <p className="text-sm text-blue-100">
+                      {candidateData.designation}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPhotoModalOpen(false)}
+                className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Image Container */}
+            <div className="relative bg-gray-900 flex items-center justify-center p-8">
+              <img
+                src={candidateData.photoUrl}
+                alt={candidateData?.name}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-gray-50 border-t border-gray-200">
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <div className="flex items-center space-x-4">
+                  {candidateData?.email && (
+                    <div className="flex items-center space-x-2">
+                      <Mail className="h-4 w-4" />
+                      <span>{candidateData.email}</span>
+                    </div>
+                  )}
+                  {(candidateData?.mobile || candidateData?.phone) && (
+                    <div className="flex items-center space-x-2">
+                      <Phone className="h-4 w-4" />
+                      <span>{candidateData?.mobile || candidateData?.phone}</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsPhotoModalOpen(false)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
