@@ -155,6 +155,7 @@ export interface InterviewQuestion {
   category: string;
   suggestedAnswers?: string[];
   options?: string[];
+  rightAnswer?: string | null;
   evaluationCriteria?: string[];
   isRequired: boolean;
   order: number;

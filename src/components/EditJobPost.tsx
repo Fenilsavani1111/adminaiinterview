@@ -84,6 +84,7 @@ export function EditJobPost() {
     category: '',
     suggestedAnswers: [''],
     options: [] as string[],
+    rightAnswer: '' as string,
     evaluationCriteria: [''],
     isRequired: true,
   });
@@ -140,6 +141,7 @@ export function EditJobPost() {
       category: '',
       suggestedAnswers: [''],
       options: [],
+      rightAnswer: '',
       evaluationCriteria: [''],
       isRequired: true,
     });
@@ -991,12 +993,13 @@ export function EditJobPost() {
                                           />
                                           <button
                                             onClick={() => {
-                                              const arr = (
-                                                editingQuestion?.options || []
-                                              ).filter((_, i) => i !== index);
+                                              const prev = editingQuestion?.options || [];
+                                              const removed = prev[index];
+                                              const arr = prev.filter((_, i) => i !== index);
                                               setEditingQuestion({
                                                 ...editingQuestion,
                                                 options: arr,
+                                                rightAnswer: removed === editingQuestion?.rightAnswer ? '' : editingQuestion?.rightAnswer,
                                               });
                                             }}
                                             className='text-red-600 hover:text-red-700'
@@ -1021,6 +1024,41 @@ export function EditJobPost() {
                                       <Plus className='h-4 w-4' />
                                       <span>Add option</span>
                                     </button>
+                                    <div className='mt-3'>
+                                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                                        Right answer (optional)
+                                      </label>
+                                      <select
+                                        value={
+                                          (() => {
+                                            const opts = (editingQuestion?.options || []).map((o) => String(o || '').trim()).filter(Boolean);
+                                            return editingQuestion?.rightAnswer && opts.includes(editingQuestion.rightAnswer)
+                                              ? editingQuestion.rightAnswer
+                                              : '';
+                                          })()
+                                        }
+                                        onChange={(e) =>
+                                          setEditingQuestion({
+                                            ...editingQuestion,
+                                            rightAnswer: e.target.value || '',
+                                          })
+                                        }
+                                        className='w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                      >
+                                        <option value=''>Select right answer (optional)</option>
+                                        {(editingQuestion?.options || [])
+                                          .map((o) => String(o || '').trim())
+                                          .filter(Boolean)
+                                          .map((opt) => (
+                                            <option key={opt} value={opt}>
+                                              {opt}
+                                            </option>
+                                          ))}
+                                      </select>
+                                      <p className='text-xs text-gray-500 mt-1'>
+                                        Must be one of the options above. Used for auto-grading MCQ.
+                                      </p>
+                                    </div>
                                   </>
                                 )}
                               </div>
@@ -1069,6 +1107,11 @@ export function EditJobPost() {
                                 {question.category && (
                                   <p className='text-sm text-gray-600 mt-1'>
                                     Category: {question.category}
+                                  </p>
+                                )}
+                                {question.options && question.options.length > 0 && question.rightAnswer && (
+                                  <p className='text-sm text-green-700 mt-1'>
+                                    ✓ Right answer: {question.rightAnswer}
                                   </p>
                                 )}
                               </div>
@@ -1287,12 +1330,13 @@ export function EditJobPost() {
                             />
                             <button
                               onClick={() => {
-                                const arr = (newQuestion.options || []).filter(
-                                  (_, i) => i !== index
-                                );
+                                const prev = newQuestion.options || [];
+                                const removed = prev[index];
+                                const arr = prev.filter((_, i) => i !== index);
                                 setNewQuestion({
                                   ...newQuestion,
                                   options: arr,
+                                  rightAnswer: removed === newQuestion.rightAnswer ? '' : newQuestion.rightAnswer,
                                 });
                               }}
                               className='text-red-600 hover:text-red-700'
@@ -1316,6 +1360,41 @@ export function EditJobPost() {
                           <Plus className='h-4 w-4' />
                           <span>Add option</span>
                         </button>
+                        <div className='mt-3'>
+                          <label className='block text-sm font-medium text-gray-700 mb-1'>
+                            Right answer (optional)
+                          </label>
+                          <select
+                            value={
+                              (() => {
+                                const opts = (newQuestion.options || []).map((o) => String(o || '').trim()).filter(Boolean);
+                                return newQuestion.rightAnswer && opts.includes(newQuestion.rightAnswer)
+                                  ? newQuestion.rightAnswer
+                                  : '';
+                              })()
+                            }
+                            onChange={(e) =>
+                              setNewQuestion({
+                                ...newQuestion,
+                                rightAnswer: e.target.value || '',
+                              })
+                            }
+                            className='w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                          >
+                            <option value=''>Select right answer (optional)</option>
+                            {(newQuestion.options || [])
+                              .map((o) => String(o || '').trim())
+                              .filter(Boolean)
+                              .map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                          </select>
+                          <p className='text-xs text-gray-500 mt-1'>
+                            Must be one of the options above. Used for auto-grading MCQ.
+                          </p>
+                        </div>
                       </>
                     )}
                   </div>
