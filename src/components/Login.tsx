@@ -1,4 +1,3 @@
-// adminaiinterview/src/components/Login.tsx
 import React, { useState } from 'react';
 import { LogIn, AlertCircle } from 'lucide-react';
 import { userAPI } from '../services/api';
@@ -72,8 +71,8 @@ export function Login() {
 
       setError(
         err?.response?.data?.message ||
-          err?.message ||
-          'Login failed. Please try again.'
+        err?.message ||
+        'Login failed. Please try again.'
       );
     } finally {
       setLoading(false);

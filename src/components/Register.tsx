@@ -1,4 +1,3 @@
-// adminaiinterview/src/components/Register.tsx
 import React, { useState } from 'react';
 import { UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
 import { userAPI } from '../services/api';
@@ -64,7 +63,7 @@ export function Register() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear validation error for this field when user starts typing
     if (validationErrors[name as keyof typeof validationErrors]) {
       setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -128,8 +127,8 @@ export function Register() {
 
       setError(
         err?.response?.data?.message ||
-          err?.message ||
-          'Registration failed. Please try again.'
+        err?.message ||
+        'Registration failed. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -186,9 +185,8 @@ export function Register() {
               required
               disabled={loading || success}
               placeholder="Enter your full name"
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 ${
-                validationErrors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 ${validationErrors.name ? 'border-red-500' : 'border-gray-300'
+                }`}
             />
             {validationErrors.name && (
               <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>
@@ -208,9 +206,8 @@ export function Register() {
               required
               disabled={loading || success}
               placeholder="Enter your email"
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 ${
-                validationErrors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 ${validationErrors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
             />
             {validationErrors.email && (
               <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
@@ -246,9 +243,8 @@ export function Register() {
               required
               disabled={loading || success}
               placeholder="Create a password (min 6 characters)"
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 ${
-                validationErrors.password ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 ${validationErrors.password ? 'border-red-500' : 'border-gray-300'
+                }`}
             />
             {validationErrors.password && (
               <p className="text-red-500 text-xs mt-1">{validationErrors.password}</p>
@@ -268,21 +264,20 @@ export function Register() {
               required
               disabled={loading || success}
               placeholder="Re-enter your password"
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 ${
-                validationErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 ${validationErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                }`}
             />
             {validationErrors.confirmPassword && (
               <p className="text-red-500 text-xs mt-1">{validationErrors.confirmPassword}</p>
             )}
-            {formData.password && 
-             formData.confirmPassword && 
-             formData.password === formData.confirmPassword && (
-              <div className="flex items-center mt-1 text-green-600">
-                <CheckCircle className="w-4 h-4 mr-1" />
-                <p className="text-xs">Passwords match</p>
-              </div>
-            )}
+            {formData.password &&
+              formData.confirmPassword &&
+              formData.password === formData.confirmPassword && (
+                <div className="flex items-center mt-1 text-green-600">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  <p className="text-xs">Passwords match</p>
+                </div>
+              )}
           </div>
 
           {/* Submit Button */}

@@ -120,6 +120,25 @@ export interface Candidate {
     positive_indicators?: string[];
     recommendations?: string[];
   };
+  invitedDate?: string;
+  submissionStatus?: string;
+  categoryPercentage?: {
+    "totalScore": number,
+    "overallScore": number,
+    "overallPercentage": number,
+    "categoryWisePercentage": {
+      "FP&A": number;
+      "Costing": number;
+      "Accounting": number;
+      "Excel (Advanced)": number;
+      "Reasoning Ability": number;
+      "Communication Skills": number;
+    }
+  },
+  proctoringStatus?: string;
+  residenceLocation: string;
+  region: string;
+  governmentProof: any[];
 }
 
 export interface StudentInterviewAnswer {

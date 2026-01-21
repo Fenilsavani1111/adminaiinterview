@@ -1,4 +1,3 @@
-// adminaiinterview/src/App.tsx
 import React, { useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { LandingPage } from './components/LandingPage';
@@ -28,7 +27,7 @@ function AppContent() {
   // ============================================
   // AUTH VIEWS (Public - No Protection)
   // ============================================
-  
+
   if (state.currentView === 'login') {
     return <Login />;
   }
@@ -40,7 +39,7 @@ function AppContent() {
   // ============================================
   // PROTECTED ADMIN VIEWS (Require Admin Auth)
   // ============================================
-  
+
   if (['admin', 'job-posts', 'create-job', 'edit-job', 'view-job', 'interview-analytics'].includes(state.currentView)) {
     return (
       <ProtectedRoute requireAdmin={true}>
@@ -57,7 +56,7 @@ function AppContent() {
   // ============================================
   // PUBLIC CANDIDATE VIEWS (No Protection)
   // ============================================
-  
+
   switch (state.currentView) {
     case 'job-selection':
       return <JobSelection />;

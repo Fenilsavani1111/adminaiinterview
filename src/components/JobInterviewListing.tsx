@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Search,
-  Filter,
   Download,
   Eye,
   Star,
@@ -12,18 +11,16 @@ import {
   Award,
   TrendingUp,
   Mail,
-  Phone,
   Linkedin,
   FileText,
-  BarChart3,
   Video,
-  X,
 } from "lucide-react";
-import { useApp } from "../context/AppContext";
 import { InterviewRecordingViewer } from "./InterviewRecordingViewer";
 import { useJobPosts } from "../hooks/useJobPosts";
 import { Candidate, JobPost } from "../types";
 import { CandidatePerformanceDetail } from "./CandidatePerformanceDetail";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 interface JobInterviewListingProps {
   jobId: string;
@@ -33,6 +30,69 @@ interface JobInterviewListingProps {
   onBack: () => void;
 }
 
+const data = [
+  {
+    name: "Surbhi",
+    email: "surbhi@test.com",
+    score: 92.5,
+    status: "Selected",
+  },
+  {
+    name: "Rahul",
+    email: "rahul@test.com",
+    score: 78.25,
+    status: "Pending",
+  },
+];
+
+const formatDate = (date?: string) =>
+  date ? new Date(date).toISOString().split("T")[0] : "N/A";
+
+const formatEducations = (educations: any[]) => {
+  if (!Array.isArray(educations) || educations.length === 0) return "N/A";
+
+  return educations
+    .map(
+      (e) =>
+        `${e.qualification}${e.year ? ` (${e.year})` : ""}${e.score ? ` - ${e.score}` : ""
+        }`
+    )
+    .join(", ");
+};
+
+const yesNo = (val: boolean | undefined) =>
+  val === true ? "Yes" : val === false ? "No" : "N/A";
+
+function secondsToHrMin(seconds) {
+  const hr = Math.floor(seconds / 3600);
+  const min = Math.floor((seconds % 3600) / 60);
+  return `${hr} hr ${min} min`;
+}
+
+const formatCategoryPercentage = (categoryPercentage: any) => {
+  if (!categoryPercentage) return "N/A";
+
+  const {
+    overallScore,
+    totalScore,
+    overallPercentage,
+    categoryWisePercentage,
+  } = categoryPercentage;
+
+  let text = `Overall Score: ${overallScore ?? 0} / ${totalScore ?? 0}\n`;
+  text += `Overall Percentage: ${overallPercentage ?? 0}%\n\n`;
+  text += `Category-wise Percentage:\n\n`;
+
+  if (categoryWisePercentage && typeof categoryWisePercentage === "object") {
+    Object.entries(categoryWisePercentage).forEach(([key, value]) => {
+      text += `${key}: ${value}%\n\n`;
+    });
+  }
+
+  return text.trim();
+};
+
+
 export function JobInterviewListing({
   jobId,
   jobTitle,
@@ -40,8 +100,7 @@ export function JobInterviewListing({
   company,
   onBack,
 }: JobInterviewListingProps) {
-  const { dispatch } = useApp();
-  const { getJobPostById, loading, error } = useJobPosts();
+  const { getJobPostById, loading } = useJobPosts();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("date");
@@ -57,167 +116,7 @@ export function JobInterviewListing({
     null
   );
   let ignore = false;
-
-  // Mock interview data for the specific job position
-  const mockInterviews = [
-    {
-      id: "1",
-      candidateName: "Alice Johnson",
-      email: "alice.johnson@email.com",
-      phone: "+1 (555) 123-4567",
-      appliedDate: "2024-01-10",
-      interviewDate: "2024-01-15",
-      duration: 22,
-      status: "completed",
-      overallScore: 92,
-      scores: {
-        communication: 90,
-        technical: 95,
-        problemSolving: 88,
-        leadership: 94,
-        bodyLanguage: 89,
-        confidence: 93,
-      },
-      experience: "6 years",
-      skills: ["React", "TypeScript", "Node.js", "GraphQL"],
-      resumeUrl: "/resumes/alice-johnson.pdf",
-      linkedinUrl: "https://linkedin.com/in/alice-johnson",
-      recommendation: "Highly Recommended",
-      notes: "Exceptional technical skills and leadership potential",
-      hasRecording: true,
-    },
-    {
-      id: "2",
-      candidateName: "Bob Smith",
-      email: "bob.smith@email.com",
-      phone: "+1 (555) 234-5678",
-      appliedDate: "2024-01-12",
-      interviewDate: "2024-01-16",
-      duration: 18,
-      status: "completed",
-      overallScore: 85,
-      scores: {
-        communication: 87,
-        technical: 82,
-        problemSolving: 85,
-        leadership: 80,
-        bodyLanguage: 88,
-        confidence: 86,
-      },
-      experience: "4 years",
-      skills: ["React", "JavaScript", "Python", "AWS"],
-      resumeUrl: "/resumes/bob-smith.pdf",
-      linkedinUrl: "https://linkedin.com/in/bob-smith",
-      recommendation: "Recommended",
-      notes: "Strong technical foundation with good growth potential",
-      hasRecording: true,
-    },
-    {
-      id: "3",
-      candidateName: "Carol Davis",
-      email: "carol.davis@email.com",
-      phone: "+1 (555) 345-6789",
-      appliedDate: "2024-01-08",
-      interviewDate: "2024-01-14",
-      duration: 25,
-      status: "completed",
-      overallScore: 78,
-      scores: {
-        communication: 82,
-        technical: 75,
-        problemSolving: 79,
-        leadership: 76,
-        bodyLanguage: 80,
-        confidence: 77,
-      },
-      experience: "3 years",
-      skills: ["Vue.js", "JavaScript", "CSS", "HTML"],
-      resumeUrl: "/resumes/carol-davis.pdf",
-      linkedinUrl: "https://linkedin.com/in/carol-davis",
-      recommendation: "Consider",
-      notes:
-        "Good potential but needs more experience in required technologies",
-      hasRecording: true,
-    },
-    {
-      id: "4",
-      candidateName: "David Wilson",
-      email: "david.wilson@email.com",
-      phone: "+1 (555) 456-7890",
-      appliedDate: "2024-01-14",
-      interviewDate: "2024-01-18",
-      duration: 20,
-      status: "completed",
-      overallScore: 88,
-      scores: {
-        communication: 85,
-        technical: 90,
-        problemSolving: 87,
-        leadership: 84,
-        bodyLanguage: 89,
-        confidence: 91,
-      },
-      experience: "5 years",
-      skills: ["React", "TypeScript", "Docker", "Kubernetes"],
-      resumeUrl: "/resumes/david-wilson.pdf",
-      linkedinUrl: "https://linkedin.com/in/david-wilson",
-      recommendation: "Recommended",
-      notes: "Strong technical skills with excellent problem-solving abilities",
-      hasRecording: true,
-    },
-    {
-      id: "5",
-      candidateName: "Eva Martinez",
-      email: "eva.martinez@email.com",
-      phone: "+1 (555) 567-8901",
-      appliedDate: "2024-01-11",
-      interviewDate: "2024-01-17",
-      duration: 19,
-      status: "completed",
-      overallScore: 91,
-      scores: {
-        communication: 94,
-        technical: 89,
-        problemSolving: 90,
-        leadership: 92,
-        bodyLanguage: 93,
-        confidence: 88,
-      },
-      experience: "7 years",
-      skills: ["React", "TypeScript", "GraphQL", "MongoDB"],
-      resumeUrl: "/resumes/eva-martinez.pdf",
-      linkedinUrl: "https://linkedin.com/in/eva-martinez",
-      recommendation: "Highly Recommended",
-      notes: "Outstanding communication and leadership skills",
-      hasRecording: true,
-    },
-    {
-      id: "6",
-      candidateName: "Frank Chen",
-      email: "frank.chen@email.com",
-      phone: "+1 (555) 678-9012",
-      appliedDate: "2024-01-09",
-      interviewDate: "2024-01-15",
-      duration: 23,
-      status: "completed",
-      overallScore: 82,
-      scores: {
-        communication: 79,
-        technical: 86,
-        problemSolving: 83,
-        leadership: 78,
-        bodyLanguage: 81,
-        confidence: 85,
-      },
-      experience: "4 years",
-      skills: ["Angular", "TypeScript", "RxJS", "NgRx"],
-      resumeUrl: "/resumes/frank-chen.pdf",
-      linkedinUrl: "https://linkedin.com/in/frank-chen",
-      recommendation: "Consider",
-      notes: "Good technical skills but limited React experience",
-      hasRecording: true,
-    },
-  ];
+  const [exporting, setExporting] = useState(false);
 
   const filteredInterviews = candidates
     .filter((interview) => interview?.interviewDate)
@@ -297,6 +196,125 @@ export function JobInterviewListing({
       setSelectedCandidates(sortedInterviews.map((interview) => interview.id));
     }
   };
+
+  const exportToExcel = async (
+    data: Record<string, any>[]
+  ) => {
+    setExporting(true);
+    if (!data || data.length === 0) {
+      console.warn("No data to export");
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Students Report");
+
+    const headers = [
+      "Job Title",
+      "Job Created User",
+      "Job Created Date",
+      "Total Assessment Count",
+      "Assessment Name",
+      "Assessment Type",
+      "Assessment Duration",
+      "Assessment Created Date",
+      "Total Invite Count",
+      "Invited User Email",
+      "Invited Date",
+      "Submission Status",
+      "Category Percentage",
+      "Percentage",
+      "Proctoring Status",
+      "Region",
+      "Location",
+      "Residence Location",
+      "Resume Link",
+      "Education Details",
+      "Govt ID 1 Proof",
+      "Govt ID 1 Verified",
+      "Govt ID 2 Proof",
+      "Govt ID 2 Verified",
+    ];
+
+    worksheet.addRow(headers);
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).alignment = { horizontal: "center", vertical: "middle" };
+
+    // ✅ ADD SORTING / FILTER DROPDOWNS
+    worksheet.autoFilter = {
+      from: {
+        row: 1,
+        column: 1,
+      },
+      to: {
+        row: 1,
+        column: headers.length,
+      },
+    };
+
+    // ✅ FREEZE HEADER ROW
+    worksheet.views = [
+      {
+        state: "frozen",
+        ySplit: 1,
+      },
+    ];
+
+    candidates?.filter((interview) => interview?.interviewDate)?.forEach((item) => {
+      worksheet.addRow([
+        item.designation || "",                      // Job Title
+        "Demo testing",                                     // Job Created User
+        jobpost?.createdAt ? formatDate(jobpost?.createdAt) : "N/A",                 // Job Created Date
+        2,                       // Total Assessment Count
+        jobpost?.title || "N/A",                        // Assessment Name
+        "MIXED_QUESTIONS", // jobpost?.type || "N/A",                         // Assessment Type
+
+        // Assessment Duration (safe reduce)
+        "1 hr", // Array.isArray(jobpost?.questions)
+        //   ? secondsToHrMin(jobpost.questions.reduce(
+        //     (acc, q) => acc + (q.expectedDuration || 0),
+        //     0
+        //   ))
+        //   : 0,
+
+        jobpost?.createdAt ? formatDate(jobpost?.createdAt) : "N/A",                 // Assessment Created Date
+        jobpost?.applicants ?? 0,                       // Total Invite Count
+        item.email,                                     // Invited User Email
+        formatDate(item.invitedDate),                   // Invited Date
+        item.submissionStatus?.replace(/_/g, " ") || "Pending",             // Submission Status
+
+        formatCategoryPercentage(item.categoryPercentage), // Category Percentage
+        item.categoryPercentage?.overallPercentage ?? 0,// Percentage
+
+        item.proctoringStatus || "N/A",                 // Proctoring Status
+        item.region || "N/A",                           // Region
+        item.location || "N/A",                         // Location
+        item.residenceLocation || "N/A",                // Residence Location
+        item.resumeUrl || "N/A",                        // Resume Link
+
+        formatEducations(item?.educations),              // Education Details
+
+        item.governmentProof?.[0]?.idProofType || "N/A",// Govt ID 1 Proof
+        yesNo(item.governmentProof?.[0]?.verified),     // Govt ID 1 Verified
+
+        item.governmentProof?.[1]?.idProofType || "N/A",// Govt ID 2 Proof
+        yesNo(item.governmentProof?.[1]?.verified),     // Govt ID 2 Verified
+      ]);
+    });
+
+
+    worksheet.columns.forEach((col) => {
+      col.width = 22;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, "students_with_job_report.xlsx");
+    setExporting(false);
+  }
 
   const averageScore =
     sortedInterviews.reduce(
@@ -407,9 +425,16 @@ export function JobInterviewListing({
                   {selectedCandidates.length} selected
                 </span>
               )}
-              <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                <Download className="h-4 w-4" />
-                <span>Export Results</span>
+              <button
+                onClick={() => exportToExcel(data)}
+                disabled={loading}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                {exporting ? <span>Exporting Results...</span> :
+                  <>
+                    <Download className="h-4 w-4" />
+                    <span>Export Results</span>
+                  </>}
               </button>
             </div>
           </div>
@@ -615,8 +640,8 @@ export function JobInterviewListing({
                               {/* {interview.experience} experience */}
                             </div>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {interview.skills
-                                .slice(0, 3)
+                              {interview?.skills?.length > 0 && interview?.skills
+                                ?.slice(0, 3)
                                 .map((skill: string, index: number) => (
                                   <span
                                     key={index}
@@ -638,11 +663,10 @@ export function JobInterviewListing({
                         {interview?.status === "completed" && (
                           <div className="text-center">
                             <div
-                              className={`text-2xl font-bold mb-1 ${
-                                getScoreColor(
-                                  interview.overallScore ?? 0
-                                ).split(" ")[0]
-                              }`}
+                              className={`text-2xl font-bold mb-1 ${getScoreColor(
+                                interview.overallScore ?? 0
+                              ).split(" ")[0]
+                                }`}
                             >
                               {interview.overallScore ?? 0}%
                             </div>
@@ -673,15 +697,14 @@ export function JobInterviewListing({
                                   <div className="flex items-center space-x-2">
                                     <div className="w-16 bg-gray-200 rounded-full h-1.5">
                                       <div
-                                        className={`h-1.5 rounded-full ${
-                                          score >= 90
-                                            ? "bg-green-500"
-                                            : score >= 80
+                                        className={`h-1.5 rounded-full ${score >= 90
+                                          ? "bg-green-500"
+                                          : score >= 80
                                             ? "bg-blue-500"
                                             : score >= 70
-                                            ? "bg-yellow-500"
-                                            : "bg-red-500"
-                                        }`}
+                                              ? "bg-yellow-500"
+                                              : "bg-red-500"
+                                          }`}
                                         style={{ width: `${score}%` }}
                                       ></div>
                                     </div>

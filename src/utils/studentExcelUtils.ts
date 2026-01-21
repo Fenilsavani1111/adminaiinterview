@@ -1,4 +1,3 @@
-// adminaiinterview/src/utils/studentExcelUtils.ts
 import * as XLSX from 'xlsx';
 
 export interface ExcelStudentRow {
@@ -213,11 +212,11 @@ export const validateStudentExcelStructure = (file: File): Promise<boolean> => {
 
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        
+
         // Get headers
         const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
         const headers: string[] = [];
-        
+
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellAddress = XLSX.utils.encode_cell({ r: range.s.r, c: col });
           const cell = worksheet[cellAddress];
@@ -228,8 +227,8 @@ export const validateStudentExcelStructure = (file: File): Promise<boolean> => {
 
         // Required headers (flexible matching)
         const requiredHeaders = ['name', 'email', 'phonenumber'];
-        const hasRequiredHeaders = requiredHeaders.every(h => 
-          headers.some(header => 
+        const hasRequiredHeaders = requiredHeaders.every(h =>
+          headers.some(header =>
             header.replace(/\s+/g, '').replace(/_/g, '').includes(h.replace(/\s+/g, ''))
           )
         );

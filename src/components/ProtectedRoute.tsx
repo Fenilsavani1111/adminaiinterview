@@ -1,4 +1,3 @@
-// adminaiinterview/src/components/ProtectedRoute.tsx
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import api, { userAPI } from '../services/api';
@@ -35,7 +34,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
         }
 
         const profile = response.user;
-        
+
         // Update local storage with fresh profile data
         localStorage.setItem('user', JSON.stringify({
           id: profile.id,
@@ -49,7 +48,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
         setIsAuthorized(true);
       } catch (error: any) {
         console.error('Auth verification failed:', error);
-        
+
         // Token invalid or expired
         localStorage.clear();
         dispatch({ type: 'SET_VIEW', payload: 'login' });

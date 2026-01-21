@@ -1,4 +1,3 @@
-// adminaiinterview/src/components/StudentListManager.tsx - COMPLETE FIXED
 import React, { useState, useEffect } from 'react';
 import {
   Users,
@@ -125,7 +124,7 @@ export function StudentListManager({
       }
 
       const parsedStudents = await parseStudentExcelFile(file);
-      
+
       // Add unique studentIds and ensure correct type
       const studentsWithIds: Student[] = parsedStudents.map((s, i) => ({
         studentId: `STU_${Date.now()}_${i}`,
@@ -206,11 +205,10 @@ export function StudentListManager({
         <div className="flex flex-col sm:flex-row border-b">
           <button
             onClick={() => setViewMode('list')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              viewMode === 'list'
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${viewMode === 'list'
                 ? 'border-b-2 border-purple-600 text-purple-600 bg-purple-50'
                 : 'text-gray-600 hover:text-purple-600'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-center space-x-2">
               <Eye className="h-4 w-4" />
@@ -219,11 +217,10 @@ export function StudentListManager({
           </button>
           <button
             onClick={() => setViewMode('upload')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              viewMode === 'upload'
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${viewMode === 'upload'
                 ? 'border-b-2 border-purple-600 text-purple-600 bg-purple-50'
                 : 'text-gray-600 hover:text-purple-600'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-center space-x-2">
               <Upload className="h-4 w-4" />
@@ -384,15 +381,14 @@ export function StudentListManager({
                       Step 2: Upload Student List
                     </h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      {students.length === 0 
+                      {students.length === 0
                         ? 'Upload your completed Excel file with student details.'
                         : 'This will add new students to the existing list.'}
                     </p>
                     <label
                       htmlFor="upload-students"
-                      className={`inline-flex items-center space-x-2 cursor-pointer bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
-                        uploading ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
+                      className={`inline-flex items-center space-x-2 cursor-pointer bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${uploading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                     >
                       <Upload className="h-4 w-4" />
                       <span>{uploading ? 'Uploading...' : 'Upload Excel File'}</span>
@@ -425,14 +421,13 @@ export function StudentListManager({
                         Replace Student List
                       </h3>
                       <p className="text-sm text-gray-600 mb-4">
-                        Replace all {students.length} existing student{students.length !== 1 ? 's' : ''} with a new list. 
+                        Replace all {students.length} existing student{students.length !== 1 ? 's' : ''} with a new list.
                         This will permanently remove the current list.
                       </p>
                       <label
                         htmlFor="replace-students"
-                        className={`inline-flex items-center space-x-2 cursor-pointer bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors ${
-                          uploading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        className={`inline-flex items-center space-x-2 cursor-pointer bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors ${uploading ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                       >
                         <RefreshCw className="h-4 w-4" />
                         <span>{uploading ? 'Replacing...' : 'Replace with New List'}</span>

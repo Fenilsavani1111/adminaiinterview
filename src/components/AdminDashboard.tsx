@@ -1,5 +1,4 @@
-// adminaiinterview/src/components/AdminDashboard.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Users,
@@ -7,20 +6,17 @@ import {
   TrendingUp,
   Award,
   Search,
-  Filter,
   Eye,
   Download,
   Star,
   Briefcase,
   Plus,
   BarChart3,
-  Clock,
   Target,
   Zap,
   ChevronRight,
   Activity,
   UserCheck,
-  FileText,
   Mail,
   TrendingDown,
   LogOut,
@@ -30,6 +26,7 @@ import { Candidate } from "../types";
 import { useJobPosts } from "../hooks/useJobPosts";
 import { userAPI } from "../services/api";
 import { CandidatePerformanceDetail } from "./CandidatePerformanceDetail";
+import Loader from "./Loader";
 
 type SkillType = {
   skill: string;
@@ -49,8 +46,9 @@ interface SummaryStats {
 }
 
 export function AdminDashboard() {
-  const { state, dispatch } = useApp();
-  const { getAdminDashboard, error, loading } = useJobPosts();
+  const { dispatch } = useApp();
+  const { getAdminDashboard } = useJobPosts();
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -113,9 +111,9 @@ export function AdminDashboard() {
           const fetchedUser = profileResp.user;
           const storedToken = localStorage.getItem('token');
 
-          const normalizedUser = { 
-            ...fetchedUser, 
-            access_token: storedToken || fetchedUser.access_token 
+          const normalizedUser = {
+            ...fetchedUser,
+            access_token: storedToken || fetchedUser.access_token
           };
           localStorage.setItem('user', JSON.stringify(normalizedUser));
 
@@ -171,18 +169,18 @@ export function AdminDashboard() {
     return matchesSearch && matchesFilter;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "in-progress":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "scheduled":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case "completed":
+  //       return "bg-green-100 text-green-800 border-green-200";
+  //     case "in-progress":
+  //       return "bg-blue-100 text-blue-800 border-blue-200";
+  //     case "scheduled":
+  //       return "bg-yellow-100 text-yellow-800 border-yellow-200";
+  //     default:
+  //       return "bg-gray-100 text-gray-800 border-gray-200";
+  //   }
+  // };
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-emerald-600";
@@ -203,6 +201,7 @@ export function AdminDashboard() {
 
   const getData = async () => {
     try {
+      setLoading(true);
       let data = await getAdminDashboard();
       setCandidates(data?.recentCandidates ?? []);
       let candidates = data?.candidates ?? [];
@@ -229,6 +228,9 @@ export function AdminDashboard() {
       setSummaryStates({ ...data?.summary, top_skills: topFiveSkills });
     } catch (error) {
       console.log("error", error);
+      setLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -315,12 +317,7 @@ export function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden">
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">Loading data...</span>
-            </div>
-          </div>
+          <Loader message="Loading data..." />
         ) : (
           <>
             {/* Enhanced Stats Grid */}
@@ -341,11 +338,10 @@ export function AdminDashboard() {
                         <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                       )}
                       <span
-                        className={`text-sm ${
-                          summaryStates.interview_weekly_growth > 0
-                            ? "text-emerald-600"
-                            : "text-red-600"
-                        } font-medium`}
+                        className={`text-sm ${summaryStates.interview_weekly_growth > 0
+                          ? "text-emerald-600"
+                          : "text-red-600"
+                          } font-medium`}
                       >
                         {summaryStates.interview_weekly_growth >= 0 ? "+" : ""}
                         {summaryStates.interview_weekly_growth?.toFixed(2)}%
@@ -369,7 +365,7 @@ export function AdminDashboard() {
                       {summaryStates.active_jobs}
                     </p>
                     {summaryStates.total_interview ===
-                    summaryStates?.active_jobs ? (
+                      summaryStates?.active_jobs ? (
                       <div className="flex items-center mt-2">
                         <Activity className="h-4 w-4 text-emerald-500 mr-1" />
                         <span className="text-sm text-emerald-600 font-medium">
@@ -555,7 +551,7 @@ export function AdminDashboard() {
 
                               <div className="text-center">
                                 {item?.recommendations?.recommendation &&
-                                item?.recommendations?.recommendation?.length >
+                                  item?.recommendations?.recommendation?.length >
                                   0 ? (
                                   <span
                                     className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border ${getRecommendationColor(

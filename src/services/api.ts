@@ -1,4 +1,3 @@
-// adminaiinterview/src/services/api.ts - COMPLETE WITH STUDENT EXAM LINK
 import axios from 'axios';
 import { JobPost } from '../types';
 
@@ -89,29 +88,29 @@ export const userAPI = {
   // Login user - USES EMAIL ONLY (NO USERNAME)
   login: async (email: string, password: string) => {
     const response = await api.post('/login', { email, password });
-    
+
     // Store user info in localStorage (token is stored by interceptor)
     if (response.data.success && response.data.user) {
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
-    
+
     return response.data;
   },
 
   // Register new user - NO USERNAME REQUIRED
-  register: async (payload: { 
-    name: string; 
-    email: string; 
-    phoneNumber?: string; 
-    password: string 
+  register: async (payload: {
+    name: string;
+    email: string;
+    phoneNumber?: string;
+    password: string
   }) => {
     const response = await api.post('/register', payload);
-    
+
     // Store user info in localStorage (token is stored by interceptor)
     if (response.data.success && response.data.user) {
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
-    
+
     return response.data;
   },
 
@@ -164,7 +163,7 @@ export const userAPI = {
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.search) queryParams.append('search', params.search);
-    
+
     const response = await api.get(`/users?${queryParams.toString()}`);
     return response.data;
   },
@@ -177,11 +176,11 @@ export const userAPI = {
 
   // Update user (NO USERNAME)
   updateUser: async (
-    id: number | string, 
-    userData: Partial<{ 
-      name: string; 
-      email: string; 
-      phoneNumber: string; 
+    id: number | string,
+    userData: Partial<{
+      name: string;
+      email: string;
+      phoneNumber: string;
       password: string
     }>
   ): Promise<{ success: boolean; message: string; user: User }> => {
@@ -249,16 +248,16 @@ export const jobPostAPI = {
 
   // Send student exam link to emails (NEW)
   sendStudentExamLink: async (
-    jobId: string, 
-    emails: string[], 
+    jobId: string,
+    emails: string[],
     messageTemplate?: string,
     students?: Array<{ name: string; email: string }>
   ): Promise<void> => {
-    await api.post('/jobposts/send-student-exam-link', { 
-      jobId, 
+    await api.post('/jobposts/send-student-exam-link', {
+      jobId,
       emails,
       messageTemplate,
-      students 
+      students
     });
   },
 

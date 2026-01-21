@@ -1,10 +1,9 @@
-// adminaiinterview/src/components/LandingPage.tsx
-import React from 'react';
-import { Brain, Video, Award, Users, ArrowRight, CheckCircle, Briefcase } from 'lucide-react';
+import { Brain, Video, Award, ArrowRight, CheckCircle, Briefcase } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export function LandingPage() {
   const { dispatch } = useApp();
+  const token = localStorage.getItem('token');
 
   const handleGetStarted = () => {
     // Check if user is already logged in
@@ -33,7 +32,7 @@ export function LandingPage() {
               <span className="text-xl font-bold text-gray-900">InterviewAI</span>
             </div>
             <div className="flex items-center space-x-4">
-              <button
+              {!token && <button
                 onClick={() => {
                   const token = localStorage.getItem('token');
                   if (token) {
@@ -47,8 +46,8 @@ export function LandingPage() {
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
                 Login
-              </button>
-              <button 
+              </button>}
+              <button
                 onClick={handleGetStarted}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
@@ -68,11 +67,11 @@ export function LandingPage() {
               <span className="text-blue-600"> AI-Powered Practice</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Get real-time feedback on your communication skills, body language, and technical expertise. 
+              Get real-time feedback on your communication skills, body language, and technical expertise.
               Practice with our advanced AI interviewer and land your dream job.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button 
+              <button
                 onClick={handleGetStarted}
                 className="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg flex items-center justify-center space-x-2"
               >
@@ -98,7 +97,7 @@ export function LandingPage() {
               Our comprehensive platform evaluates every aspect of your interview performance
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center group">
               <div className="bg-blue-100 p-4 rounded-2xl w-16 h-16 mx-auto mb-4 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
@@ -107,7 +106,7 @@ export function LandingPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Live Video Analysis</h3>
               <p className="text-gray-600">Real-time body language and facial expression evaluation</p>
             </div>
-            
+
             <div className="text-center group">
               <div className="bg-teal-100 p-4 rounded-2xl w-16 h-16 mx-auto mb-4 flex items-center justify-center group-hover:bg-teal-200 transition-colors">
                 <Brain className="h-8 w-8 text-teal-600" />
@@ -115,7 +114,7 @@ export function LandingPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">AI-Powered Questions</h3>
               <p className="text-gray-600">Tailored questions based on your role and experience</p>
             </div>
-            
+
             <div className="text-center group">
               <div className="bg-green-100 p-4 rounded-2xl w-16 h-16 mx-auto mb-4 flex items-center justify-center group-hover:bg-green-200 transition-colors">
                 <Award className="h-8 w-8 text-green-600" />
@@ -123,7 +122,7 @@ export function LandingPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Detailed Scoring</h3>
               <p className="text-gray-600">Comprehensive feedback on all interview aspects</p>
             </div>
-            
+
             <div className="text-center group">
               <div className="bg-purple-100 p-4 rounded-2xl w-16 h-16 mx-auto mb-4 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                 <Briefcase className="h-8 w-8 text-purple-600" />
@@ -146,7 +145,7 @@ export function LandingPage() {
               <p className="text-lg text-gray-600 mb-8">
                 Our AI evaluates multiple dimensions of your interview performance to provide actionable insights.
               </p>
-              
+
               <div className="space-y-4">
                 {[
                   'Communication Skills & Clarity',
@@ -163,14 +162,14 @@ export function LandingPage() {
                 ))}
               </div>
             </div>
-            
+
             <div className="bg-white p-8 rounded-2xl shadow-lg">
               <div className="text-center mb-6">
                 <div className="bg-blue-600 text-white text-lg font-bold py-2 px-4 rounded-lg inline-block">
                   Sample Score Report
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 {[
                   { label: 'Overall Score', score: 85, color: 'bg-blue-600' },
@@ -185,7 +184,7 @@ export function LandingPage() {
                       <span className="text-sm font-bold text-gray-900">{item.score}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className={`${item.color} h-2 rounded-full transition-all duration-1000`}
                         style={{ width: `${item.score}%` }}
                       ></div>
@@ -207,7 +206,7 @@ export function LandingPage() {
           <p className="text-xl text-blue-100 mb-8">
             Join thousands of professionals who have improved their interview performance with InterviewAI
           </p>
-          <button 
+          <button
             onClick={handleGetStarted}
             className="bg-white text-blue-600 px-8 py-4 rounded-lg hover:bg-gray-100 transition-colors font-semibold text-lg"
           >
