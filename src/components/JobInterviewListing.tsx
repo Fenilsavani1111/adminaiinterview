@@ -51,19 +51,32 @@ const formatDate = (date?: string) =>
 const formatEducations = (educations: any[]) => {
   if (!Array.isArray(educations) || educations.length === 0) return "N/A";
 
+  const qualificationMap: Record<string, string> = {
+    tenth: "10th",
+    twelfth: "12th",
+    degree: "Degree",
+    pg: "PG",
+  };
+
   return educations
-    .map(
-      (e) =>
-        `${e.qualification}${e.year ? ` (${e.year})` : ""}${e.score ? ` - ${e.score}` : ""
-        }`
-    )
-    .join(", ");
+    .map((e) => {
+      const qualification = qualificationMap[e.type] || e.type;
+      const score = e.percentage ? e.percentage : "";
+      const year = e.yearOfPassing ? e.yearOfPassing : "";
+
+      // Build string like "10th (8.8) - 2014" or "PG" if both empty
+      if (score || year) {
+        return `${qualification}${score ? ` (${score})` : ""}${year ? ` - ${year}` : ""}`;
+      }
+      return qualification;
+    })
+    .join(" | ");
 };
 
 const yesNo = (val: boolean | undefined) =>
   val === true ? "Yes" : val === false ? "No" : "N/A";
 
-function secondsToHrMin(seconds) {
+function secondsToHrMin(seconds: number) {
   const hr = Math.floor(seconds / 3600);
   const min = Math.floor((seconds % 3600) / 60);
   return `${hr} hr ${min} min`;
@@ -100,7 +113,8 @@ export function JobInterviewListing({
   company,
   onBack,
 }: JobInterviewListingProps) {
-  const { getJobPostById, loading } = useJobPosts();
+  const { getJobPostById } = useJobPosts();
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("date");
@@ -197,11 +211,9 @@ export function JobInterviewListing({
     }
   };
 
-  const exportToExcel = async (
-    data: Record<string, any>[]
-  ) => {
+  const exportToExcel = async () => {
     setExporting(true);
-    if (!data || data.length === 0) {
+    if (!candidates || candidates.length === 0) {
       console.warn("No data to export");
       return;
     }
@@ -260,7 +272,7 @@ export function JobInterviewListing({
       },
     ];
 
-    candidates?.filter((interview) => interview?.interviewDate)?.forEach((item) => {
+    candidates?.sort((a, b) => Number(a.id) - Number(b.id))?.filter((interview) => interview?.interviewDate)?.forEach((item) => {
       worksheet.addRow([
         item.designation || "",                      // Job Title
         "Demo testing",                                     // Job Created User
@@ -292,12 +304,12 @@ export function JobInterviewListing({
         item.residenceLocation || "N/A",                // Residence Location
         item.resumeUrl || "N/A",                        // Resume Link
 
-        formatEducations(item?.educations),              // Education Details
+        formatEducations(item?.educations ?? []),              // Education Details
 
-        item.governmentProof?.[0]?.idProofType || "N/A",// Govt ID 1 Proof
+        item.governmentProof?.[0]?.value || "N/A",
         yesNo(item.governmentProof?.[0]?.verified),     // Govt ID 1 Verified
 
-        item.governmentProof?.[1]?.idProofType || "N/A",// Govt ID 2 Proof
+        item.governmentProof?.[1]?.value || "N/A",
         yesNo(item.governmentProof?.[1]?.verified),     // Govt ID 2 Verified
       ]);
     });
@@ -312,7 +324,7 @@ export function JobInterviewListing({
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
 
-    saveAs(blob, "students_with_job_report.xlsx");
+    saveAs(blob, "recruitment_progress_report.xlsx");
     setExporting(false);
   }
 
@@ -351,11 +363,14 @@ export function JobInterviewListing({
 
   const getData = async () => {
     try {
+      setLoading(true);
       let job = await getJobPostById(jobId);
       setCandidates(job?.candidates ?? []);
       if (job?.post) setJobpost({ ...job?.post });
     } catch (error) {
       console.log("error", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -425,8 +440,8 @@ export function JobInterviewListing({
                   {selectedCandidates.length} selected
                 </span>
               )}
-              <button
-                onClick={() => exportToExcel(data)}
+              {candidates?.length > 0 && <button
+                onClick={() => exportToExcel()}
                 disabled={loading}
                 className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
@@ -435,7 +450,7 @@ export function JobInterviewListing({
                     <Download className="h-4 w-4" />
                     <span>Export Results</span>
                   </>}
-              </button>
+              </button>}
             </div>
           </div>
         </div>

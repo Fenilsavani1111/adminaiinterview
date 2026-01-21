@@ -30,8 +30,8 @@ export interface JobPost {
   };
   questions: InterviewQuestion[];
   status: 'draft' | 'active' | 'paused' | 'closed';
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   createdBy: string;
   shareableUrl?: string;
   applicants?: number;
@@ -139,6 +139,8 @@ export interface Candidate {
   residenceLocation: string;
   region: string;
   governmentProof: any[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface StudentInterviewAnswer {
