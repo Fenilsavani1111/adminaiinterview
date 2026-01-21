@@ -16,9 +16,6 @@ export function Login() {
     setError('');
     setLoading(true);
 
-    console.log('🔐 LOGIN ATTEMPT');
-    console.log('📧 Email:', email);
-
     try {
       const response = await userAPI.login(email.trim(), password);
 
@@ -38,12 +35,15 @@ export function Login() {
       });
 
       // Store user data (token is already stored by api.ts interceptor)
-      localStorage.setItem('user', JSON.stringify({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        phoneNumber: user.phoneNumber
-      }));
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          phoneNumber: user.phoneNumber,
+        })
+      );
 
       // Set current user in app context
       dispatch({ type: 'SET_CURRENT_USER', payload: user });
@@ -69,11 +69,7 @@ export function Login() {
         status: err?.response?.status,
       });
 
-      setError(
-        err?.response?.data?.message ||
-        err?.message ||
-        'Login failed. Please try again.'
-      );
+      setError(err?.response?.data?.message || err?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
       console.log('🏁 Login process completed');
@@ -81,70 +77,62 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="flex items-center justify-center mb-8">
-          <LogIn className="w-12 h-12 text-indigo-600" />
+    <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4'>
+      <div className='bg-white rounded-2xl shadow-xl p-8 w-full max-w-md'>
+        <div className='flex items-center justify-center mb-8'>
+          <LogIn className='w-12 h-12 text-indigo-600' />
         </div>
 
-        <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">
-          Login
-        </h1>
-        <p className="text-center text-gray-600 mb-8">
-          Sign in to access your dashboard
-        </p>
+        <h1 className='text-3xl font-bold text-center mb-2 text-gray-800'>Login</h1>
+        <p className='text-center text-gray-600 mb-8'>Sign in to access your dashboard</p>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
-            <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-red-700">{error}</p>
+          <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start'>
+            <AlertCircle className='w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0' />
+            <p className='text-sm text-red-700'>{error}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className='space-y-6'>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Email</label>
             <input
-              type="email"
+              type='email'
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
-              placeholder="Enter your email"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100"
+              placeholder='Enter your email'
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100'
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Password</label>
             <input
-              type="password"
+              type='password'
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
-              placeholder="Enter your password"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100"
+              placeholder='Enter your password'
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100'
             />
           </div>
 
           <button
-            type="submit"
+            type='submit'
             disabled={loading}
-            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors"
+            className='w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors'
           >
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className='mt-6 text-center'>
           <button
             onClick={() => dispatch({ type: 'SET_VIEW', payload: 'register' })}
-            className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+            className='text-indigo-600 hover:text-indigo-700 text-sm font-medium'
             disabled={loading}
           >
             Don&apos;t have an account? Register
