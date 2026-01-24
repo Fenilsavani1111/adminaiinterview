@@ -102,7 +102,7 @@ export const userAPI = {
     name: string;
     email: string;
     phoneNumber?: string;
-    password: string
+    password: string;
   }) => {
     const response = await api.post('/register', payload);
 
@@ -181,7 +181,7 @@ export const userAPI = {
       name: string;
       email: string;
       phoneNumber: string;
-      password: string
+      password: string;
     }>
   ): Promise<{ success: boolean; message: string; user: User }> => {
     const response = await api.put(`/users/${id}`, userData);
@@ -201,7 +201,9 @@ export const userAPI = {
 
 export const jobPostAPI = {
   // Create a new job post
-  create: async (jobPostData: Omit<JobPost, 'id' | 'createdAt' | 'updatedAt'>): Promise<JobPost> => {
+  create: async (
+    jobPostData: Omit<JobPost, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<JobPost> => {
     const response = await api.post('/jobposts', jobPostData);
     return response.data;
   },
@@ -257,7 +259,7 @@ export const jobPostAPI = {
       jobId,
       emails,
       messageTemplate,
-      students
+      students,
     });
   },
 
@@ -286,8 +288,16 @@ export const jobPostAPI = {
   },
 
   // Get candidate by ID (Public)
-  getCandidateById: async (id: string): Promise<JobPost> => {
+  getCandidateById: async (id: string): Promise<any> => {
     const response = await api.get(`/jobposts/get-candidate-byid/${id}`);
+    return response.data;
+  },
+
+  // Get performance comparison data (Public)
+  getPerformanceComparison: async (jobPostId?: string) => {
+    const response = await api.get(
+      `/jobposts/performance-comparison${jobPostId ? `?jobPostId=${jobPostId}` : ''}`
+    );
     return response.data;
   },
 };

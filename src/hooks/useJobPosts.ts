@@ -23,9 +23,7 @@ export const useJobPosts = () => {
       const data = await jobPostAPI.getAll();
       setJobPosts(data);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to fetch job posts'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to fetch job posts');
     } finally {
       setLoading(false);
     }
@@ -41,9 +39,7 @@ export const useJobPosts = () => {
         setJobPosts((prev) => [...prev, newJobPost]);
         return newJobPost;
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to create job post'
-        );
+        setError(err instanceof Error ? err.message : 'Failed to create job post');
         throw err;
       } finally {
         setLoading(false);
@@ -53,27 +49,20 @@ export const useJobPosts = () => {
   );
 
   // Update a job post
-  const updateJobPost = useCallback(
-    async (id: string, jobPostData: Partial<JobPost>) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const updatedJobPost = await jobPostAPI.update(id, jobPostData);
-        setJobPosts((prev) =>
-          prev.map((job) => (job.id === id ? updatedJobPost : job))
-        );
-        return updatedJobPost;
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to update job post'
-        );
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+  const updateJobPost = useCallback(async (id: string, jobPostData: Partial<JobPost>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedJobPost = await jobPostAPI.update(id, jobPostData);
+      setJobPosts((prev) => prev.map((job) => (job.id === id ? updatedJobPost : job)));
+      return updatedJobPost;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update job post');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Delete a job post
   const deleteJobPost = useCallback(async (id: string) => {
@@ -83,9 +72,7 @@ export const useJobPosts = () => {
       await jobPostAPI.delete(id);
       setJobPosts((prev) => prev.filter((job) => job.id !== id));
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to delete job post'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to delete job post');
       throw err;
     } finally {
       setLoading(false);
@@ -116,11 +103,7 @@ export const useJobPosts = () => {
       setJobPosts(data);
       return data;
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to fetch job posts by status'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to fetch job posts by status');
       throw err;
     } finally {
       setLoading(false);
@@ -258,9 +241,7 @@ export const useJobPosts = () => {
         let data: InterviewQuestion[] = evaluation?.interviewQuestions ?? [];
         return data;
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to generate Questions'
-        );
+        setError(err instanceof Error ? err.message : 'Failed to generate Questions');
         throw err;
       } finally {
         setLoading(false);
@@ -270,47 +251,44 @@ export const useJobPosts = () => {
   );
 
   // Get job responsibilities from job description using chatgtp openai
-  const getJobPostResponsibilityFromJD = useCallback(
-    async (jobDescription: string) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are a helpful assistant that extracts job responsibilities from job descriptions and returns them in JSON format only.',
-            },
-            {
-              role: 'user',
-              content: `Extract the job responsibilities in JSON format from the following job description:\n\n${jobDescription}`,
-            },
-          ],
-          // max_tokens: 150,
-          temperature: 0.3,
-          response_format: {
-            type: 'json_object',
+  const getJobPostResponsibilityFromJD = useCallback(async (jobDescription: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a helpful assistant that extracts job responsibilities from job descriptions and returns them in JSON format only.',
           },
-        });
-        let responseText = response.choices[0]?.message?.content ?? '';
-        const evaluation = JSON.parse(responseText);
-        let data: string[] = evaluation?.job_responsibilities ?? [];
-        return data;
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Failed to generate responsibilities from job description'
-        );
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+          {
+            role: 'user',
+            content: `Extract the job responsibilities in JSON format from the following job description:\n\n${jobDescription}`,
+          },
+        ],
+        // max_tokens: 150,
+        temperature: 0.3,
+        response_format: {
+          type: 'json_object',
+        },
+      });
+      let responseText = response.choices[0]?.message?.content ?? '';
+      const evaluation = JSON.parse(responseText);
+      let data: string[] = evaluation?.job_responsibilities ?? [];
+      return data;
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to generate responsibilities from job description'
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Get job description from uploaded pdf using chatgtp openai
   const getJobDescriptionFromPDf = useCallback(async (pdfText: string) => {
@@ -349,11 +327,7 @@ PDF text:
       let data: string = evaluation?.job_description ?? '';
       return data;
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to generate job description pdf'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
       throw err;
     } finally {
       setLoading(false);
@@ -368,11 +342,7 @@ PDF text:
       const data = await jobPostAPI.getRecentCandidates();
       return data;
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to generate job description pdf'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
       throw err;
     } finally {
       setLoading(false);
@@ -387,11 +357,7 @@ PDF text:
       const data = await jobPostAPI.getAdminDashboard();
       return data;
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to generate job description pdf'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
       throw err;
     } finally {
       setLoading(false);
@@ -406,11 +372,7 @@ PDF text:
       const data = await jobPostAPI.getAnalyticsDashboard();
       return data;
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to generate job description pdf'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
       throw err;
     } finally {
       setLoading(false);
@@ -426,6 +388,21 @@ PDF text:
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch job post');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Get performance comparison data
+  const getPerformanceComparison = useCallback(async (jobPostId?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await jobPostAPI.getPerformanceComparison(jobPostId);
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch performance comparison');
       throw err;
     } finally {
       setLoading(false);
@@ -465,5 +442,6 @@ PDF text:
     getAdminDashboard,
     getAnalyticsDashboard,
     getCandidateById,
+    getPerformanceComparison,
   };
 };

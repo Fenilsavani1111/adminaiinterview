@@ -70,7 +70,7 @@ export interface Candidate {
   appliedDate: any;
   interviewDate: any;
   duration: number;
-  status: 'completed' | 'inprogress' | 'scheduled';
+  status: 'pending' | 'inprogress' | 'under_review' | 'completed';
   overallScore: number;
   scores: {
     communication: number;
@@ -93,13 +93,16 @@ export interface Candidate {
   photoUrl?: string;
   highestQualification?: string;
   educations?: Array<{
-    degree?: string;
-    institution?: string;
-    fieldOfStudy?: string;
-    startDate?: string;
-    endDate?: string;
-    grade?: string;
-    description?: string;
+    type: 'tenth' | 'degree' | 'pg' | 'master' | 'phd';
+    stream?: string;
+    percentage?: string;
+    yearOfPassing?: string;
+  }>;
+  educationDetails?: Array<{
+    type: 'tenth' | 'degree' | 'pg' | 'master' | 'phd';
+    stream?: string;
+    percentage?: string;
+    yearOfPassing?: string;
   }>;
   JobPost?: JobPost;
   StudentInterviewAnswer?: StudentInterviewAnswer[];
@@ -120,22 +123,16 @@ export interface Candidate {
     positive_indicators?: string[];
     recommendations?: string[];
   };
-  invitedDate?: string;
-  submissionStatus?: string;
   categoryPercentage?: {
-    "totalScore": number,
-    "overallScore": number,
-    "overallPercentage": number,
-    "categoryWisePercentage": {
-      "FP&A": number;
-      "Costing": number;
-      "Accounting": number;
-      "Excel (Advanced)": number;
-      "Reasoning Ability": number;
-      "Communication Skills": number;
-    }
-  },
+    totalScore: number;
+    overallScore: number;
+    overallPercentage: number;
+    categoryWisePercentage: {
+      [key: string]: number; // Dynamic keys for different categories like technical, confidence, leadership, etc.
+    };
+  };
   proctoringStatus?: string;
+  proctoringAlerts?: Array<{ message?: string; type?: string; [k: string]: unknown }>;
   residenceLocation: string;
   region: string;
   governmentProof: any[];
@@ -161,7 +158,7 @@ export interface InterviewSession {
   applicationId?: string;
   startTime: Date;
   endTime?: Date;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'inprogress' | 'under_review' | 'completed' | 'cancelled';
   questions: InterviewQuestion[];
   responses: InterviewResponse[];
   evaluation?: InterviewEvaluation;
