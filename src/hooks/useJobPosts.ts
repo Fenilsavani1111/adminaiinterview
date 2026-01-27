@@ -127,107 +127,157 @@ export const useJobPosts = () => {
             {
               role: 'system',
               content: `
-            You are an expert interview-question generator for hiring teams.
-            
-            ==================== MANDATORY RULES ====================
-            
-            1. Generate a MINIMUM of 40 interview questions.
-            2. Generate AT LEAST 10 questions for EACH category:
-               - Reasoning
-               - Communication
-               - Arithmetic / Quantitative
-               - Subjective / Role-based
-            3. All questions MUST be directly derived from the provided job post.
-            4. Questions MUST adapt to the experience level:
-               - Entry-level → fundamentals, basic scenarios
-               - Mid-level → applied problem-solving, real-world cases
-               - Senior-level → decision-making, trade-offs, leadership
-            5. DO NOT generate generic or school-level questions.
-            6. expectedDuration MUST be in seconds.
-            7. suggestedAnswers MUST be an array (can be empty but must exist).
-            8. evaluationCriteria MUST be an array with at least 2 items.
-            9. id must be a unique integer starting from 1.
-            10. order must match the id.
-            11. difficulty must be one of: easy, medium, hard.
-            12. type must be one of:
-                - reasoning
-                - communication
-                - arithmetic
-                - subjective
-            13. category MUST clearly reflect the role or skill being assessed.
-            14. isRequired MUST always be true.
-            15. Output ONLY valid JSON — no explanations, no markdown, no extra text.
-            
-            ==================== ROLE AWARENESS RULES ====================
-            
-            - Reasoning questions:
-              Evaluate logic, decision-making, and problem-solving using role-specific scenarios.
-            
-            - Communication questions:
-              Simulate real workplace conversations relevant to the role, team, and stakeholders.
-            
-            - Arithmetic / Quantitative questions:
-              Use role-related metrics, data, timelines, performance, or business calculations.
-            
-            - Subjective / Role-based questions:
-              Assess ownership, judgment, ethics, leadership, role-fit, and experience-based decisions.
-            
-            ==================== OUTPUT FORMAT ====================
-            
-            Return a JSON ARRAY of objects:
-            
-            [
-              {
-                "id": number,
-                "question": string,
-                "type": "reasoning | communication | arithmetic | subjective",
-                "expectedDuration": number,
-                "difficulty": "easy | medium | hard",
-                "category": string,
-                "suggestedAnswers": string[],
-                "evaluationCriteria": string[],
-                "isRequired": true,
-                "order": number
-              }
-            ]
-            `,
+          You are an expert interview-question generator for hiring teams.
+          
+          ==================== MANDATORY RULES ====================
+          
+          1. Generate EXACTLY 49 interview questions total.
+          2. Generate EXACTLY the following distribution:
+             - Reasoning: 13 questions (at least 4 MCQ)
+             - Communication: 12 questions (at least 3 MCQ)
+             - Arithmetic/Quantitative: 12 questions (at least 5 MCQ)
+             - Subjective/Role-based: 12 questions (at least 3 MCQ)
+          3. Overall, generate at least 15 MCQ questions across all categories.
+          4. All questions MUST be directly derived from the provided job post.
+          5. Questions MUST adapt to the experience level:
+             - Entry-level → fundamentals, basic scenarios
+             - Mid-level → applied problem-solving, real-world cases
+             - Senior-level → decision-making, trade-offs, leadership
+          6. DO NOT generate generic or school-level questions.
+          7. expectedDuration MUST be in seconds.
+          8. For open-ended questions: suggestedAnswers MUST be an array (can be empty but must exist).
+          9. For MCQ questions: 
+             - options MUST be an array with exactly 4 choices
+             - rightAnswer MUST contain the exact correct answer text from options
+             - DO NOT include suggestedAnswers field
+          10. evaluationCriteria MUST be an array with at least 2 items.
+          11. id must be a unique integer starting from 1.
+          12. order must match the id.
+          13. difficulty must be one of: easy, medium, hard.
+          14. questionFormat must be one of: open-ended, mcq.
+          15. type must be one of:
+              - reasoning
+              - communication
+              - arithmetic
+              - subjective
+          16. category MUST clearly reflect the role or skill being assessed.
+          17. isRequired MUST always be true.
+          18. Output ONLY valid JSON — no explanations, no markdown, no extra text.
+          
+          ==================== TYPE-SPECIFIC GUIDELINES ====================
+          
+          REASONING questions (13 total):
+          - Test logical thinking, problem-solving, and analytical skills
+          - Include scenario-based decisions relevant to the role
+          - MCQ format: test understanding of frameworks, methodologies, or best approaches
+          - Open-ended: explore thought process and decision-making rationale
+          - Examples: troubleshooting scenarios, prioritization challenges, system design logic
+          
+          COMMUNICATION questions (12 total):
+          - Assess written and verbal communication abilities
+          - Test stakeholder management and collaboration skills
+          - MCQ format: best practices for communication scenarios, email/message choices
+          - Open-ended: role-play situations, explaining complex topics, conflict resolution
+          - Examples: explaining technical concepts, handling difficult conversations, presentation skills
+          
+          ARITHMETIC/QUANTITATIVE questions (12 total):
+          - Use role-specific calculations, metrics, and data analysis
+          - Include business math, estimations, and quantitative reasoning
+          - MCQ format: calculations with specific answer choices, data interpretation
+          - Open-ended: explain methodology, analyze trends, forecast scenarios
+          - Examples: budget calculations, performance metrics, ROI analysis, capacity planning
+          
+          SUBJECTIVE/ROLE-BASED questions (12 total):
+          - Assess judgment, ethics, leadership, and role fit
+          - Explore past experiences and situational responses
+          - MCQ format: ethical dilemmas, best practices, approach selection
+          - Open-ended: behavioral questions, experience-based scenarios, vision and strategy
+          - Examples: handling failure, team conflicts, career motivations, leadership philosophy
+          
+          ==================== OUTPUT FORMAT ====================
+          
+          Return a JSON ARRAY of exactly 49 objects with TWO possible structures:
+          
+          For OPEN-ENDED questions:
+          {
+            "id": number,
+            "question": string,
+            "type": "reasoning | communication | arithmetic | subjective",
+            "questionFormat": "open-ended",
+            "expectedDuration": number,
+            "difficulty": "easy | medium | hard",
+            "category": string,
+            "suggestedAnswers": string[],
+            "evaluationCriteria": string[],
+            "isRequired": true,
+            "order": number
+          }
+          
+          For MULTIPLE-CHOICE questions:
+          {
+            "id": number,
+            "question": string,
+            "type": "reasoning | communication | arithmetic | subjective",
+            "questionFormat": "mcq",
+            "expectedDuration": number,
+            "difficulty": "easy | medium | hard",
+            "category": string,
+            "options": [string, string, string, string],
+            "rightAnswer": string,
+            "evaluationCriteria": string[],
+            "isRequired": true,
+            "order": number
+          }
+          
+          CRITICAL REQUIREMENTS:
+          - Total count MUST be exactly 49 questions
+          - MUST include all 4 types: reasoning, communication, arithmetic, subjective
+          - Each type MUST have the specified count (13, 12, 12, 12)
+          - MCQ questions must NOT have suggestedAnswers field
+          - Open-ended questions must NOT have options or rightAnswer fields
+          - rightAnswer MUST exactly match one of the options
+          `,
             },
             {
               role: 'user',
               content: `
-            Generate interview questions strictly following all system rules.
-            
-            ==================== JOB POST DETAILS ====================
-            
-            Position: ${jobdata?.title}
-            Company: ${jobdata?.company}
-            Department: ${jobdata?.department}
-            Job Type: ${jobdata?.type}
-            Experience Level: ${jobdata?.experience}
-            
-            Job Description:
-            ${jobdata?.description}
-            
-            Requirements:
-            ${jobdata?.requirements?.map((item) => `- ${item}`).join('\n')}
-            
-            Responsibilities:
-            ${jobdata?.responsibilities?.map((item) => `- ${item}`).join('\n')}
-            
-            Skills:
-            ${jobdata?.skills?.map((item) => `- ${item}`).join('\n')}
-            
-            ${
-              jobdata?.salary?.min !== undefined
-                ? `Min Salary: ${jobdata.salary.min} ${jobdata.salary.currency}`
-                : ''
-            }
-            ${
-              jobdata?.salary?.max !== undefined
-                ? `Max Salary: ${jobdata.salary.max} ${jobdata.salary.currency}`
-                : ''
-            }
-            `,
+          Generate interview questions strictly following all system rules.
+          
+          ==================== JOB POST DETAILS ====================
+          
+          Position: ${jobdata?.title}
+          Company: ${jobdata?.company}
+          Department: ${jobdata?.department}
+          Job Type: ${jobdata?.type}
+          Experience Level: ${jobdata?.experience}
+          
+          Job Description:
+          ${jobdata?.description}
+          
+          Requirements:
+          ${jobdata?.requirements?.map((item) => `- ${item}`).join('\n')}
+          
+          Responsibilities:
+          ${jobdata?.responsibilities?.map((item) => `- ${item}`).join('\n')}
+          
+          Skills:
+          ${jobdata?.skills?.map((item) => `- ${item}`).join('\n')}
+          
+          ${jobdata?.salary?.min !== undefined
+                  ? `Min Salary: ${jobdata.salary.min} ${jobdata.salary.currency}`
+                  : ''
+                }
+          ${jobdata?.salary?.max !== undefined
+                  ? `Max Salary: ${jobdata.salary.max} ${jobdata.salary.currency}`
+                  : ''
+                }
+          
+          REMINDER: Generate EXACTLY 49 questions with the following distribution:
+          - 13 Reasoning questions
+          - 12 Communication questions
+          - 12 Arithmetic/Quantitative questions
+          - 12 Subjective/Role-based questions
+          `,
             },
           ],
           // max_tokens: 150,
@@ -238,7 +288,8 @@ export const useJobPosts = () => {
         });
         let responseText = response.choices[0]?.message?.content ?? '';
         const evaluation = JSON.parse(responseText);
-        let data: InterviewQuestion[] = evaluation?.interviewQuestions ?? [];
+        console.log('evaluation', evaluation);
+        let data: InterviewQuestion[] = evaluation?.questions ?? [];
         return data;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate Questions');
