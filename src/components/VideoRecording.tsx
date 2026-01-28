@@ -558,7 +558,7 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
                       interviewData?.overallScore ?? 0
                     )}`}
                   >
-                    {interviewData?.overallScore}%
+                    {interviewData?.overallScore}
                   </span>
                 </div>
                 <div className='flex items-center justify-between'>

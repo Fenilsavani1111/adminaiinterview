@@ -696,7 +696,7 @@ export function InterviewAnalytics() {
                           candidate.overallScore ?? 0
                         )} flex items-center space-x-2`}
                       >
-                        <span>{candidate.overallScore ?? 0}%</span>
+                        <span>{candidate.overallScore ?? 0}</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

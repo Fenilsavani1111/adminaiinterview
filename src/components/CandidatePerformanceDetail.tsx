@@ -6,13 +6,10 @@ import {
   Clock,
   Award,
   TrendingUp,
-  Play,
   Download,
   Eye,
   Star,
   MessageSquare,
-  Video,
-  Mic,
   GraduationCap,
   MapPin,
   Mail,
@@ -1379,7 +1376,7 @@ export function CandidatePerformanceDetail({
                             ).split(' ')[0]
                           }`}
                         >
-                          {candidateData?.categoryPercentage?.overallPercentage}%
+                          {candidateData?.categoryPercentage?.overallPercentage}
                         </div>
                         <div className='text-sm text-gray-600'>Overall Score</div>
                         <div
@@ -1806,17 +1803,6 @@ export function CandidatePerformanceDetail({
                             <h3 className='text-lg font-medium text-gray-900 mb-3'>
                               {response?.Question?.question}
                             </h3>
-                          </div>
-                          <div className='flex items-center space-x-2'>
-                            <button className='p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100'>
-                              <Video className='h-4 w-4' />
-                            </button>
-                            <button className='p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100'>
-                              <Mic className='h-4 w-4' />
-                            </button>
-                            <button className='p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100'>
-                              <Play className='h-4 w-4' />
-                            </button>
                           </div>
                         </div>
 

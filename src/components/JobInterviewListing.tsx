@@ -445,7 +445,7 @@ export function JobInterviewListing({
               <div>
                 <p className='text-sm text-gray-600 mb-1'>Average Score</p>
                 <p className='text-3xl font-bold text-gray-900'>
-                  {Number.isNaN(averageScore) ? '0' : averageScore.toFixed(1)}%
+                  {Number.isNaN(averageScore) ? '0' : averageScore.toFixed(1)}
                 </p>
               </div>
               <div className='bg-green-100 p-3 rounded-lg'>
@@ -459,7 +459,7 @@ export function JobInterviewListing({
               <div>
                 <p className='text-sm text-gray-600 mb-1'>High Performers</p>
                 <p className='text-3xl font-bold text-gray-900'>{highPerformers}</p>
-                <p className='text-sm text-gray-500'>Score ≥ 85%</p>
+                <p className='text-sm text-gray-500'>Score ≥ 85</p>
               </div>
               <div className='bg-yellow-100 p-3 rounded-lg'>
                 <TrendingUp className='h-6 w-6 text-yellow-600' />
@@ -639,7 +639,7 @@ export function JobInterviewListing({
                                 getScoreColor(interview.overallScore ?? 0).split(' ')[0]
                               }`}
                             >
-                              {interview.overallScore ?? 0}%
+                              {interview.overallScore ?? 0}
                             </div>
                             <div className='flex items-center justify-center'>
                               {interview.overallScore >= 90 && (
