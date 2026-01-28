@@ -404,7 +404,7 @@ export function JobApplicationsList({
                 <div className='flex items-center justify-between'>
                   <div>
                     <p className='text-sm text-gray-600 mb-1'>Average Score</p>
-                    <p className='text-3xl font-bold text-gray-900'>{averageScore.toFixed(1)}%</p>
+                    <p className='text-3xl font-bold text-gray-900'>{averageScore.toFixed(1)}</p>
                   </div>
                   <div className='bg-green-100 p-3 rounded-lg'>
                     <Award className='h-6 w-6 text-green-600' />
@@ -417,7 +417,7 @@ export function JobApplicationsList({
                   <div>
                     <p className='text-sm text-gray-600 mb-1'>High Performers</p>
                     <p className='text-3xl font-bold text-gray-900'>{highPerformers}</p>
-                    <p className='text-sm text-gray-500'>Score ≥ 85%</p>
+                    <p className='text-sm text-gray-500'>Score ≥ 85</p>
                   </div>
                   <div className='bg-yellow-100 p-3 rounded-lg'>
                     <TrendingUp className='h-6 w-6 text-yellow-600' />
@@ -574,7 +574,7 @@ export function JobApplicationsList({
                                     getScoreColor(application.overallScore).split(' ')[0]
                                   }`}
                                 >
-                                  {application.overallScore}%
+                                  {application.overallScore}
                                 </span>
                                 {application.recommendations && (
                                   <span

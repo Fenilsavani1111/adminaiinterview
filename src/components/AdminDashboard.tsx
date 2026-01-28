@@ -367,10 +367,11 @@ export function AdminDashboard() {
                         <TrendingDown className='h-4 w-4 text-red-500 mr-1' />
                       )}
                       <span
-                        className={`text-sm ${summaryStates.interview_weekly_growth > 0
+                        className={`text-sm ${
+                          summaryStates.interview_weekly_growth > 0
                             ? 'text-emerald-600'
                             : 'text-red-600'
-                          } font-medium`}
+                        } font-medium`}
                       >
                         {summaryStates.interview_weekly_growth >= 0 ? '+' : ''}
                         {summaryStates.interview_weekly_growth?.toFixed(2)}% this week
@@ -429,7 +430,7 @@ export function AdminDashboard() {
                   <div>
                     <p className='text-sm font-medium text-gray-600 mb-1'>Average Score</p>
                     <p className='text-3xl font-bold text-gray-900'>
-                      {summaryStates.average_score}%
+                      {summaryStates.average_score}
                     </p>
                     <div className='flex items-center mt-2'>
                       <Target className='h-4 w-4 text-amber-500 mr-1' />
@@ -530,17 +531,17 @@ export function AdminDashboard() {
                             <div className='flex items-center space-x-6'>
                               {(item?.status === 'completed' ||
                                 item?.status === 'under_review') && (
-                                  <div className='text-center'>
-                                    <div
-                                      className={`text-3xl font-bold mb-1 ${getScoreColor(
-                                        item.overallScore ?? 0
-                                      )}`}
-                                    >
-                                      {item.overallScore ?? 0}%
-                                    </div>
-                                    <div className='text-xs text-gray-500'>Overall Score</div>
+                                <div className='text-center'>
+                                  <div
+                                    className={`text-3xl font-bold mb-1 ${getScoreColor(
+                                      item.overallScore ?? 0
+                                    )}`}
+                                  >
+                                    {item.overallScore ?? 0}%
                                   </div>
-                                )}
+                                  <div className='text-xs text-gray-500'>Overall Score</div>
+                                </div>
+                              )}
 
                               {item.duration ? (
                                 <div className='text-center'>
@@ -555,7 +556,7 @@ export function AdminDashboard() {
 
                               <div className='text-center'>
                                 {item?.recommendations?.recommendation &&
-                                  item?.recommendations?.recommendation?.length > 0 ? (
+                                item?.recommendations?.recommendation?.length > 0 ? (
                                   <span
                                     className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border ${getRecommendationColor(
                                       item.recommendations?.recommendation
@@ -586,10 +587,11 @@ export function AdminDashboard() {
                                 <button
                                   onClick={() => handleExportCandidate(item.id)}
                                   disabled={exportingCandidates.has(item.id)}
-                                  className={`p-2 rounded-lg transition-all duration-200 ${exportingCandidates.has(item.id)
+                                  className={`p-2 rounded-lg transition-all duration-200 ${
+                                    exportingCandidates.has(item.id)
                                       ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
                                       : 'text-gray-600 hover:text-gray-700 hover:bg-gray-50'
-                                    }`}
+                                  }`}
                                   title={
                                     exportingCandidates.has(item.id)
                                       ? 'Exporting...'
@@ -669,7 +671,7 @@ export function AdminDashboard() {
                         <p className='text-sm font-medium text-gray-900'>
                           Carol Davis completed interview
                         </p>
-                        <p className='text-xs text-gray-500'>2 hours ago • Score: 92%</p>
+                        <p className='text-xs text-gray-500'>2 hours ago • Score: 92</p>
                       </div>
                     </div>
                     <div className='flex items-start space-x-3 group hover:bg-gray-50 p-3 rounded-lg transition-all duration-200'>
@@ -684,9 +686,7 @@ export function AdminDashboard() {
                     <div className='flex items-start space-x-3 group hover:bg-gray-50 p-3 rounded-lg transition-all duration-200'>
                       <div className='w-2 h-2 bg-purple-500 rounded-full mt-2 group-hover:scale-125 transition-transform duration-200'></div>
                       <div className='flex-1'>
-                        <p className='text-sm font-medium text-gray-900'>
-                          Alice Johnson scored 85%
-                        </p>
+                        <p className='text-sm font-medium text-gray-900'>Alice Johnson scored 85</p>
                         <p className='text-xs text-gray-500'>5 hours ago • Highly recommended</p>
                       </div>
                     </div>
