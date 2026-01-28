@@ -240,18 +240,19 @@ export const exportCandidateReport = async (
       overviewSheet.mergeCells(`A${proctoringSection.number}:B${proctoringSection.number}`);
 
       candidateData.proctoringAlerts.forEach((alert, index) => {
-        const row = overviewSheet.addRow([`Alert ${index + 1}`, alert.message || 'N/A']);
+        const row = overviewSheet.addRow([`Alert ${index + 1}`, (alert as any).message || 'N/A']);
         row.getCell(1).font = { bold: true };
         row.height = 18;
 
-        // Add color coding based on alert type
-        if (alert.type === 'warning') {
+        // Add color coding based on alert severity (info / warning / critical)
+        const severity = (alert as any).severity || '';
+        if (severity === 'warning') {
           row.getCell(2).fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: { argb: 'FFFEF3C7' },
           };
-        } else if (alert.type === 'error') {
+        } else if (severity === 'critical') {
           row.getCell(2).fill = {
             type: 'pattern',
             pattern: 'solid',
@@ -864,41 +865,41 @@ export const exportCandidateReport = async (
         }
       });
 
-      // Add verification insights
-      govProofSheet.addRow([]);
-      const verificationInsightsTitle = govProofSheet.addRow(['VERIFICATION INSIGHTS', '', '', '']);
-      verificationInsightsTitle.font = { bold: true, color: { argb: 'FF374151' } };
-      verificationInsightsTitle.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFF3F4F6' },
-      };
-      verificationInsightsTitle.height = 20;
-      govProofSheet.mergeCells(
-        `A${verificationInsightsTitle.number}:D${verificationInsightsTitle.number}`
-      );
+      // // Add verification insights
+      // govProofSheet.addRow([]);
+      // const verificationInsightsTitle = govProofSheet.addRow(['VERIFICATION INSIGHTS', '', '', '']);
+      // verificationInsightsTitle.font = { bold: true, color: { argb: 'FF374151' } };
+      // verificationInsightsTitle.fill = {
+      //   type: 'pattern',
+      //   pattern: 'solid',
+      //   fgColor: { argb: 'FFF3F4F6' },
+      // };
+      // verificationInsightsTitle.height = 20;
+      // govProofSheet.mergeCells(
+      //   `A${verificationInsightsTitle.number}:D${verificationInsightsTitle.number}`
+      // );
 
-      const verificationInsights = [
-        [
-          'Verification Completion',
-          `${verificationRate}%`,
-          '',
-          verifiedDocs === totalDocs ? '🎯 Complete' : '⚠️ Incomplete',
-        ],
-        ['Documents Submitted', totalDocs.toString(), '', '📋 Total Count'],
-        [
-          'Pending Verification',
-          (totalDocs - verifiedDocs).toString(),
-          '',
-          totalDocs - verifiedDocs === 0 ? '✅ None' : '⏳ Action Required',
-        ],
-      ];
+      // const verificationInsights = [
+      //   [
+      //     'Verification Completion',
+      //     `${verificationRate}%`,
+      //     '',
+      //     verifiedDocs === totalDocs ? '🎯 Complete' : '⚠️ Incomplete',
+      //   ],
+      //   ['Documents Submitted', totalDocs.toString(), '', '📋 Total Count'],
+      //   [
+      //     'Pending Verification',
+      //     (totalDocs - verifiedDocs).toString(),
+      //     '',
+      //     totalDocs - verifiedDocs === 0 ? '✅ None' : '⏳ Action Required',
+      //   ],
+      // ];
 
-      verificationInsights.forEach(([metric, value, empty, note]) => {
-        const row = govProofSheet.addRow([metric, value, empty, note]);
-        row.getCell(1).font = { bold: true };
-        row.height = 18;
-      });
+      // verificationInsights.forEach(([metric, value, empty, note]) => {
+      //   const row = govProofSheet.addRow([metric, value, empty, note]);
+      //   row.getCell(1).font = { bold: true };
+      //   row.height = 18;
+      // });
     }
 
     // Add Behavioral Analysis sheet
@@ -1130,6 +1131,8 @@ export function CandidatePerformanceDetail({
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [comparisonData, setComparisonData] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [alertSeverityFilter, setAlertSeverityFilter] = useState<'all' | 'info' | 'warning' | 'critical'>('all');
+  const [alertTypeFilter, setAlertTypeFilter] = useState<string>('all');
   let ignore = false;
 
   const getScoreColor = (score: number) => {
@@ -2165,8 +2168,8 @@ export function CandidatePerformanceDetail({
                           <div>
                             <p className='text-sm text-rose-600 font-medium'>Critical Alerts</p>
                             <p className='text-lg font-bold text-rose-900'>
-                              {candidateData?.proctoringAlerts?.filter((alert) =>
-                                /error|critical|fail/i.test(alert.type || '')
+                              {candidateData?.proctoringAlerts?.filter(
+                                (alert: any) => (alert.severity || 'info') === 'critical'
                               ).length || 0}
                             </p>
                           </div>
@@ -2187,104 +2190,16 @@ export function CandidatePerformanceDetail({
                       <h2 className='text-xl font-bold text-gray-900'>Proctoring Alerts</h2>
                     </div>
 
-                    {/* Alerts Container with MatricsView Style */}
-                    <div className='rounded-xl border border-slate-200/80 bg-gradient-to-br from-amber-50/40 to-rose-50/20 overflow-hidden'>
-                      <div className='flex items-center gap-2 px-3 py-2 border-b border-amber-200/50 bg-white/60'>
-                        <Bell className='w-4 h-4 text-amber-500' />
-                        <span className='text-sm font-semibold text-slate-700'>Recent Alerts</span>
-                        {candidateData?.proctoringAlerts &&
-                          candidateData.proctoringAlerts.length > 0 && (
-                            <span className='ml-auto bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full'>
-                              {candidateData.proctoringAlerts.length} alert
-                              {candidateData.proctoringAlerts.length !== 1 ? 's' : ''}
-                            </span>
-                          )}
-                      </div>
-                      <div className='max-h-80 overflow-y-auto p-2'>
-                        {!candidateData?.proctoringAlerts ||
-                          candidateData.proctoringAlerts.length === 0 ? (
-                          <div className='flex flex-col items-center justify-center py-12 text-slate-400'>
-                            <Shield className='w-12 h-12 mb-3 text-slate-300' />
-                            <p className='text-sm font-medium'>No proctoring alerts</p>
-                            <p className='text-xs mt-1'>
-                              This candidate maintained proper conduct during the interview
-                            </p>
-                          </div>
-                        ) : (
-                          <ul className='space-y-1.5'>
-                            {candidateData.proctoringAlerts.slice(0, 20).map((alert, index) => {
-                              const alertObj =
-                                typeof alert === 'object' && alert && !Array.isArray(alert)
-                                  ? alert
-                                  : { message: String(alert) };
-                              const alertType = (alertObj.type || 'info') as string;
-                              const isWarning = /warn|attention|warning/i.test(alertType);
-                              const isError = /error|critical|fail|violation/i.test(alertType);
-
-                              const Icon = isError ? XCircle : isWarning ? AlertTriangle : Info;
-                              const borderColor = isError
-                                ? 'border-l-rose-400'
-                                : isWarning
-                                  ? 'border-l-amber-400'
-                                  : 'border-l-indigo-400';
-                              const bgColor = isError
-                                ? 'bg-rose-50/60'
-                                : isWarning
-                                  ? 'bg-amber-50/60'
-                                  : 'bg-indigo-50/40';
-                              const message =
-                                (alertObj as { message?: string }).message ??
-                                (typeof alert === 'string' ? alert : JSON.stringify(alert));
-
-                              return (
-                                <li
-                                  key={index}
-                                  className={`flex items-start gap-2 px-2.5 py-1.5 rounded-r-lg border-l-2 ${borderColor} ${bgColor} hover:bg-opacity-80 transition-colors`}
-                                >
-                                  <Icon className='w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500' />
-                                  <div className='flex-1'>
-                                    <span className='text-xs text-slate-700 block'>
-                                      {typeof message === 'string'
-                                        ? message
-                                        : JSON.stringify(message)}
-                                    </span>
-                                    {typeof alertObj.timestamp === 'string' ||
-                                      typeof alertObj.timestamp === 'number' ||
-                                      alertObj.timestamp instanceof Date ? (
-                                      <span className='text-xs text-slate-400 mt-0.5 block'>
-                                        {new Date(alertObj.timestamp).toLocaleString()}
-                                      </span>
-                                    ) : null}
-                                  </div>
-                                  {(isError || isWarning) && (
-                                    <span
-                                      className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${isError
-                                        ? 'bg-rose-100 text-rose-700'
-                                        : 'bg-amber-100 text-amber-700'
-                                        }`}
-                                    >
-                                      {isError ? 'Critical' : 'Warning'}
-                                    </span>
-                                  )}
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-
                     {/* Alert Summary Stats */}
                     {candidateData?.proctoringAlerts &&
                       candidateData.proctoringAlerts.length > 0 && (
-                        <div className='mt-6 grid grid-cols-2 md:grid-cols-4 gap-4'>
+                        <div className='mb-6 grid grid-cols-2 md:grid-cols-4 gap-4'>
                           <div className='text-center p-3 bg-indigo-50 rounded-lg'>
                             <Info className='w-5 h-5 text-indigo-600 mx-auto mb-1' />
                             <p className='text-sm font-medium text-indigo-800'>
                               {
                                 candidateData.proctoringAlerts.filter(
-                                  (alert) =>
-                                    !/warn|error|critical|fail/i.test((alert as any).type || '')
+                                  (alert: any) => (alert.severity || 'info') === 'info'
                                 ).length
                               }
                             </p>
@@ -2294,8 +2209,8 @@ export function CandidatePerformanceDetail({
                             <AlertTriangle className='w-5 h-5 text-amber-600 mx-auto mb-1' />
                             <p className='text-sm font-medium text-amber-800'>
                               {
-                                candidateData.proctoringAlerts.filter((alert) =>
-                                  /warn|attention|warning/i.test((alert as any).type || '')
+                                candidateData.proctoringAlerts.filter(
+                                  (alert: any) => (alert.severity || 'info') === 'warning'
                                 ).length
                               }
                             </p>
@@ -2305,8 +2220,8 @@ export function CandidatePerformanceDetail({
                             <XCircle className='w-5 h-5 text-rose-600 mx-auto mb-1' />
                             <p className='text-sm font-medium text-rose-800'>
                               {
-                                candidateData.proctoringAlerts.filter((alert) =>
-                                  /error|critical|fail|violation/i.test((alert as any).type || '')
+                                candidateData.proctoringAlerts.filter(
+                                  (alert: any) => (alert.severity || 'info') === 'critical'
                                 ).length
                               }
                             </p>
@@ -2321,67 +2236,160 @@ export function CandidatePerformanceDetail({
                           </div>
                         </div>
                       )}
-                  </div>
 
-                  {/* Proctoring Recommendations */}
-                  {candidateData?.proctoringAlerts && candidateData.proctoringAlerts.length > 0 && (
-                    <div className='bg-white rounded-xl shadow-sm p-6'>
-                      <div className='flex items-center space-x-3 mb-4'>
-                        <div className='bg-purple-100 p-2 rounded-lg'>
-                          <Star className='h-5 w-5 text-purple-600' />
-                        </div>
-                        <h3 className='text-lg font-semibold text-gray-900'>Recommendations</h3>
-                      </div>
-                      <div className='bg-purple-50 rounded-lg p-4'>
-                        <ul className='text-sm text-purple-800 space-y-2'>
-                          {candidateData.proctoringAlerts.length === 0 ? (
-                            <li className='flex items-start space-x-2'>
-                              <span className='text-green-500 mt-0.5'>•</span>
-                              <span>
-                                No violations detected. Candidate maintained proper interview
-                                conduct.
+                    {/* Alerts Container with MatricsView Style */}
+                    <div className='rounded-xl border border-slate-200/80 bg-gradient-to-br from-amber-50/40 to-rose-50/20 overflow-hidden'>
+                      <div className='flex flex-col gap-2 border-b border-amber-200/50 bg-white/60 px-3 py-2'>
+                        <div className='flex items-center gap-2'>
+                          <Bell className='w-4 h-4 text-amber-500' />
+                          <span className='text-sm font-semibold text-slate-700'>Recent Alerts</span>
+                          {candidateData?.proctoringAlerts &&
+                            candidateData.proctoringAlerts.length > 0 && (
+                              <span className='ml-auto bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full'>
+                                {candidateData.proctoringAlerts.length} alert
+                                {candidateData.proctoringAlerts.length !== 1 ? 's' : ''}
                               </span>
-                            </li>
-                          ) : (
-                            <ul className='space-y-1.5'>
-                              {[...candidateData.proctoringAlerts].map((a, i) => {
-                                const obj =
-                                  typeof a === 'object' && a && !Array.isArray(a)
-                                    ? a
-                                    : { message: String(a) };
-                                const t = (obj.type || obj.severity || 'info') as string;
-                                const isWarn = /warn|attention/i.test(t);
-                                const isErr = /error|critical|fail/i.test(t);
-                                const Icon = isErr ? XCircle : isWarn ? AlertTriangle : Info;
-                                const border = isErr
+                            )}
+                        </div>
+
+                        {/* Modern filter chips */}
+                        <div className='flex flex-wrap items-center gap-2'>
+                          {/* Severity filter */}
+                          <div className='flex items-center gap-2'>
+                            {/* <span className='text-xs font-medium text-slate-500'>Severity:</span> */}
+                            {[
+                              { id: 'all', label: 'All' },
+                              { id: 'info', label: 'Info' },
+                              { id: 'warning', label: 'Warning' },
+                              { id: 'critical', label: 'Critical' },
+                            ].map((option) => (
+                              <button
+                                key={option.id}
+                                onClick={() =>
+                                  setAlertSeverityFilter(option.id as 'all' | 'info' | 'warning' | 'critical')
+                                }
+                                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${alertSeverityFilter === option.id
+                                  ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                  }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Type filter */}
+                          <div className='flex items-center gap-2'>
+                            <span className='text-xs font-medium text-slate-500'>Type:</span>
+                            <select
+                              value={alertTypeFilter}
+                              onChange={(e) => setAlertTypeFilter(e.target.value)}
+                              className='text-xs px-2.5 py-1 rounded-full border border-slate-200 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400'
+                            >
+                              <option value='all'>All types</option>
+                              <option value='looking_away'>Looking away</option>
+                              <option value='multiple_faces_detected'>Multiple faces</option>
+                              <option value='low_engagement'>Low engagement</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='max-h-80 overflow-y-auto p-2'>
+                        {!candidateData?.proctoringAlerts ||
+                          candidateData.proctoringAlerts.length === 0 ? (
+                          <div className='flex flex-col items-center justify-center py-12 text-slate-400'>
+                            <Shield className='w-12 h-12 mb-3 text-slate-300' />
+                            <p className='text-sm font-medium'>No proctoring alerts</p>
+                            <p className='text-xs mt-1'>
+                              This candidate maintained proper conduct during the interview
+                            </p>
+                          </div>
+                        ) : (
+                          <ul className='space-y-1.5'>
+                            {candidateData.proctoringAlerts
+                              .filter((alert: any) => {
+                                const sev = alert.severity || 'info';
+                                const type = alert.type || 'unknown';
+
+                                const matchesSeverity =
+                                  alertSeverityFilter === 'all' || sev === alertSeverityFilter;
+                                const matchesType =
+                                  alertTypeFilter === 'all' || type === alertTypeFilter;
+
+                                return matchesSeverity && matchesType;
+                              })
+                              .slice(0, 20)
+                              .map((alert, index) => {
+                                const alertObj =
+                                  typeof alert === 'object' && alert && !Array.isArray(alert)
+                                    ? alert
+                                    : { message: String(alert) };
+                                const severity = (alertObj as any).severity || 'info';
+                                const isWarning = severity === 'warning';
+                                const isError = severity === 'critical';
+
+                                const Icon = isError ? XCircle : isWarning ? AlertTriangle : Info;
+                                const borderColor = isError
                                   ? 'border-l-rose-400'
-                                  : isWarn
+                                  : isWarning
                                     ? 'border-l-amber-400'
                                     : 'border-l-indigo-400';
-                                const bg = isErr
+                                const bgColor = isError
                                   ? 'bg-rose-50/60'
-                                  : isWarn
+                                  : isWarning
                                     ? 'bg-amber-50/60'
                                     : 'bg-indigo-50/40';
-                                const msg =
-                                  (obj as { message?: string }).message ??
-                                  (typeof a === 'string' ? a : JSON.stringify(a));
+                                const message =
+                                  (alertObj as { message?: string }).message ??
+                                  (typeof alert === 'string' ? alert : JSON.stringify(alert));
+
                                 return (
                                   <li
-                                    key={i}
-                                    className={`flex items-start gap-2 px-2.5 py-1.5 rounded-r-lg border-l-2 ${border} ${bg}`}
+                                    key={index}
+                                    className={`flex items-start gap-2 px-2.5 py-1.5 rounded-r-lg border-l-2 ${borderColor} ${bgColor} hover:bg-opacity-80 transition-colors`}
                                   >
                                     <Icon className='w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500' />
-                                    <span className='text-xs text-slate-700'>{msg}</span>
+                                    <div className='flex-1'>
+                                      <div className='flex items-center justify-between'>
+                                        <span className='text-[11px] font-medium uppercase tracking-wide text-slate-500'>
+                                          {(alertObj as any).type || 'unknown'}
+                                        </span>
+                                        <span className='text-[10px] px-1.5 py-0.5 rounded-full bg-slate-900/5 text-slate-500'>
+                                          {severity}
+                                        </span>
+                                      </div>
+                                      <span className='text-xs text-slate-700 block mt-0.5'>
+                                        {typeof message === 'string'
+                                          ? message
+                                          : JSON.stringify(message)}
+                                      </span>
+                                      {typeof alertObj.timestamp === 'string' ||
+                                        typeof alertObj.timestamp === 'number' ||
+                                        alertObj.timestamp instanceof Date ? (
+                                        <span className='text-[10px] text-slate-400 mt-0.5 block'>
+                                          {new Date(alertObj.timestamp).toLocaleString()}
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                    {(isError || isWarning) && (
+                                      <span
+                                        className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isError
+                                          ? 'bg-rose-100 text-rose-700'
+                                          : 'bg-amber-100 text-amber-700'
+                                          }`}
+                                      >
+                                        {isError ? 'Critical' : 'Warning'}
+                                      </span>
+                                    )}
                                   </li>
                                 );
                               })}
-                            </ul>
-                          )}
-                        </ul>
+                          </ul>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </>
