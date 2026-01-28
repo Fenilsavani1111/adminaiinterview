@@ -547,7 +547,7 @@ export function JobInterviewListing({
                     Candidate
                   </th>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Overall Score
+                    Overall Percentage
                   </th>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Performance Breakdown
@@ -636,10 +636,12 @@ export function JobInterviewListing({
                           <div className='text-center'>
                             <div
                               className={`text-2xl font-bold mb-1 ${
-                                getScoreColor(interview.overallScore ?? 0).split(' ')[0]
+                                getScoreColor(
+                                  interview?.categoryPercentage?.overallPercentage ?? 0
+                                ).split(' ')[0]
                               }`}
                             >
-                              {interview.overallScore ?? 0}%
+                              {interview?.categoryPercentage?.overallPercentage ?? 0}%
                             </div>
                             {/* <div className='flex items-center justify-center'>
                               {interview.overallScore >= 90 && (
