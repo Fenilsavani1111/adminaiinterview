@@ -91,7 +91,7 @@ export function StudentListManager({
       const response = await studentAPI.createStudents(jobPostId, studentsWithIds);
 
       setSuccess(`Successfully uploaded ${response.count} students!`);
-      setStudents(response.students || []);
+      setStudents([...students, ...response.students || []]);
       setViewMode('list');
 
       setTimeout(() => setSuccess(''), 5000);
@@ -206,8 +206,8 @@ export function StudentListManager({
           <button
             onClick={() => setViewMode('list')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${viewMode === 'list'
-                ? 'border-b-2 border-purple-600 text-purple-600 bg-purple-50'
-                : 'text-gray-600 hover:text-purple-600'
+              ? 'border-b-2 border-purple-600 text-purple-600 bg-purple-50'
+              : 'text-gray-600 hover:text-purple-600'
               }`}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -218,8 +218,8 @@ export function StudentListManager({
           <button
             onClick={() => setViewMode('upload')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${viewMode === 'upload'
-                ? 'border-b-2 border-purple-600 text-purple-600 bg-purple-50'
-                : 'text-gray-600 hover:text-purple-600'
+              ? 'border-b-2 border-purple-600 text-purple-600 bg-purple-50'
+              : 'text-gray-600 hover:text-purple-600'
               }`}
           >
             <div className="flex items-center justify-center space-x-2">
