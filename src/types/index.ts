@@ -132,7 +132,7 @@ export interface Candidate {
     };
   };
   proctoringStatus?: string;
-  proctoringAlerts?: Array<{ message?: string; type?: string; [k: string]: unknown }>;
+  proctoringAlerts?: Array<{ message?: string; type?: string;[k: string]: unknown }>;
   residenceLocation: string;
   region: string;
   governmentProof: any[];
@@ -167,7 +167,7 @@ export interface InterviewSession {
 export interface InterviewQuestion {
   id: string;
   question: string;
-  type: 'behavioral' | 'technical' | 'general' | 'situational';
+  type: 'behavioral' | 'communication' | 'reasoning' | 'arithmetic' | 'subjective';
   expectedDuration: number; // in seconds
   difficulty: 'easy' | 'medium' | 'hard';
   category: string;

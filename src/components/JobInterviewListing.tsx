@@ -258,8 +258,8 @@ export function JobInterviewListing({
           // Assessment Duration (safe reduce)
           Array.isArray(jobpost?.questions)
             ? secondsToHrMin(
-                jobpost.questions.reduce((acc, q) => acc + (q.expectedDuration || 0), 0)
-              )
+              jobpost.questions.reduce((acc, q) => acc + (q.expectedDuration || 0), 0)
+            )
             : 0,
 
           jobpost?.createdAt ? formatDate(jobpost?.createdAt) : 'N/A', // Assessment Created Date
@@ -633,24 +633,23 @@ export function JobInterviewListing({
                       <td className='px-6 py-4'>
                         {(interview?.status === 'completed' ||
                           interview?.status === 'under_review') && (
-                          <div className='text-center'>
-                            <div
-                              className={`text-2xl font-bold mb-1 ${
-                                getScoreColor(interview.overallScore ?? 0).split(' ')[0]
-                              }`}
-                            >
-                              {interview.overallScore ?? 0}%
-                            </div>
-                            <div className='flex items-center justify-center'>
+                            <div className='text-center'>
+                              <div
+                                className={`text-2xl font-bold mb-1 ${getScoreColor(interview.overallScore ?? 0).split(' ')[0]
+                                  }`}
+                              >
+                                {interview.overallScore ?? 0}%
+                              </div>
+                              {/* <div className='flex items-center justify-center'>
                               {interview.overallScore >= 90 && (
                                 <Star className='h-4 w-4 text-yellow-500 fill-current' />
                               )}
                               {interview.overallScore >= 85 && interview.overallScore < 90 && (
                                 <TrendingUp className='h-4 w-4 text-green-500' />
                               )}
+                            </div> */}
                             </div>
-                          </div>
-                        )}
+                          )}
                       </td>
                       <td className='px-6 py-4'>
                         {interview?.performanceBreakdown && (
@@ -663,15 +662,14 @@ export function JobInterviewListing({
                                 <div className='flex items-center space-x-2'>
                                   <div className='w-16 bg-gray-200 rounded-full h-1.5'>
                                     <div
-                                      className={`h-1.5 rounded-full ${
-                                        score >= 90
+                                      className={`h-1.5 rounded-full ${score >= 90
                                           ? 'bg-green-500'
                                           : score >= 80
                                             ? 'bg-blue-500'
                                             : score >= 70
                                               ? 'bg-yellow-500'
                                               : 'bg-red-500'
-                                      }`}
+                                        }`}
                                       style={{ width: `${score}%` }}
                                     ></div>
                                   </div>
