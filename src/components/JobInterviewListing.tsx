@@ -21,6 +21,7 @@ import { Candidate, JobPost } from '../types';
 import { CandidatePerformanceDetail } from './CandidatePerformanceDetail';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import moment from 'moment';
 
 interface JobInterviewListingProps {
   jobId: string;
@@ -258,8 +259,8 @@ export function JobInterviewListing({
           // Assessment Duration (safe reduce)
           Array.isArray(jobpost?.questions)
             ? secondsToHrMin(
-                jobpost.questions.reduce((acc, q) => acc + (q.expectedDuration || 0), 0)
-              )
+              jobpost.questions.reduce((acc, q) => acc + (q.expectedDuration || 0), 0)
+            )
             : 0,
 
           jobpost?.createdAt ? formatDate(jobpost?.createdAt) : 'N/A', // Assessment Created Date
@@ -398,6 +399,12 @@ export function JobInterviewListing({
                 <p className='text-sm text-gray-600'>
                   {company} • {sortedInterviews.length} candidates interviewed
                 </p>
+                {jobpost?.interviewStartDateTime && (
+                  <div className='mt-2 inline-flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-800'>
+                    <Calendar className='h-4 w-4' />
+                    Scheduled: {moment(jobpost.interviewStartDateTime).format('DD-MM-YYYY HH:mm A')}
+                  </div>
+                )}
               </div>
             </div>
             <div className='flex items-center space-x-4'>
@@ -607,7 +614,6 @@ export function JobInterviewListing({
                             <div className='text-sm text-gray-500'>{interview.email}</div>
                             <div className='text-sm text-gray-500'>
                               {interview.experienceLevel}
-                              {/* {interview.experience} experience */}
                             </div>
                             <div className='flex flex-wrap gap-1 mt-1'>
                               {interview?.skills?.length > 0 &&
@@ -633,17 +639,16 @@ export function JobInterviewListing({
                       <td className='px-6 py-4'>
                         {(interview?.status === 'completed' ||
                           interview?.status === 'under_review') && (
-                          <div className='text-center'>
-                            <div
-                              className={`text-2xl font-bold mb-1 ${
-                                getScoreColor(
+                            <div className='text-center'>
+                              <div
+                                className={`text-2xl font-bold mb-1 ${getScoreColor(
                                   interview?.categoryPercentage?.overallPercentage ?? 0
                                 ).split(' ')[0]
-                              }`}
-                            >
-                              {interview?.categoryPercentage?.overallPercentage ?? 0}%
-                            </div>
-                            {/* <div className='flex items-center justify-center'>
+                                  }`}
+                              >
+                                {interview?.categoryPercentage?.overallPercentage ?? 0}%
+                              </div>
+                              {/* <div className='flex items-center justify-center'>
                               {interview.overallScore >= 90 && (
                                 <Star className='h-4 w-4 text-yellow-500 fill-current' />
                               )}
@@ -651,8 +656,8 @@ export function JobInterviewListing({
                                 <TrendingUp className='h-4 w-4 text-green-500' />
                               )}
                             </div> */}
-                          </div>
-                        )}
+                            </div>
+                          )}
                       </td>
                       <td className='px-6 py-4'>
                         {interview?.performanceBreakdown && (
@@ -665,15 +670,14 @@ export function JobInterviewListing({
                                 <div className='flex items-center space-x-2'>
                                   <div className='w-16 bg-gray-200 rounded-full h-1.5'>
                                     <div
-                                      className={`h-1.5 rounded-full ${
-                                        score >= 90
-                                          ? 'bg-green-500'
-                                          : score >= 80
-                                            ? 'bg-blue-500'
-                                            : score >= 70
-                                              ? 'bg-yellow-500'
-                                              : 'bg-red-500'
-                                      }`}
+                                      className={`h-1.5 rounded-full ${score >= 90
+                                        ? 'bg-green-500'
+                                        : score >= 80
+                                          ? 'bg-blue-500'
+                                          : score >= 70
+                                            ? 'bg-yellow-500'
+                                            : 'bg-red-500'
+                                        }`}
                                       style={{ width: `${score}%` }}
                                     ></div>
                                   </div>
@@ -693,7 +697,7 @@ export function JobInterviewListing({
                           ) : (
                             <div className='flex items-center space-x-2 mb-1'>
                               <Calendar className='h-4 w-4 text-gray-400' />
-                              <span>{new Date(interview.interviewDate).toLocaleDateString()}</span>
+                              <span>{moment(interview.interviewDate).format('DD-MM-YYYY')}</span>
                             </div>
                           )}
                           <div className='flex items-center space-x-2 mb-1'>
@@ -704,7 +708,7 @@ export function JobInterviewListing({
                             <></>
                           ) : (
                             <div className='text-xs text-gray-500 mt-2'>
-                              Applied: {new Date(interview.appliedDate).toLocaleDateString()}
+                              Applied: {moment(interview.appliedDate).format('DD-MM-YYYY')}
                             </div>
                           )}
                         </div>

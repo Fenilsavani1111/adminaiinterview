@@ -9,11 +9,18 @@ import {
   Plus,
   Trash2,
   Edit,
+  Calendar,
 } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min?url';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
+const getNowLocal = () => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 16);
+};
 
 export let defaultQuestions: InterviewQuestion[] = [
   {
@@ -42,8 +49,6 @@ export function EditJobPost() {
   const { state, dispatch } = useApp();
   const {
     updateJobPost,
-    loading,
-    error,
     getJobPostOpenaiQuestions,
     getJobPostResponsibilityFromJD,
     getJobDescriptionFromPDf,
@@ -69,6 +74,7 @@ export function EditJobPost() {
     salaryMax: '',
     currency: 'INR',
     enableVideoRecording: false,
+    interviewStartDateTime: '',
   });
   const [questions, setQuestions] = useState<InterviewQuestion[]>([
     ...defaultQuestions,
@@ -88,6 +94,7 @@ export function EditJobPost() {
     evaluationCriteria: [''],
     isRequired: true,
   });
+  const [interviewStartDateTimeError, setInterviewStartDateTimeError] = useState<string | null>(null);
 
   const generateQuestionsFromJD = async () => {
     try {
@@ -244,6 +251,9 @@ export function EditJobPost() {
         salaryMax: job.salary?.max?.toString() || '',
         currency: job.salary?.currency || 'INR',
         enableVideoRecording: job.enableVideoRecording ?? false,
+        interviewStartDateTime: job.interviewStartDateTime
+          ? new Date(job.interviewStartDateTime).toISOString().slice(0, 16)
+          : '',
       });
       // Store original description to track changes
       setOriginalDescription(job.description || '');
@@ -278,6 +288,11 @@ export function EditJobPost() {
             : undefined,
         status: jobPost.status,
         enableVideoRecording: formData.enableVideoRecording,
+        interviewStartDateTime: formData.interviewStartDateTime?.trim()
+          ? new Date(formData.interviewStartDateTime).toISOString()
+          : (() => {
+            throw new Error('Interview start date & time is required.');
+          })(),
         questions: questions,
       };
 
@@ -716,6 +731,44 @@ export function EditJobPost() {
               </div>
             </div>
 
+            {/* Interview Schedule */}
+            <div className='mb-8 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm'>
+              <div className='flex items-center gap-2 mb-3'>
+                <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600'>
+                  <Calendar className='h-4 w-4' />
+                </div>
+                <h3 className='text-sm font-semibold text-slate-900'>
+                  Interview Schedule
+                </h3>
+              </div>
+              <p className='text-xs text-slate-500 mb-4'>
+                Set when this interview is scheduled to start.
+              </p>
+              <input
+                type="datetime-local"
+                required
+                min={getNowLocal()}
+                value={formData.interviewStartDateTime}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    interviewStartDateTime: e.target.value,
+                  })
+                }
+                onBlur={(e) => {
+                  const selected = new Date(e.target.value);
+                  const now = new Date();
+                  if (selected < now) {
+                    setInterviewStartDateTimeError('Interview start date & time must be in the future.');
+                  } else {
+                    setInterviewStartDateTimeError(null);
+                  }
+                }}
+                className="w-full max-w-xs rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+              {interviewStartDateTimeError && <p className='text-red-600 text-sm mt-2'>{interviewStartDateTimeError}</p>}
+            </div>
+
             {/* Interview Recording Options */}
             <div className='mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50'>
               <h3 className='text-sm font-semibold text-gray-900 mb-2'>
@@ -755,8 +808,19 @@ export function EditJobPost() {
                 Back
               </button>
               <button
-                onClick={() => setStep(3)}
-                className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors'
+                onClick={() => {
+                  if (!formData.interviewStartDateTime.trim()) {
+                    setInterviewStartDateTimeError('Interview start date & time is required.');
+                    return;
+                  } else if (Boolean(interviewStartDateTimeError)) {
+                    setInterviewStartDateTimeError(null);
+                  }
+                  setStep(3);
+                }}
+                disabled={
+                  Boolean(interviewStartDateTimeError)
+                }
+                className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 Continue
               </button>
@@ -799,7 +863,7 @@ export function EditJobPost() {
                   <div className='space-y-4 mb-8'>
                     {questions.map((question, index) => (
                       <div
-                        key={question.id}
+                        key={index}
                         className='border border-gray-200 rounded-lg p-4'
                       >
                         {editingQuestion?.id === question.id ? (
@@ -1422,9 +1486,9 @@ export function EditJobPost() {
                 </button>
                 <div className='flex items-center space-x-4'>
                   <button
-                    disabled={continueLoading}
+                    disabled={continueLoading || !formData.interviewStartDateTime?.trim()}
                     onClick={() => handleSubmit()}
-                    className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors'
+                    className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                   >
                     {continueLoading ? (
                       <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-white-600 mx-[45px]'></div>

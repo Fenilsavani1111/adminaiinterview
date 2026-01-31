@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { InterviewQuestion } from "../types";
 import * as pdfjsLib from "pdfjs-dist";
@@ -11,16 +11,6 @@ export function ViewJobPost() {
   const { state, dispatch } = useApp();
   const [step, setStep] = useState(1);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
-  const [newQuestion, setNewQuestion] = useState({
-    question: "",
-    type: "behavioral" as const,
-    expectedDuration: 120,
-    difficulty: "medium" as const,
-    category: "",
-    suggestedAnswers: [""],
-    evaluationCriteria: [""],
-    isRequired: true,
-  });
   const [formData, setFormData] = useState({
     title: "",
     company: "",
@@ -35,6 +25,7 @@ export function ViewJobPost() {
     salaryMin: "",
     salaryMax: "",
     currency: "USD",
+    interviewStartDateTime: "",
   });
 
   const updateArrayField = (
@@ -67,6 +58,12 @@ export function ViewJobPost() {
         salaryMin: job.salary?.min?.toString() || "",
         salaryMax: job.salary?.max?.toString() || "",
         currency: job.salary?.currency || "USD",
+        interviewStartDateTime: job.interviewStartDateTime
+          ? new Date(job.interviewStartDateTime).toLocaleString(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+          : "",
       });
       let damiquestions = job.questions?.sort((a: any, b: any) => a.id - b.id);
       setQuestions([...damiquestions]);
@@ -331,6 +328,23 @@ export function ViewJobPost() {
                 </div>
               ))}
             </div>
+
+            {/* Interview Schedule */}
+            {formData.interviewStartDateTime && (
+              <div className="mb-8 rounded-xl border border-slate-200 bg-gradient-to-br from-indigo-50/80 to-white p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                    <Calendar className="h-4 w-4" />
+                  </div>
+                  <label className="text-sm font-semibold text-slate-900">
+                    Interview Start
+                  </label>
+                </div>
+                <p className="text-base text-slate-700 font-medium">
+                  {formData.interviewStartDateTime}
+                </p>
+              </div>
+            )}
 
             {/* Salary */}
             <div className="mb-8">

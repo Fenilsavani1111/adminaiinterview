@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   ArrowLeft,
   Upload,
@@ -6,12 +6,12 @@ import {
   Plus,
   Trash2,
   Edit,
-  Save,
   Download,
   FileSpreadsheet,
   AlertCircle,
   Users,
   X,
+  Calendar,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { JobPost, InterviewQuestion } from '../types';
@@ -33,12 +33,16 @@ import type { Student } from '../utils/studentExcelUtils';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+const getNowLocal = () => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 16);
+};
+
 export function CreateJobPost() {
   const { dispatch } = useApp();
   const {
     createJobPost,
-    loading,
-    error,
     getJobPostOpenaiQuestions,
     getJobPostResponsibilityFromJD,
     getJobDescriptionFromPDf,
@@ -57,6 +61,8 @@ export function CreateJobPost() {
   const [studentError, setStudentError] = useState<string>('');
   const [studentSuccess, setStudentSuccess] = useState<string>('');
 
+  const [interviewStartDateTimeError, setInterviewStartDateTimeError] = useState<string | null>(null);
+
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     title: '',
@@ -73,6 +79,7 @@ export function CreateJobPost() {
     salaryMax: '',
     currency: 'INR',
     enableVideoRecording: false,
+    interviewStartDateTime: '',
   });
   const [questions, setQuestions] = useState<InterviewQuestion[]>([
     ...defaultQuestions,
@@ -349,6 +356,11 @@ export function CreateJobPost() {
             : undefined,
         // pass flag to backend so candidate app knows whether to record video
         enableVideoRecording: formData.enableVideoRecording,
+        interviewStartDateTime: formData.interviewStartDateTime?.trim()
+          ? new Date(formData.interviewStartDateTime).toISOString()
+          : (() => {
+            throw new Error('Interview start date & time is required.');
+          })(),
         questions: questions,
         status: isDraft ? ('draft' as const) : ('active' as const),
         createdBy: 'admin',
@@ -772,6 +784,44 @@ export function CreateJobPost() {
               </div>
             </div>
 
+            {/* Interview Schedule */}
+            <div className='mb-8 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm'>
+              <div className='flex items-center gap-2 mb-3'>
+                <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600'>
+                  <Calendar className='h-4 w-4' />
+                </div>
+                <h3 className='text-sm font-semibold text-slate-900'>
+                  Interview Schedule
+                </h3>
+              </div>
+              <p className='text-xs text-slate-500 mb-4'>
+                <span className='text-red-600 font-medium'>Required.</span> Set when this interview is scheduled to start.
+              </p>
+              <input
+                type="datetime-local"
+                required
+                min={getNowLocal()}
+                value={formData.interviewStartDateTime}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    interviewStartDateTime: e.target.value,
+                  })
+                }
+                onBlur={(e) => {
+                  const selected = new Date(e.target.value);
+                  const now = new Date();
+                  if (selected < now) {
+                    setInterviewStartDateTimeError('Interview start date & time must be in the future.');
+                  } else {
+                    setInterviewStartDateTimeError(null);
+                  }
+                }}
+                className="w-full max-w-xs rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+              {interviewStartDateTimeError && <p className='text-red-600 text-sm mt-2'>{interviewStartDateTimeError}</p>}
+            </div>
+
             {/* Interview Recording Options */}
             <div className='mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50'>
               <h3 className='text-sm font-semibold text-gray-900 mb-2'>
@@ -811,8 +861,17 @@ export function CreateJobPost() {
                 Back
               </button>
               <button
-                onClick={() => setStep(3)}
-                className='w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors'
+                onClick={() => {
+                  if (!formData.interviewStartDateTime.trim()) {
+                    setInterviewStartDateTimeError('Interview start date & time is required.');
+                    return;
+                  } else if (Boolean(interviewStartDateTimeError)) {
+                    setInterviewStartDateTimeError(null);
+                  }
+                  setStep(3);
+                }}
+                disabled={Boolean(interviewStartDateTimeError)}
+                className='w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 Continue
               </button>
@@ -964,7 +1023,7 @@ export function CreateJobPost() {
                   <div className='space-y-4 mb-8'>
                     {questions.map((question, index) => (
                       <div
-                        key={question.id}
+                        key={index}
                         className='border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow'
                       >
                         {editingQuestion?.id === question.id ? (
@@ -1600,16 +1659,16 @@ export function CreateJobPost() {
                 </button>
                 <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-4 order-1 sm:order-2 w-full sm:w-auto'>
                   <button
-                    disabled={continueLoading}
+                    disabled={continueLoading || !formData.interviewStartDateTime?.trim()}
                     onClick={() => handleSubmit(true)}
-                    className='w-full sm:w-auto border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors'
+                    className='w-full sm:w-auto border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                   >
                     Save as Draft
                   </button>
                   <button
-                    disabled={continueLoading}
+                    disabled={continueLoading || !formData.interviewStartDateTime?.trim()}
                     onClick={() => handleSubmit(false)}
-                    className='w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors'
+                    className='w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                   >
                     {continueLoading ? (
                       <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-white mx-auto'></div>

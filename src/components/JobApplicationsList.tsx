@@ -1,29 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowLeft,
   Search,
-  Filter,
   Download,
   Eye,
-  Star,
-  Calendar,
-  Clock,
   User,
   Award,
   TrendingUp,
   Mail,
-  Phone,
   Linkedin,
-  FileText,
-  BarChart3,
   Video,
-  CheckCircle,
   X,
+  Star,
+  FileText,
 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
 import { InterviewRecordingViewer } from './InterviewRecordingViewer';
 import { Candidate, JobPost } from '../types';
 import { useJobPosts } from '../hooks/useJobPosts';
+import moment from 'moment';
 
 interface JobApplicationsListProps {
   jobId: string;
@@ -40,8 +34,7 @@ export function JobApplicationsList({
   onBack,
   showInterviewsOnly = false,
 }: JobApplicationsListProps) {
-  const { dispatch } = useApp();
-  const { getJobPostById, loading, error } = useJobPosts();
+  const { getJobPostById, loading } = useJobPosts();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('date');
@@ -55,136 +48,6 @@ export function JobApplicationsList({
   const [jobpost, setJobpost] = useState<JobPost | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   let ignore = false;
-
-  // Mock applications data for the specific job position
-  const mockApplications = [
-    {
-      id: '1',
-      name: 'Alice Johnson',
-      email: 'alice.johnson@email.com',
-      phone: '+1 (555) 123-4567',
-      appliedDate: '2024-01-10',
-      interviewDate: '2024-01-15',
-      duration: 22,
-      status: 'interviewed',
-      overallScore: 92,
-      scores: {
-        communication: 90,
-        technical: 95,
-        problemSolving: 88,
-        leadership: 94,
-        bodyLanguage: 89,
-        confidence: 93,
-      },
-      experienceLevel: '6 years',
-      skills: ['React', 'TypeScript', 'Node.js', 'GraphQL'],
-      resumeUrl: '/resumes/alice-johnson.pdf',
-      linkedinUrl: 'https://linkedin.com/in/alice-johnson',
-      recommendation: 'Highly Recommended',
-      notes: 'Exceptional technical skills and leadership potential',
-      hasRecording: true,
-      coverLetter: 'I am excited to apply for the Senior Frontend Developer position...',
-      location: 'San Francisco, CA',
-      currentCompany: 'TechStart Inc.',
-      designation: 'Frontend Developer',
-    },
-    {
-      id: '2',
-      name: 'Bob Smith',
-      email: 'bob.smith@email.com',
-      phone: '+1 (555) 234-5678',
-      appliedDate: '2024-01-12',
-      interviewDate: '2024-01-16',
-      duration: 18,
-      status: 'interviewed',
-      overallScore: 85,
-      scores: {
-        communication: 87,
-        technical: 82,
-        problemSolving: 85,
-        leadership: 80,
-        bodyLanguage: 88,
-        confidence: 86,
-      },
-      experienceLevel: '4 years',
-      skills: ['React', 'JavaScript', 'Python', 'AWS'],
-      resumeUrl: '/resumes/bob-smith.pdf',
-      linkedinUrl: 'https://linkedin.com/in/bob-smith',
-      recommendation: 'Recommended',
-      notes: 'Strong technical foundation with good growth potential',
-      hasRecording: true,
-      coverLetter: 'With 4 years of experienceLevel in frontend development...',
-      location: 'New York, NY',
-      currentCompany: 'WebCorp',
-      designation: 'Software Engineer',
-    },
-    {
-      id: '3',
-      name: 'Carol Davis',
-      email: 'carol.davis@email.com',
-      phone: '+1 (555) 345-6789',
-      appliedDate: '2024-01-08',
-      status: 'applied',
-      experienceLevel: '3 years',
-      skills: ['Vue.js', 'JavaScript', 'CSS', 'HTML'],
-      resumeUrl: '/resumes/carol-davis.pdf',
-      linkedinUrl: 'https://linkedin.com/in/carol-davis',
-      notes: 'Good potential but needs more experienceLevel in required technologies',
-      hasRecording: false,
-      coverLetter: 'I am passionate about creating beautiful user interfaces...',
-      location: 'Austin, TX',
-      currentCompany: 'StartupXYZ',
-      designation: 'Junior Developer',
-    },
-    {
-      id: '4',
-      name: 'David Wilson',
-      email: 'david.wilson@email.com',
-      phone: '+1 (555) 456-7890',
-      appliedDate: '2024-01-14',
-      interviewDate: '2024-01-18',
-      duration: 20,
-      status: 'interviewed',
-      overallScore: 88,
-      scores: {
-        communication: 85,
-        technical: 90,
-        problemSolving: 87,
-        leadership: 84,
-        bodyLanguage: 89,
-        confidence: 91,
-      },
-      experienceLevel: '5 years',
-      skills: ['React', 'TypeScript', 'Docker', 'Kubernetes'],
-      resumeUrl: '/resumes/david-wilson.pdf',
-      linkedinUrl: 'https://linkedin.com/in/david-wilson',
-      recommendation: 'Recommended',
-      notes: 'Strong technical skills with excellent problem-solving abilities',
-      hasRecording: true,
-      coverLetter: 'As a seasoned frontend developer with DevOps experienceLevel...',
-      location: 'Seattle, WA',
-      currentCompany: 'CloudTech',
-      designation: 'Senior Developer',
-    },
-    {
-      id: '5',
-      name: 'Eva Martinez',
-      email: 'eva.martinez@email.com',
-      phone: '+1 (555) 567-8901',
-      appliedDate: '2024-01-11',
-      status: 'shortlisted',
-      experienceLevel: '7 years',
-      skills: ['React', 'TypeScript', 'GraphQL', 'MongoDB'],
-      resumeUrl: '/resumes/eva-martinez.pdf',
-      linkedinUrl: 'https://linkedin.com/in/eva-martinez',
-      notes: 'Outstanding communication and leadership skills',
-      hasRecording: false,
-      coverLetter: 'I bring 7 years of experienceLevel in building scalable web applications...',
-      location: 'Los Angeles, CA',
-      currentCompany: 'BigTech Corp',
-      designation: 'Lead Frontend Engineer',
-    },
-  ];
 
   // Filter applications based on showInterviewsOnly
   const filteredByType = showInterviewsOnly
@@ -209,8 +72,8 @@ export function JobApplicationsList({
         bValue = b.name;
         break;
       case 'score':
-        aValue = a.overallScore || 0;
-        bValue = b.overallScore || 0;
+        aValue = a.categoryPercentage?.overallPercentage ?? 0;
+        bValue = b.categoryPercentage?.overallPercentage ?? 0;
         break;
       case 'date':
         aValue = new Date(a.appliedDate).getTime();
@@ -284,10 +147,10 @@ export function JobApplicationsList({
   const averageScore =
     interviewedCount > 0
       ? filteredByType
-          .filter((app) => app.overallScore)
-          .reduce((sum, app) => sum + (app.overallScore || 0), 0) / interviewedCount
+        .filter((app) => app.categoryPercentage?.overallPercentage)
+        .reduce((sum, app) => sum + (app.categoryPercentage?.overallPercentage ?? 0), 0) / interviewedCount
       : 0;
-  const highPerformers = filteredByType.filter((app) => (app.overallScore || 0) >= 85).length;
+  const highPerformers = filteredByType.filter((app) => (app.categoryPercentage?.overallPercentage ?? 0) >= 85).length;
 
   const handleDownloadResume = async (resumeUrl: string, name: string) => {
     try {
@@ -526,7 +389,7 @@ export function JobApplicationsList({
                       <div className='flex-1'>
                         <div className='flex items-center space-x-3 mb-2'>
                           <h3 className='text-lg font-bold text-gray-900'>{application.name}</h3>
-                          {application.overallScore && application.overallScore >= 90 && (
+                          {application.categoryPercentage?.overallPercentage && application.categoryPercentage?.overallPercentage >= 90 && (
                             <Star className='h-5 w-5 text-yellow-500 fill-current' />
                           )}
                           <span
@@ -561,39 +424,38 @@ export function JobApplicationsList({
                               {application.location}
                             </p>
                             <p className='text-sm text-gray-600'>
-                              Applied: {new Date(application.appliedDate).toLocaleDateString()}
+                              Applied: {moment(application.appliedDate).format('DD-MM-YYYY')}
                             </p>
                           </div>
                           {(application.status === 'completed' ||
                             application.status === 'under_review') && (
-                            <div>
-                              <p className='text-sm text-gray-600'>Interview Score</p>
-                              <div className='flex items-center space-x-2'>
-                                <span
-                                  className={`text-lg font-bold ${
-                                    getScoreColor(application.overallScore).split(' ')[0]
-                                  }`}
-                                >
-                                  {application.overallScore}
-                                </span>
-                                {application.recommendations && (
+                              <div>
+                                <p className='text-sm text-gray-600'>Interview Score</p>
+                                <div className='flex items-center space-x-2'>
                                   <span
-                                    className={`px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
-                                      application.recommendations?.recommendation ?? ''
-                                    )}`}
+                                    className={`text-lg font-bold ${getScoreColor(application.categoryPercentage?.overallPercentage ?? 0).split(' ')[0]
+                                      }`}
                                   >
-                                    {application.recommendations?.recommendation}
+                                    {application.categoryPercentage?.overallPercentage ?? 0}%
                                   </span>
+                                  {application.recommendations && (
+                                    <span
+                                      className={`px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
+                                        application.recommendations?.recommendation ?? ''
+                                      )}`}
+                                    >
+                                      {application.recommendations?.recommendation}
+                                    </span>
+                                  )}
+                                </div>
+                                {application.interviewDate && (
+                                  <p className='text-sm text-gray-600'>
+                                    Interviewed:{' '}
+                                    {moment(application.interviewDate).format('DD-MM-YYYY')}
+                                  </p>
                                 )}
                               </div>
-                              {application.interviewDate && (
-                                <p className='text-sm text-gray-600'>
-                                  Interviewed:{' '}
-                                  {new Date(application.interviewDate).toLocaleDateString()}
-                                </p>
-                              )}
-                            </div>
-                          )}
+                            )}
                         </div>
 
                         <div className='mb-4'>
@@ -622,15 +484,14 @@ export function JobApplicationsList({
                                   <div className='flex items-center space-x-2'>
                                     <div className='w-12 bg-gray-200 rounded-full h-1.5'>
                                       <div
-                                        className={`h-1.5 rounded-full ${
-                                          score >= 90
-                                            ? 'bg-green-500'
-                                            : score >= 80
-                                              ? 'bg-blue-500'
-                                              : score >= 70
-                                                ? 'bg-yellow-500'
-                                                : 'bg-red-500'
-                                        }`}
+                                        className={`h-1.5 rounded-full ${score >= 90
+                                          ? 'bg-green-500'
+                                          : score >= 80
+                                            ? 'bg-blue-500'
+                                            : score >= 70
+                                              ? 'bg-yellow-500'
+                                              : 'bg-red-500'
+                                          }`}
                                         style={{ width: `${score}%` }}
                                       ></div>
                                     </div>
@@ -862,15 +723,14 @@ export function JobApplicationsList({
                         <div className='flex items-center space-x-2'>
                           <div className='w-20 bg-gray-200 rounded-full h-2'>
                             <div
-                              className={`h-2 rounded-full ${
-                                score >= 90
-                                  ? 'bg-green-500'
-                                  : score >= 80
-                                    ? 'bg-blue-500'
-                                    : score >= 70
-                                      ? 'bg-yellow-500'
-                                      : 'bg-red-500'
-                              }`}
+                              className={`h-2 rounded-full ${score >= 90
+                                ? 'bg-green-500'
+                                : score >= 80
+                                  ? 'bg-blue-500'
+                                  : score >= 70
+                                    ? 'bg-yellow-500'
+                                    : 'bg-red-500'
+                                }`}
                               style={{ width: `${score}%` }}
                             ></div>
                           </div>

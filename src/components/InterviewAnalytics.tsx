@@ -19,6 +19,7 @@ import { CandidatePerformanceDetail } from "./CandidatePerformanceDetail";
 import { JobInterviewListing } from "./JobInterviewListing";
 import { useJobPosts } from "../hooks/useJobPosts";
 import { Candidate } from "../types";
+import moment from "moment";
 
 interface SummaryStats {
   total_interview: number;
@@ -440,15 +441,13 @@ export function InterviewAnalytics() {
                   {summaryStates.total_interview}
                 </p>
                 <p
-                  className={`text-sm ${
-                    summaryStates.interview_growth > 0
-                      ? "text-emerald-600"
-                      : "text-red-600"
-                  }  mt-1`}
+                  className={`text-sm ${summaryStates.interview_growth > 0
+                    ? "text-emerald-600"
+                    : "text-red-600"
+                    }  mt-1`}
                 >
-                  {`${summaryStates.interview_growth > 0 ? "↑" : "↓"} ${
-                    summaryStates.interview_growth
-                  }% from last month`}
+                  {`${summaryStates.interview_growth > 0 ? "↑" : "↓"} ${summaryStates.interview_growth
+                    }% from last month`}
                 </p>
               </div>
               <div className="bg-blue-100 p-3 rounded-lg">
@@ -465,15 +464,13 @@ export function InterviewAnalytics() {
                   {summaryStates.total_avg_score}%
                 </p>
                 <p
-                  className={`text-sm ${
-                    summaryStates.score_growth > 0
-                      ? "text-emerald-600"
-                      : "text-red-600"
-                  }  mt-1`}
+                  className={`text-sm ${summaryStates.score_growth > 0
+                    ? "text-emerald-600"
+                    : "text-red-600"
+                    }  mt-1`}
                 >
-                  {`${summaryStates.score_growth > 0 ? "↑" : "↓"} ${
-                    summaryStates.score_growth
-                  }% from last month`}
+                  {`${summaryStates.score_growth > 0 ? "↑" : "↓"} ${summaryStates.score_growth
+                    }% from last month`}
                 </p>
               </div>
               <div className="bg-green-100 p-3 rounded-lg">
@@ -509,15 +506,13 @@ export function InterviewAnalytics() {
                   {summaryStates.total_avg_duration}m
                 </p>
                 <p
-                  className={`text-sm ${
-                    summaryStates.duration_growth > 0
-                      ? "text-blue-600"
-                      : "text-red-600"
-                  }  mt-1`}
+                  className={`text-sm ${summaryStates.duration_growth > 0
+                    ? "text-blue-600"
+                    : "text-red-600"
+                    }  mt-1`}
                 >
-                  {`${summaryStates.duration_growth > 0 ? "↑" : "↓"} ${
-                    summaryStates.duration_growth
-                  }m from last month`}
+                  {`${summaryStates.duration_growth > 0 ? "↑" : "↓"} ${summaryStates.duration_growth
+                    }m from last month`}
                 </p>
               </div>
               <div className="bg-purple-100 p-3 rounded-lg">
@@ -683,9 +678,9 @@ export function InterviewAnalytics() {
                           {candidate.JobPost?.title}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {new Date(
+                          {moment(
                             candidate.interviewDate
-                          ).toLocaleDateString()}{" "}
+                          ).format('DD-MM-YYYY')}{" "}
                           • {candidate.duration}m
                         </div>
                       </div>
@@ -807,9 +802,8 @@ export function InterviewAnalytics() {
                               {scorePercentage.toFixed(1)}%
                             </span>
                             <span
-                              className={`text-xs ${
-                                trend >= 0 ? "text-green-600" : "text-red-600"
-                              }`}
+                              className={`text-xs ${trend >= 0 ? "text-green-600" : "text-red-600"
+                                }`}
                             >
                               {trend >= 0 ? "↑" : "↓"}{" "}
                               {Math.abs(trend).toFixed(1)}%

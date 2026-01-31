@@ -13,6 +13,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { Candidate } from '../types';
+import moment from 'moment';
 
 // --- Utility helpers ---
 function formatTime(s: number) {
@@ -147,7 +148,7 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
         } else {
           await v.requestPictureInPicture();
         }
-      } catch {}
+      } catch { }
     }
   };
 
@@ -161,7 +162,7 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
         await document.exitFullscreen();
         setIsFullscreen(false);
       }
-    } catch {}
+    } catch { }
   };
 
   // --- Duration Infinity fix for certain WebM streams ---
@@ -181,12 +182,12 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
           v.removeEventListener('timeupdate', onTimeUpdate);
           try {
             v.currentTime = 0;
-          } catch {}
+          } catch { }
         };
         v.addEventListener('timeupdate', onTimeUpdate);
         try {
           v.currentTime = 1e101; // trigger duration computation
-        } catch {}
+        } catch { }
         appliedInfinityHack.current = true;
       }
     };
@@ -197,7 +198,7 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
       try {
         const b = v.buffered;
         if (b.length > 0) setBufferedEnd(b.end(b.length - 1));
-      } catch {}
+      } catch { }
     };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
@@ -491,9 +492,8 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
                         <button
                           key={r}
                           onClick={() => setRate(r)}
-                          className={`w-full rounded-lg px-3 py-2 text-left text-sm text-white/90 hover:bg-white/10 ${
-                            playbackRate === r ? 'bg-white/10' : ''
-                          }`}
+                          className={`w-full rounded-lg px-3 py-2 text-left text-sm text-white/90 hover:bg-white/10 ${playbackRate === r ? 'bg-white/10' : ''
+                            }`}
                         >
                           {r.toFixed(2)}x
                         </button>
@@ -561,40 +561,40 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
           <div className='space-y-4'>
             {(interviewData?.status === 'completed' ||
               interviewData?.status === 'under_review') && (
-              <>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-gray-600'>Overall Score</span>
-                  <span
-                    className={`text-lg font-bold ${getScoreColor(
-                      interviewData?.overallScore ?? 0
-                    )}`}
-                  >
-                    {interviewData?.overallScore}%
-                  </span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm text-gray-600'>Duration</span>
-                  <span className='text-sm font-medium text-gray-900'>
-                    {interviewData?.duration || 0} minutes
-                  </span>
-                </div>
-              </>
-            )}
+                <>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-gray-600'>Overall Score</span>
+                    <span
+                      className={`text-lg font-bold ${getScoreColor(
+                        interviewData?.categoryPercentage?.overallPercentage ?? 0
+                      )}`}
+                    >
+                      {interviewData?.categoryPercentage?.overallPercentage}%
+                    </span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-gray-600'>Duration</span>
+                    <span className='text-sm font-medium text-gray-900'>
+                      {interviewData?.duration || 0} minutes
+                    </span>
+                  </div>
+                </>
+              )}
             <div className='flex items-center justify-between'>
               <span className='text-sm text-gray-600'>Date</span>
               <span className='text-sm font-medium text-gray-900'>
-                {new Date(interviewData?.interviewDate).toLocaleDateString()}
+                {moment(interviewData?.interviewDate).format('DD-MM-YYYY')}
               </span>
             </div>
             {(interviewData?.status === 'completed' ||
               interviewData?.status === 'under_review') && (
-              <div className='flex items-center justify-between'>
-                <span className='text-sm text-gray-600'>Questions</span>
-                <span className='text-sm font-medium text-gray-900'>
-                  {interviewData?.attemptedQuestions}
-                </span>
-              </div>
-            )}
+                <div className='flex items-center justify-between'>
+                  <span className='text-sm text-gray-600'>Questions</span>
+                  <span className='text-sm font-medium text-gray-900'>
+                    {interviewData?.attemptedQuestions}
+                  </span>
+                </div>
+              )}
           </div>
         </div>
 
@@ -607,11 +607,10 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
                 <button
                   key={item.Question.id}
                   onClick={() => jumpToQuestion(index)}
-                  className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                    selectedQuestion === index
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`w-full text-left p-3 rounded-lg border transition-colors ${selectedQuestion === index
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
                 >
                   <div className='flex items-center justify-between mb-2'>
                     <span className='text-sm font-medium text-gray-900'>Question {index + 1}</span>
@@ -620,7 +619,7 @@ export const VideoPlayer = ({ src, interviewData }: VideoPlayerProps) => {
                         className={`text-sm font-bold ${getQuestionScoreColor(item.score, item.Question.type)}`}
                       >
                         {item.Question.type === 'communication' ||
-                        item.Question.type === 'behavioral'
+                          item.Question.type === 'behavioral'
                           ? `${item.score} out of 10`
                           : item.score}
                       </span>
@@ -722,15 +721,14 @@ const renderAnalysis = (title: string, score: number) => {
       <div className='flex items-center space-x-2'>
         <div className='w-16 bg-gray-200 rounded-full h-1.5'>
           <div
-            className={`h-1.5 rounded-full ${
-              score >= 90
-                ? 'bg-green-500'
-                : score >= 80
-                  ? 'bg-blue-500'
-                  : score >= 70
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
-            }`}
+            className={`h-1.5 rounded-full ${score >= 90
+              ? 'bg-green-500'
+              : score >= 80
+                ? 'bg-blue-500'
+                : score >= 70
+                  ? 'bg-yellow-500'
+                  : 'bg-red-500'
+              }`}
             style={{ width: `${score}%` }}
           ></div>
         </div>

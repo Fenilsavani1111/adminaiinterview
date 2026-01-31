@@ -40,6 +40,8 @@ export interface JobPost {
   // When true, candidates can record both video and audio responses.
   // When false or undefined, interviews are audio-only for this job.
   enableVideoRecording?: boolean;
+  /** Scheduled interview start date/time (ISO string or null). */
+  interviewStartDateTime?: string | null;
 }
 
 export interface JobApplication {
