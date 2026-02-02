@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { InterviewQuestion, JobPost } from '../types';
 import { useJobPosts } from '../hooks/useJobPosts';
+import { jobPostAPI } from '../services/api';
 import {
   ArrowLeft,
   Upload,
@@ -10,6 +11,7 @@ import {
   Trash2,
   Edit,
   Calendar,
+  Image as ImageIcon,
 } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min?url';
@@ -75,7 +77,9 @@ export function EditJobPost() {
     currency: 'INR',
     enableVideoRecording: false,
     interviewStartDateTime: '',
+    logoUrl: '',
   });
+  const [logoUploading, setLogoUploading] = useState(false);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([
     ...defaultQuestions,
   ]);
@@ -197,6 +201,22 @@ export function EditJobPost() {
     });
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    try {
+      setLogoUploading(true);
+      const res = await jobPostAPI.uploadFile(file);
+      const url = res?.file_url ?? (res as { url?: string })?.url;
+      if (url) setFormData((prev) => ({ ...prev, logoUrl: url }));
+    } catch (err) {
+      console.error('Logo upload failed:', err);
+    } finally {
+      setLogoUploading(false);
+      e.target.value = '';
+    }
+  };
+
   const extractTextFromPdf = async (file: File): Promise<void> => {
     try {
       setJdFromPdfLoading(true);
@@ -254,6 +274,7 @@ export function EditJobPost() {
         interviewStartDateTime: job.interviewStartDateTime
           ? new Date(job.interviewStartDateTime).toISOString().slice(0, 16)
           : '',
+        logoUrl: job.logoUrl || '',
       });
       // Store original description to track changes
       setOriginalDescription(job.description || '');
@@ -288,6 +309,7 @@ export function EditJobPost() {
             : undefined,
         status: jobPost.status,
         enableVideoRecording: formData.enableVideoRecording,
+        logoUrl: formData.logoUrl || undefined,
         interviewStartDateTime: formData.interviewStartDateTime?.trim()
           ? new Date(formData.interviewStartDateTime).toISOString()
           : (() => {
@@ -391,6 +413,57 @@ export function EditJobPost() {
                   className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                   placeholder='Company name'
                 />
+              </div>
+
+              <div className='md:col-span-2'>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Company / Role logo (optional)
+                </label>
+                <div className='flex items-center gap-4'>
+                  {formData.logoUrl ? (
+                    <>
+                      <img
+                        src={formData.logoUrl}
+                        alt='Logo'
+                        className='w-16 h-16 rounded-lg object-contain border border-gray-200 bg-gray-50'
+                      />
+                      <div className='flex-1 flex flex-wrap items-center gap-2'>
+                        <label className='inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-sm font-medium disabled:opacity-50'>
+                          <ImageIcon className='h-4 w-4' />
+                          {logoUploading ? 'Uploading...' : 'Change logo'}
+                          <input
+                            type='file'
+                            accept='image/*'
+                            className='hidden'
+                            disabled={logoUploading}
+                            onChange={handleLogoUpload}
+                          />
+                        </label>
+                        <button
+                          type='button'
+                          onClick={() =>
+                            setFormData((prev) => ({ ...prev, logoUrl: '' }))
+                          }
+                          className='px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg'
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <label className='inline-flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-700 disabled:opacity-50'>
+                      <Upload className='h-4 w-4' />
+                      {logoUploading ? 'Uploading...' : 'Upload logo'}
+                      <input
+                        type='file'
+                        accept='image/*'
+                        className='hidden'
+                        disabled={logoUploading}
+                        onChange={handleLogoUpload}
+                      />
+                    </label>
+                  )}
+                </div>
               </div>
 
               <div>

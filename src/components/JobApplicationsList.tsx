@@ -34,7 +34,8 @@ export function JobApplicationsList({
   onBack,
   showInterviewsOnly = false,
 }: JobApplicationsListProps) {
-  const { getJobPostById, loading } = useJobPosts();
+  const { getJobPostById } = useJobPosts();
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('date');
@@ -175,11 +176,14 @@ export function JobApplicationsList({
 
   const getData = async () => {
     try {
+      setLoading(true);
       let job = await getJobPostById(jobId);
       setCandidates(job?.candidates ?? []);
-      if (job?.post) setJobpost({ ...job?.post });
+      setJobpost({ ...job?.post });
+      setLoading(false);
     } catch (error) {
       console.log('error', error);
+      setLoading(false);
     }
   };
 
@@ -253,7 +257,7 @@ export function JobApplicationsList({
                 <p className='text-sm text-gray-600 mb-1'>
                   Total {showInterviewsOnly ? 'Interviews' : 'Applications'}
                 </p>
-                <p className='text-3xl font-bold text-gray-900'>{jobpost?.applicants}</p>
+                <p className='text-3xl font-bold text-gray-900'>{jobpost?.applicants ?? 0}</p>
               </div>
               <div className='bg-blue-100 p-3 rounded-lg'>
                 <User className='h-6 w-6 text-blue-600' />
@@ -461,7 +465,7 @@ export function JobApplicationsList({
                         <div className='mb-4'>
                           <p className='text-sm text-gray-600 mb-2'>Skills</p>
                           <div className='flex flex-wrap gap-2'>
-                            {application.skills.map((skill, index) => (
+                            {application?.skills?.length && application?.skills?.length > 0 && application?.skills?.map((skill, index) => (
                               <span
                                 key={index}
                                 className='bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium'

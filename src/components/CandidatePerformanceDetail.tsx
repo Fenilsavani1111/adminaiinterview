@@ -1184,6 +1184,9 @@ export function CandidatePerformanceDetail({
       setIsPdfExporting(true);
       const doc = await generateCandidatePdf(candidateData);
 
+      // // open the pdf in a new tab
+      // const pdfUrl = URL.createObjectURL(new Blob([doc.output('blob')], { type: 'application/pdf' }));
+      // window.open(pdfUrl, '_blank');
       doc.save(`${candidateData?.name || "candidate"}_profile.pdf`);
       setIsPdfExporting(false);
     } catch (err) {
@@ -1310,7 +1313,7 @@ export function CandidatePerformanceDetail({
                   </>
                 )}
               </button>
-              {/* <button
+              <button
                 onClick={exportToPdf}
                 disabled={loading || !candidateData || isPdfExporting}
                 className='flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
@@ -1326,7 +1329,7 @@ export function CandidatePerformanceDetail({
                     <span>Export PDF</span>
                   </>
                 )}
-              </button> */}
+              </button>
             </div>
           </div>
         </div>

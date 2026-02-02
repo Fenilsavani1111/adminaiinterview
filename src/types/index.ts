@@ -42,6 +42,8 @@ export interface JobPost {
   enableVideoRecording?: boolean;
   /** Scheduled interview start date/time (ISO string or null). */
   interviewStartDateTime?: string | null;
+  /** Company/role logo image URL. */
+  logoUrl?: string | null;
 }
 
 export interface JobApplication {

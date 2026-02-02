@@ -231,6 +231,16 @@ export const jobPostAPI = {
     await api.delete(`/jobposts/${id}`);
   },
 
+  // Upload file (e.g. logo) - returns { file_url }
+  uploadFile: async (file: File): Promise<{ file_url: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/jobposts/upload-resume', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
   // Get job posts by status (Public)
   getByStatus: async (status: JobPost['status']): Promise<JobPost[]> => {
     const response = await api.get(`/jobposts?status=${status}`);
