@@ -302,10 +302,10 @@ export function JobInterviewListing({
   };
 
   const averageScore =
-    sortedInterviews.reduce((sum, interview) => sum + interview.overallScore, 0) /
+    sortedInterviews.reduce((sum, interview) => sum + (interview?.categoryPercentage?.overallScore ?? 0), 0) /
     sortedInterviews.length;
   const highPerformers = sortedInterviews.filter(
-    (interview) => interview.overallScore >= 85
+    (interview) => (interview?.categoryPercentage?.overallPercentage ?? 0) >= 85
   ).length;
   const averageDuration =
     sortedInterviews.reduce((sum, interview) => sum + interview.duration, 0) /
@@ -600,7 +600,7 @@ export function JobInterviewListing({
                       <td className='px-6 py-4'>
                         <div className='flex items-center'>
                           <div className='h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center'>
-                            <span className='text-sm font-medium text-gray-700'>
+                            <span className='text-sm font-medium text-gray-700 uppercase'>
                               {interview.name
                                 .split(' ')
                                 .map((n: string) => n[0])

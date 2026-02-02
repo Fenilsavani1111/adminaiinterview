@@ -14,6 +14,7 @@ export interface User {
 export interface JobPost {
   id: string;
   title: string;
+  jobTitle?: string;
   company: string;
   department: string;
   location: string[];
@@ -136,7 +137,7 @@ export interface Candidate {
     };
   };
   proctoringStatus?: string;
-  proctoringAlerts?: Array<{ message?: string; type?: string;[k: string]: unknown }>;
+  proctoringAlerts?: Array<{ message?: string; type?: string; [k: string]: unknown }>;
   residenceLocation: string;
   region: string;
   governmentProof: any[];

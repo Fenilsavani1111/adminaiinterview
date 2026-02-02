@@ -1182,9 +1182,9 @@ export function CandidatePerformanceDetail({
     if (!candidateData) return;
     try {
       setIsPdfExporting(true);
-      const doc = await generateCandidatePdf(candidateData);
+      const doc = await generateCandidatePdf(candidateData, comparisonData);
 
-      // // open the pdf in a new tab
+      // open the pdf in a new tab
       // const pdfUrl = URL.createObjectURL(new Blob([doc.output('blob')], { type: 'application/pdf' }));
       // window.open(pdfUrl, '_blank');
       doc.save(`${candidateData?.name || "candidate"}_profile.pdf`);
@@ -2386,9 +2386,9 @@ export function CandidatePerformanceDetail({
                                         <span className='text-[11px] font-medium uppercase tracking-wide text-slate-500'>
                                           {(alertObj as any).type || 'unknown'}
                                         </span>
-                                        <span className='text-[10px] px-1.5 py-0.5 rounded-full bg-slate-900/5 text-slate-500'>
+                                        {severity === "info" && <span className='text-[10px] px-1.5 py-0.5 rounded-full bg-slate-900/5 text-slate-500'>
                                           {severity}
-                                        </span>
+                                        </span>}
                                       </div>
                                       <span className='text-xs text-slate-700 block mt-0.5'>
                                         {typeof message === 'string'
