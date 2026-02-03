@@ -26,7 +26,8 @@ interface AppState {
   | 'job-selection'
   | 'job-application'
   | 'candidate-interview'
-  | 'interview-analytics';
+  | 'interview-analytics'
+  | 'llm-key';
 }
 
 type AppAction =

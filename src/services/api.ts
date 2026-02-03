@@ -11,6 +11,10 @@ export interface User {
   email: string;
   name?: string;
   phoneNumber?: string;
+  llmKey?: string | null;
+  hasLlmKey?: boolean;
+  jobPostLlmKey?: string | null;
+  hasJobPostLlmKey?: boolean;
   access_token?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -185,6 +189,24 @@ export const userAPI = {
     }>
   ): Promise<{ success: boolean; message: string; user: User }> => {
     const response = await api.put(`/users/${id}`, userData);
+    return response.data;
+  },
+
+  // Update (or clear) a user's LLM key (never returned by API)
+  updateUserLlmKey: async (
+    id: number | string,
+    llmKey: string | null
+  ): Promise<{ success: boolean; message: string; user: User }> => {
+    const response = await api.put(`/users/${id}/llm-key`, { llmKey });
+    return response.data;
+  },
+
+  // Update (or clear) a user's Job Post LLM key (never returned by API)
+  updateUserJobPostLlmKey: async (
+    id: number | string,
+    jobPostLlmKey: string | null
+  ): Promise<{ success: boolean; message: string; user: User }> => {
+    const response = await api.put(`/users/${id}/jobpost-llm-key`, { jobPostLlmKey });
     return response.data;
   },
 

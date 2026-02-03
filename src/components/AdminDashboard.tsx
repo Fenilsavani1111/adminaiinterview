@@ -8,7 +8,6 @@ import {
   Search,
   Eye,
   Download,
-  Star,
   Briefcase,
   Plus,
   BarChart3,
@@ -19,6 +18,7 @@ import {
   Mail,
   TrendingDown,
   LogOut,
+  KeyRound,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Candidate } from '../types';
@@ -328,6 +328,13 @@ export function AdminDashboard() {
               >
                 <Briefcase className='h-4 w-4' />
                 <span className='font-medium'>Manage Jobs</span>
+              </button>
+              <button
+                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'llm-key' })}
+                className='flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-2.5 rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+              >
+                <KeyRound className='h-4 w-4' />
+                <span className='font-medium'>LLM Keys</span>
               </button>
               <button className='flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2.5 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'>
                 <Download className='h-4 w-4' />
@@ -709,6 +716,20 @@ export function AdminDashboard() {
                     </div>
                   </div>
                   <div className='space-y-3'>
+                    <button
+                      onClick={() => dispatch({ type: 'SET_VIEW', payload: 'llm-key' })}
+                      className='w-full text-left p-4 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-blue-50 transition-all duration-200 border border-gray-200 hover:border-indigo-300 group'
+                    >
+                      <div className='flex items-center justify-between'>
+                        <div>
+                          <div className='font-medium text-gray-900 group-hover:text-indigo-700'>
+                            Manage LLM Keys
+                          </div>
+                          <div className='text-sm text-gray-500'>Set/clear LLM key for a user</div>
+                        </div>
+                        <KeyRound className='h-5 w-5 text-gray-400 group-hover:text-indigo-600 transition-colors duration-200' />
+                      </div>
+                    </button>
                     <button
                       onClick={() => dispatch({ type: 'SET_VIEW', payload: 'create-job' })}
                       className='w-full text-left p-4 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 border border-gray-200 hover:border-blue-300 group'

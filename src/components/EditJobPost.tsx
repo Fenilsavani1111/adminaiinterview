@@ -10,6 +10,8 @@ import {
   Plus,
   Trash2,
   Edit,
+  AlertCircle,
+  X,
   Calendar,
   Image as ImageIcon,
 } from 'lucide-react';
@@ -54,6 +56,8 @@ export function EditJobPost() {
     getJobPostOpenaiQuestions,
     getJobPostResponsibilityFromJD,
     getJobDescriptionFromPDf,
+    error: jobPostsError,
+    clearError: clearJobPostsError,
   } = useJobPosts();
   const [jobPost, setJobPost] = useState<JobPost | null>(null);
   const [originalDescription, setOriginalDescription] = useState<string>('');
@@ -207,7 +211,7 @@ export function EditJobPost() {
     try {
       setLogoUploading(true);
       const res = await jobPostAPI.uploadFile(file);
-      const url = res?.file_url ?? (res as { url?: string })?.url;
+      const url = res?.file_url ?? "";
       if (url) setFormData((prev) => ({ ...prev, logoUrl: url }));
     } catch (err) {
       console.error('Logo upload failed:', err);
@@ -366,6 +370,24 @@ export function EditJobPost() {
       </header>
 
       <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+        {/* OpenAI / Job Posts Errors */}
+        {jobPostsError && (
+          <div className='mb-4 p-3 bg-red-100 border border-red-300 rounded-lg flex items-start space-x-2'>
+            <AlertCircle className='h-5 w-5 text-red-600 flex-shrink-0 mt-0.5' />
+            <div className='flex-1'>
+              <p className='text-sm text-red-800 whitespace-pre-line'>{jobPostsError}</p>
+            </div>
+            <button
+              type='button'
+              onClick={clearJobPostsError}
+              className='text-red-700 hover:text-red-900'
+              title='Dismiss'
+            >
+              <X className='h-4 w-4' />
+            </button>
+          </div>
+        )}
+
         {/* Progress Bar */}
         <div className='mb-8'>
           <div className='w-full bg-gray-200 rounded-full h-2'>

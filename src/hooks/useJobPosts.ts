@@ -1,19 +1,77 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { InterviewQuestion, JobPost } from '../types';
-import { jobPostAPI } from '../services/api';
+import { jobPostAPI, userAPI } from '../services/api';
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_APP_OPENAI_KEY,
-  dangerouslyAllowBrowser: true,
-});
+type KeyValidationState = {
+  key: string;
+  validatedAt: number;
+};
+
+const KEY_VALIDATION_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+const mapOpenAiKeyError = (error: any): string => {
+  const status: number | undefined =
+    error?.status ?? error?.response?.status ?? error?.error?.status ?? error?.cause?.status;
+  const msg: string = error?.message || 'OpenAI request failed';
+
+  // Requested mapping
+  if (status === 401) return `❌ OpenAI key failed (401 Invalid / revoked key). ${msg}`;
+  if (status === 429) return `❌ OpenAI key failed (429 Quota exceeded / billing issue). ${msg}`;
+  if (status === 403) return `❌ OpenAI key failed (403 Org / project access issue). ${msg}`;
+
+  return `❌ OpenAI key failed. ${msg}${status ? ` (HTTP ${status})` : ''}`;
+};
 
 export const useJobPosts = () => {
   const [jobPosts, setJobPosts] = useState<JobPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   let ignore = false;
+
+  const keyValidationRef = useRef<KeyValidationState | null>(null);
+
+  const getValidatedOpenAiClient = useCallback(async (): Promise<OpenAI> => {
+    try {
+      const profileResp = await userAPI.getProfile();
+      const key = profileResp?.user?.jobPostLlmKey;
+
+      if (!key || String(key).trim() === '') {
+        throw new Error(
+          'Job post LLM key is missing. Please set it in LLM Key Manager, then try again.'
+        );
+      }
+
+      const normalizedKey = String(key).trim();
+
+      // Reuse recent validation to avoid repeated test calls
+      const cached = keyValidationRef.current;
+      const cacheValid =
+        cached &&
+        cached.key === normalizedKey &&
+        Date.now() - cached.validatedAt < KEY_VALIDATION_TTL_MS;
+
+      const client = new OpenAI({
+        apiKey: normalizedKey,
+        dangerouslyAllowBrowser: true,
+      });
+
+      if (!cacheValid) {
+        // Test key before any real request (as requested)
+        await client.responses.create({
+          model: 'gpt-4.1-mini',
+          input: 'Say hello in one word',
+        });
+        keyValidationRef.current = { key: normalizedKey, validatedAt: Date.now() };
+      }
+
+      return client;
+    } catch (e: any) {
+      const message = mapOpenAiKeyError(e);
+      setError(message);
+      throw new Error(message);
+    }
+  }, []);
 
   // Fetch all job posts
   const fetchJobPosts = useCallback(async () => {
@@ -121,7 +179,8 @@ export const useJobPosts = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await openai.chat.completions.create({
+        const client = await getValidatedOpenAiClient();
+        const response = await client.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [
             {
@@ -263,14 +322,16 @@ export const useJobPosts = () => {
           Skills:
           ${jobdata?.skills?.map((item) => `- ${item}`).join('\n')}
           
-          ${jobdata?.salary?.min !== undefined
-                  ? `Min Salary: ${jobdata.salary.min} ${jobdata.salary.currency}`
-                  : ''
-                }
-          ${jobdata?.salary?.max !== undefined
-                  ? `Max Salary: ${jobdata.salary.max} ${jobdata.salary.currency}`
-                  : ''
-                }
+          ${
+            jobdata?.salary?.min !== undefined
+              ? `Min Salary: ${jobdata.salary.min} ${jobdata.salary.currency}`
+              : ''
+          }
+          ${
+            jobdata?.salary?.max !== undefined
+              ? `Max Salary: ${jobdata.salary.max} ${jobdata.salary.currency}`
+              : ''
+          }
           
           REMINDER: Generate EXACTLY 49 questions with the following distribution:
           - 13 Reasoning questions
@@ -298,66 +359,72 @@ export const useJobPosts = () => {
         setLoading(false);
       }
     },
-    []
+    [getValidatedOpenAiClient]
   );
 
   // Get job responsibilities from job description using chatgtp openai
-  const getJobPostResponsibilityFromJD = useCallback(async (jobDescription: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are a helpful assistant that extracts job responsibilities from job descriptions and returns them in JSON format only.',
+  const getJobPostResponsibilityFromJD = useCallback(
+    async (jobDescription: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const client = await getValidatedOpenAiClient();
+        const response = await client.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are a helpful assistant that extracts job responsibilities from job descriptions and returns them in JSON format only.',
+            },
+            {
+              role: 'user',
+              content: `Extract the job responsibilities in JSON format from the following job description:\n\n${jobDescription}`,
+            },
+          ],
+          // max_tokens: 150,
+          temperature: 0.3,
+          response_format: {
+            type: 'json_object',
           },
-          {
-            role: 'user',
-            content: `Extract the job responsibilities in JSON format from the following job description:\n\n${jobDescription}`,
-          },
-        ],
-        // max_tokens: 150,
-        temperature: 0.3,
-        response_format: {
-          type: 'json_object',
-        },
-      });
-      let responseText = response.choices[0]?.message?.content ?? '';
-      const evaluation = JSON.parse(responseText);
-      let data: string[] = evaluation?.job_responsibilities ?? [];
-      return data;
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to generate responsibilities from job description'
-      );
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        });
+        let responseText = response.choices[0]?.message?.content ?? '';
+        const evaluation = JSON.parse(responseText);
+        let data: string[] = evaluation?.job_responsibilities ?? [];
+        return data;
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to generate responsibilities from job description'
+        );
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [getValidatedOpenAiClient]
+  );
 
   // Get job description from uploaded pdf using chatgtp openai
-  const getJobDescriptionFromPDf = useCallback(async (pdfText: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are an expert at reading job postings and extracting the actual job description text, no matter what the section heading is.',
-          },
-          {
-            role: 'user',
-            // content: `Extract the job description as "job_description" in JSON format from the following PDF content:\n\n${pdfText}`,
-            content: `
+  const getJobDescriptionFromPDf = useCallback(
+    async (pdfText: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const client = await getValidatedOpenAiClient();
+        const response = await client.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are an expert at reading job postings and extracting the actual job description text, no matter what the section heading is.',
+            },
+            {
+              role: 'user',
+              // content: `Extract the job description as "job_description" in JSON format from the following PDF content:\n\n${pdfText}`,
+              content: `
 From the following text, find the section that describes the job role (this could be labeled as 'Overview', 'Description', 'About the Role', or similar).
 Return it in JSON with a single key: job_description.
 If there are multiple candidate sections, merge them into one continuous description.
@@ -365,25 +432,27 @@ If there are multiple candidate sections, merge them into one continuous descrip
 PDF text:
 """${pdfText}"""
 `,
+            },
+          ],
+          // max_tokens: 150,
+          temperature: 0.3,
+          response_format: {
+            type: 'json_object',
           },
-        ],
-        // max_tokens: 150,
-        temperature: 0.3,
-        response_format: {
-          type: 'json_object',
-        },
-      });
-      let responseText = response.choices[0]?.message?.content ?? '';
-      const evaluation = JSON.parse(responseText);
-      let data: string = evaluation?.job_description ?? '';
-      return data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        });
+        let responseText = response.choices[0]?.message?.content ?? '';
+        const evaluation = JSON.parse(responseText);
+        let data: string = evaluation?.job_description ?? '';
+        return data;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [getValidatedOpenAiClient]
+  );
 
   // Get recent candidates
   const getRecentCandidatesData = useCallback(async () => {

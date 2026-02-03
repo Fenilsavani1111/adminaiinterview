@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { LandingPage } from './components/LandingPage';
 import { UserProfile } from './components/UserProfile';
@@ -16,6 +16,8 @@ import { ViewJobPost } from './components/ViewJobPost';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { UserLlmKeyManager } from './components/UserLlmKeyManager';
+import { RequireLlmKey } from './components/RequireLlmKey';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -40,15 +42,24 @@ function AppContent() {
   // PROTECTED ADMIN VIEWS (Require Admin Auth)
   // ============================================
 
-  if (['admin', 'job-posts', 'create-job', 'edit-job', 'view-job', 'interview-analytics'].includes(state.currentView)) {
+  if (
+    ['admin', 'job-posts', 'create-job', 'edit-job', 'view-job', 'interview-analytics', 'llm-key'].includes(
+      state.currentView
+    )
+  ) {
     return (
       <ProtectedRoute requireAdmin={true}>
-        {state.currentView === 'admin' && <AdminDashboard />}
-        {state.currentView === 'job-posts' && <JobPostManager />}
-        {state.currentView === 'create-job' && <CreateJobPost />}
-        {state.currentView === 'edit-job' && <EditJobPost />}
-        {state.currentView === 'view-job' && <ViewJobPost />}
+        {state.currentView === 'admin' && <RequireLlmKey><AdminDashboard /></RequireLlmKey>}
+        {state.currentView === 'job-posts' && <RequireLlmKey><JobPostManager /></RequireLlmKey>}
+        {state.currentView === 'create-job' && (
+          <RequireLlmKey>
+            <CreateJobPost />
+          </RequireLlmKey>
+        )}
+        {state.currentView === 'edit-job' && <RequireLlmKey><EditJobPost /></RequireLlmKey>}
+        {state.currentView === 'view-job' && <RequireLlmKey><ViewJobPost /></RequireLlmKey>}
         {state.currentView === 'interview-analytics' && <InterviewAnalytics />}
+        {state.currentView === 'llm-key' && <UserLlmKeyManager />}
       </ProtectedRoute>
     );
   }
