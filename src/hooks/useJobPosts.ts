@@ -362,6 +362,223 @@ export const useJobPosts = () => {
     [getValidatedOpenAiClient]
   );
 
+  // Generate filtered questions by type
+  const getJobPostFilteredQuestions = useCallback(
+    async (
+      jobdata: Omit<
+        JobPost,
+        'id' | 'createdAt' | 'updatedAt' | 'questions' | 'status' | 'createdBy'
+      >,
+      questionType: string,
+      questionCount: number
+    ) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const client = await getValidatedOpenAiClient();
+        
+        // Type-specific guidelines
+        const typeGuidelines: Record<string, string> = {
+          reasoning: `
+REASONING questions:
+- Test logical thinking, problem-solving, and analytical skills
+- Include scenario-based decisions relevant to the role
+- MCQ format: test understanding of frameworks, methodologies, or best approaches
+- Open-ended: explore thought process and decision-making rationale
+- Examples: troubleshooting scenarios, prioritization challenges, system design logic, pattern recognition`,
+          communication: `
+COMMUNICATION questions:
+- Assess written and verbal communication abilities
+- Test stakeholder management and collaboration skills
+- MCQ format: best practices for communication scenarios, email/message choices
+- Open-ended: role-play situations, explaining complex topics, conflict resolution
+- Examples: explaining technical concepts, handling difficult conversations, presentation skills, active listening`,
+          arithmetic: `
+ARITHMETIC/QUANTITATIVE questions:
+- Use role-specific calculations, metrics, and data analysis
+- Include business math, estimations, and quantitative reasoning
+- MCQ format: calculations with specific answer choices, data interpretation
+- Open-ended: explain methodology, analyze trends, forecast scenarios
+- Examples: budget calculations, performance metrics, ROI analysis, capacity planning, statistical analysis`,
+          subjective: `
+SUBJECTIVE/ROLE-BASED questions:
+- Assess judgment, ethics, leadership, and role fit
+- Explore past experiences and situational responses
+- MCQ format: ethical dilemmas, best practices, approach selection
+- Open-ended: behavioral questions, experience-based scenarios, vision and strategy
+- Examples: handling failure, team conflicts, career motivations, leadership philosophy, cultural fit`,
+          behavioral: `
+BEHAVIORAL questions:
+- Focus on past experiences and specific situations
+- Use STAR method (Situation, Task, Action, Result)
+- Assess soft skills, teamwork, and problem-solving in real scenarios
+- Examples: conflict resolution, leadership moments, challenges overcome, teamwork examples`,
+          technical: `
+TECHNICAL questions:
+- Assess domain-specific knowledge and practical skills
+- Include hands-on scenarios and real-world applications
+- MCQ format: best practices, tools, methodologies
+- Open-ended: system design, code review, architecture decisions
+- Examples: coding problems, design patterns, debugging scenarios, technology choices`,
+          aptitude: `
+APTITUDE questions:
+- Test general cognitive abilities and problem-solving skills
+- Include pattern recognition, logical reasoning, and quick thinking
+- MCQ format: puzzles, sequences, logic problems
+- Examples: number series, verbal reasoning, spatial reasoning, abstract thinking`,
+          general: `
+GENERAL questions:
+- Cover broad professional and interpersonal topics
+- Assess overall fit, motivation, and career alignment
+- Include company culture, work ethic, and professional values
+- Examples: career goals, work preferences, learning approach, professional development`
+        };
+
+        const response = await client.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `
+You are an expert interview-question generator for hiring teams.
+
+==================== MANDATORY RULES ====================
+
+1. Generate EXACTLY ${questionCount} interview questions.
+2. ALL questions MUST be of type: "${questionType}".
+3. Include a mix of both open-ended and MCQ questions (at least 30% should be MCQ).
+4. All questions MUST be directly derived from the provided job post.
+5. Questions MUST adapt to the experience level:
+   - Entry-level → fundamentals, basic scenarios
+   - Mid-level → applied problem-solving, real-world cases
+   - Senior-level → decision-making, trade-offs, leadership
+6. DO NOT generate generic or school-level questions.
+7. expectedDuration MUST be in seconds (range: 60-300).
+8. For open-ended questions: suggestedAnswers MUST be an array (can be empty but must exist).
+9. For MCQ questions: 
+   - options MUST be an array with exactly 4 choices
+   - rightAnswer MUST contain the exact correct answer text from options
+   - DO NOT include suggestedAnswers field
+10. evaluationCriteria MUST be an array with at least 2 items.
+11. id must be a unique integer starting from 1.
+12. order must match the id.
+13. difficulty must be one of: easy, medium, hard.
+14. questionFormat must be one of: open-ended, mcq.
+15. type must be: "${questionType}".
+16. category MUST clearly reflect the role or skill being assessed.
+17. isRequired MUST always be true.
+18. Output ONLY valid JSON — no explanations, no markdown, no extra text.
+
+==================== TYPE-SPECIFIC GUIDELINES ====================
+
+${typeGuidelines[questionType] || typeGuidelines['general']}
+
+==================== OUTPUT FORMAT ====================
+
+Return a JSON object with a "questions" array containing exactly ${questionCount} objects with TWO possible structures:
+
+For OPEN-ENDED questions:
+{
+  "id": number,
+  "question": string,
+  "type": "${questionType}",
+  "questionFormat": "open-ended",
+  "expectedDuration": number,
+  "difficulty": "easy | medium | hard",
+  "category": string,
+  "suggestedAnswers": string[],
+  "evaluationCriteria": string[],
+  "isRequired": true,
+  "order": number
+}
+
+For MULTIPLE-CHOICE questions:
+{
+  "id": number,
+  "question": string,
+  "type": "${questionType}",
+  "questionFormat": "mcq",
+  "expectedDuration": number,
+  "difficulty": "easy | medium | hard",
+  "category": string,
+  "options": [string, string, string, string],
+  "rightAnswer": string,
+  "evaluationCriteria": string[],
+  "isRequired": true,
+  "order": number
+}
+
+CRITICAL REQUIREMENTS:
+- Total count MUST be exactly ${questionCount} questions
+- ALL questions must be of type "${questionType}"
+- Include a good mix of difficulty levels
+- MCQ questions must NOT have suggestedAnswers field
+- Open-ended questions must NOT have options or rightAnswer fields
+- rightAnswer MUST exactly match one of the options
+`,
+            },
+            {
+              role: 'user',
+              content: `
+Generate ${questionCount} interview questions of type "${questionType}" strictly following all system rules.
+
+==================== JOB POST DETAILS ====================
+
+Position: ${jobdata?.title}
+Company: ${jobdata?.company}
+Department: ${jobdata?.department}
+Job Type: ${jobdata?.type}
+Experience Level: ${jobdata?.experience}
+
+Job Description:
+${jobdata?.description}
+
+Requirements:
+${jobdata?.requirements?.map((item) => `- ${item}`).join('\n')}
+
+Responsibilities:
+${jobdata?.responsibilities?.map((item) => `- ${item}`).join('\n')}
+
+Skills:
+${jobdata?.skills?.map((item) => `- ${item}`).join('\n')}
+
+${
+  jobdata?.salary?.min !== undefined
+    ? `Min Salary: ${jobdata.salary.min} ${jobdata.salary.currency}`
+    : ''
+}
+${
+  jobdata?.salary?.max !== undefined
+    ? `Max Salary: ${jobdata.salary.max} ${jobdata.salary.currency}`
+    : ''
+}
+
+REMINDER: Generate EXACTLY ${questionCount} questions, ALL of type "${questionType}".
+Make them highly relevant to this specific role and company.
+`,
+            },
+          ],
+          temperature: 0.3,
+          response_format: {
+            type: 'json_object',
+          },
+        });
+        
+        let responseText = response.choices[0]?.message?.content ?? '';
+        const evaluation = JSON.parse(responseText);
+        console.log('Filtered questions evaluation', evaluation);
+        let data: InterviewQuestion[] = evaluation?.questions ?? [];
+        return data;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to generate filtered questions');
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [getValidatedOpenAiClient]
+  );
+
   // Get job responsibilities from job description using chatgtp openai
   const getJobPostResponsibilityFromJD = useCallback(
     async (jobDescription: string) => {
@@ -556,6 +773,7 @@ PDF text:
     getJobPostsByStatus,
     clearError,
     getJobPostOpenaiQuestions,
+    getJobPostFilteredQuestions,
     getJobPostResponsibilityFromJD,
     getJobDescriptionFromPDf,
     getRecentCandidatesData,

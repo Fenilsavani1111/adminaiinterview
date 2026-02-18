@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min?url';
+import moment from 'moment';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -25,6 +26,18 @@ const getNowLocal = () => {
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   return now.toISOString().slice(0, 16);
 };
+
+export const questionTypes = [
+  { value: 'behavioral', label: 'Behavioral' },
+  { value: 'communication', label: 'Communication' },
+  { value: 'reasoning', label: 'Reasoning' },
+  { value: 'arithmetic', label: 'Arithmetic' },
+  { value: 'subjective', label: 'Subjective' },
+  { value: 'aptitude', label: 'Aptitude' },
+  { value: 'technical', label: 'Technical' },
+  { value: 'general', label: 'General' },
+  { value: 'aptitude', label: 'Aptitude' },
+];
 
 export let defaultQuestions: InterviewQuestion[] = [
   {
@@ -54,6 +67,7 @@ export function EditJobPost() {
   const {
     updateJobPost,
     getJobPostOpenaiQuestions,
+    getJobPostFilteredQuestions,
     getJobPostResponsibilityFromJD,
     getJobDescriptionFromPDf,
     error: jobPostsError,
@@ -64,6 +78,11 @@ export function EditJobPost() {
   const [jdFromPdfLoading, setJdFromPdfLoading] = useState(false);
   const [continueLoading, setContinueLoading] = useState(false);
   const [questionsFromJdLoading, setQuestionsFromJdLoading] = useState(false);
+  const [filteredQuestionsLoading, setFilteredQuestionsLoading] =
+    useState(false);
+  const [showFilteredGenerator, setShowFilteredGenerator] = useState(false);
+  const [filteredQuestionType, setFilteredQuestionType] = useState('reasoning');
+  const [filteredQuestionCount, setFilteredQuestionCount] = useState(5);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     title: '',
@@ -102,7 +121,8 @@ export function EditJobPost() {
     evaluationCriteria: [''],
     isRequired: true,
   });
-  const [interviewStartDateTimeError, setInterviewStartDateTimeError] = useState<string | null>(null);
+  const [interviewStartDateTimeError, setInterviewStartDateTimeError] =
+    useState<string | null>(null);
 
   const generateQuestionsFromJD = async () => {
     try {
@@ -125,10 +145,10 @@ export function EditJobPost() {
         salary:
           formData.salaryMin && formData.salaryMax
             ? {
-              min: parseInt(formData.salaryMin),
-              max: parseInt(formData.salaryMax),
-              currency: formData.currency,
-            }
+                min: parseInt(formData.salaryMin),
+                max: parseInt(formData.salaryMax),
+                currency: formData.currency,
+              }
             : undefined,
       };
       const generatedQuestions: InterviewQuestion[] =
@@ -138,6 +158,61 @@ export function EditJobPost() {
     } catch (error) {
       setQuestionsFromJdLoading(false);
       console.log('generateQuestionsFromJD error', error);
+    }
+  };
+
+  const generateFilteredQuestions = async () => {
+    try {
+      setFilteredQuestionsLoading(true);
+      const jobPostData: Omit<
+        JobPost,
+        'id' | 'createdAt' | 'updatedAt' | 'questions' | 'status' | 'createdBy'
+      > = {
+        title: formData.title,
+        company: formData.company,
+        department: formData.department,
+        location: formData.location.filter((loc) => loc.trim()),
+        type: formData.type,
+        experience: formData.experience,
+        description: formData.description,
+        requirements: formData.requirements.filter((r) => r.trim()),
+        responsibilities: formData.responsibilities.filter((r) => r.trim()),
+        skills: formData.skills.filter((s) => s.trim()),
+        salary:
+          formData.salaryMin && formData.salaryMax
+            ? {
+                min: parseInt(formData.salaryMin),
+                max: parseInt(formData.salaryMax),
+                currency: formData.currency,
+              }
+            : undefined,
+      };
+
+      const generatedQuestions: InterviewQuestion[] =
+        await getJobPostFilteredQuestions(
+          jobPostData,
+          filteredQuestionType,
+          filteredQuestionCount,
+        );
+
+      // Append to existing questions with updated IDs and order
+      const maxId =
+        questions.length > 0
+          ? Math.max(...questions.map((q) => parseInt(String(q.id)) || 0))
+          : 0;
+
+      const questionsWithUpdatedIds = generatedQuestions.map((q, index) => ({
+        ...q,
+        id: (maxId + index + 1).toString(),
+        order: questions.length + index + 1,
+      }));
+
+      setQuestions([...questions, ...questionsWithUpdatedIds]);
+      setFilteredQuestionsLoading(false);
+      setShowFilteredGenerator(false);
+    } catch (error) {
+      setFilteredQuestionsLoading(false);
+      console.log('generateFilteredQuestions error', error);
     }
   };
 
@@ -164,10 +239,10 @@ export function EditJobPost() {
 
   const updateQuestion = (
     id: string,
-    updatedQuestion: Partial<InterviewQuestion>
+    updatedQuestion: Partial<InterviewQuestion>,
   ) => {
     setQuestions(
-      questions.map((q) => (q.id === id ? { ...q, ...updatedQuestion } : q))
+      questions.map((q) => (q.id === id ? { ...q, ...updatedQuestion } : q)),
     );
     setEditingQuestion(undefined);
   };
@@ -177,7 +252,7 @@ export function EditJobPost() {
   };
 
   const addArrayField = (
-    field: 'requirements' | 'responsibilities' | 'skills'
+    field: 'requirements' | 'responsibilities' | 'skills',
   ) => {
     setFormData({
       ...formData,
@@ -188,7 +263,7 @@ export function EditJobPost() {
   const updateArrayField = (
     field: 'requirements' | 'responsibilities' | 'skills',
     index: number,
-    value: string
+    value: string,
   ) => {
     const updated = [...formData[field]];
     updated[index] = value;
@@ -197,7 +272,7 @@ export function EditJobPost() {
 
   const removeArrayField = (
     field: 'requirements' | 'responsibilities' | 'skills',
-    index: number
+    index: number,
   ) => {
     setFormData({
       ...formData,
@@ -211,7 +286,7 @@ export function EditJobPost() {
     try {
       setLogoUploading(true);
       const res = await jobPostAPI.uploadFile(file);
-      const url = res?.file_url ?? "";
+      const url = res?.file_url ?? '';
       if (url) setFormData((prev) => ({ ...prev, logoUrl: url }));
     } catch (err) {
       console.error('Logo upload failed:', err);
@@ -276,7 +351,10 @@ export function EditJobPost() {
         currency: job.salary?.currency || 'INR',
         enableVideoRecording: job.enableVideoRecording ?? false,
         interviewStartDateTime: job.interviewStartDateTime
-          ? new Date(job.interviewStartDateTime).toISOString().slice(0, 16)
+          ? moment
+              .utc(job.interviewStartDateTime)
+              .local()
+              .format('YYYY-MM-DDTHH:mm')
           : '',
         logoUrl: job.logoUrl || '',
       });
@@ -306,10 +384,10 @@ export function EditJobPost() {
         salary:
           formData.salaryMin && formData.salaryMax
             ? {
-              min: parseInt(formData.salaryMin),
-              max: parseInt(formData.salaryMax),
-              currency: formData.currency,
-            }
+                min: parseInt(formData.salaryMin),
+                max: parseInt(formData.salaryMax),
+                currency: formData.currency,
+              }
             : undefined,
         status: jobPost.status,
         enableVideoRecording: formData.enableVideoRecording,
@@ -317,8 +395,8 @@ export function EditJobPost() {
         interviewStartDateTime: formData.interviewStartDateTime?.trim()
           ? new Date(formData.interviewStartDateTime).toISOString()
           : (() => {
-            throw new Error('Interview start date & time is required.');
-          })(),
+              throw new Error('Interview start date & time is required.');
+            })(),
         questions: questions,
       };
 
@@ -333,153 +411,155 @@ export function EditJobPost() {
 
   if (!jobPost) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Loading job post...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading job post...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className='bg-white shadow-sm border-b border-gray-100'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex items-center justify-between py-4'>
-            <div className='flex items-center space-x-4'>
+      <header className="bg-white shadow-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() =>
                   dispatch({ type: 'SET_VIEW', payload: 'job-posts' })
                 }
-                className='flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors'
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
-                <ArrowLeft className='h-5 w-5' />
+                <ArrowLeft className="h-5 w-5" />
                 <span>Back to Job Posts</span>
               </button>
-              <h1 className='text-2xl font-bold text-gray-900'>
+              <h1 className="text-2xl font-bold text-gray-900">
                 Update Job Post
               </h1>
             </div>
-            <div className='flex items-center space-x-4'>
-              <span className='text-sm text-gray-500'>Step {step} of 3</span>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500">Step {step} of 3</span>
             </div>
           </div>
         </div>
       </header>
 
-      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* OpenAI / Job Posts Errors */}
         {jobPostsError && (
-          <div className='mb-4 p-3 bg-red-100 border border-red-300 rounded-lg flex items-start space-x-2'>
-            <AlertCircle className='h-5 w-5 text-red-600 flex-shrink-0 mt-0.5' />
-            <div className='flex-1'>
-              <p className='text-sm text-red-800 whitespace-pre-line'>{jobPostsError}</p>
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg flex items-start space-x-2">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-red-800 whitespace-pre-line">
+                {jobPostsError}
+              </p>
             </div>
             <button
-              type='button'
+              type="button"
               onClick={clearJobPostsError}
-              className='text-red-700 hover:text-red-900'
-              title='Dismiss'
+              className="text-red-700 hover:text-red-900"
+              title="Dismiss"
             >
-              <X className='h-4 w-4' />
+              <X className="h-4 w-4" />
             </button>
           </div>
         )}
 
         {/* Progress Bar */}
-        <div className='mb-8'>
-          <div className='w-full bg-gray-200 rounded-full h-2'>
+        <div className="mb-8">
+          <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className='bg-blue-600 h-2 rounded-full transition-all duration-300'
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${(step / 3) * 100}%` }}
             ></div>
           </div>
         </div>
 
         {step === 1 && (
-          <div className='bg-white rounded-2xl shadow-lg p-8'>
-            <h2 className='text-2xl font-bold text-gray-900 mb-6'>
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Job Details
             </h2>
 
-            <div className='grid md:grid-cols-2 gap-6'>
+            <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Job Title *
                 </label>
                 <input
-                  type='text'
+                  type="text"
                   required
                   value={formData.title}
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                  placeholder='e.g., Senior Software Engineer'
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., Senior Software Engineer"
                 />
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Company *
                 </label>
                 <input
-                  type='text'
+                  type="text"
                   required
                   value={formData.company}
                   onChange={(e) =>
                     setFormData({ ...formData, company: e.target.value })
                   }
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                  placeholder='Company name'
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Company name"
                 />
               </div>
 
-              <div className='md:col-span-2'>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Company / Role logo (optional)
                 </label>
-                <div className='flex items-center gap-4'>
+                <div className="flex items-center gap-4">
                   {formData.logoUrl ? (
                     <>
                       <img
                         src={formData.logoUrl}
-                        alt='Logo'
-                        className='w-16 h-16 rounded-lg object-contain border border-gray-200 bg-gray-50'
+                        alt="Logo"
+                        className="w-16 h-16 rounded-lg object-contain border border-gray-200 bg-gray-50"
                       />
-                      <div className='flex-1 flex flex-wrap items-center gap-2'>
-                        <label className='inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-sm font-medium disabled:opacity-50'>
-                          <ImageIcon className='h-4 w-4' />
+                      <div className="flex-1 flex flex-wrap items-center gap-2">
+                        <label className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-sm font-medium disabled:opacity-50">
+                          <ImageIcon className="h-4 w-4" />
                           {logoUploading ? 'Uploading...' : 'Change logo'}
                           <input
-                            type='file'
-                            accept='image/*'
-                            className='hidden'
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
                             disabled={logoUploading}
                             onChange={handleLogoUpload}
                           />
                         </label>
                         <button
-                          type='button'
+                          type="button"
                           onClick={() =>
                             setFormData((prev) => ({ ...prev, logoUrl: '' }))
                           }
-                          className='px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg'
+                          className="px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg"
                         >
                           Remove
                         </button>
                       </div>
                     </>
                   ) : (
-                    <label className='inline-flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-700 disabled:opacity-50'>
-                      <Upload className='h-4 w-4' />
+                    <label className="inline-flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-700 disabled:opacity-50">
+                      <Upload className="h-4 w-4" />
                       {logoUploading ? 'Uploading...' : 'Upload logo'}
                       <input
-                        type='file'
-                        accept='image/*'
-                        className='hidden'
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
                         disabled={logoUploading}
                         onChange={handleLogoUpload}
                       />
@@ -489,29 +569,29 @@ export function EditJobPost() {
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Department *
                 </label>
                 <input
-                  type='text'
+                  type="text"
                   required
                   value={formData.department}
                   onChange={(e) =>
                     setFormData({ ...formData, department: e.target.value })
                   }
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                  placeholder='e.g., Engineering, Product, Marketing'
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., Engineering, Product, Marketing"
                 />
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Locations *
                 </label>
                 {formData.location.map((loc, index) => (
-                  <div key={index} className='flex gap-2 mb-2 items-center'>
+                  <div key={index} className="flex gap-2 mb-2 items-center">
                     <input
-                      type='text'
+                      type="text"
                       required
                       value={loc}
                       onChange={(e) => {
@@ -519,42 +599,42 @@ export function EditJobPost() {
                         newLocations[index] = e.target.value;
                         setFormData({ ...formData, location: newLocations });
                       }}
-                      className='flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                      placeholder='e.g., San Francisco, CA or Remote'
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., San Francisco, CA or Remote"
                     />
                     {formData.location.length > 1 && (
                       <button
-                        type='button'
+                        type="button"
                         onClick={() => {
                           const newLocations = formData.location.filter(
-                            (_, i) => i !== index
+                            (_, i) => i !== index,
                           );
                           setFormData({ ...formData, location: newLocations });
                         }}
-                        className='px-1.5 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors'
+                        className="px-1.5 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                       >
-                        <Trash2 className='h-4 w-4' />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     )}
                   </div>
                 ))}
                 <button
-                  type='button'
+                  type="button"
                   onClick={() => {
                     setFormData({
                       ...formData,
                       location: [...formData.location, ''],
                     });
                   }}
-                  className='mt-2 flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium'
+                  className="mt-2 flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
-                  <Plus className='h-4 w-4' />
+                  <Plus className="h-4 w-4" />
                   Add Location
                 </button>
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Job Type *
                 </label>
                 <select
@@ -562,17 +642,17 @@ export function EditJobPost() {
                   onChange={(e) =>
                     setFormData({ ...formData, type: e.target.value as any })
                   }
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value='full-time'>Full-time</option>
-                  <option value='part-time'>Part-time</option>
-                  <option value='contract'>Contract</option>
-                  <option value='internship'>Internship</option>
+                  <option value="full-time">Full-time</option>
+                  <option value="part-time">Part-time</option>
+                  <option value="contract">Contract</option>
+                  <option value="internship">Internship</option>
                 </select>
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Experience Level *
                 </label>
                 <select
@@ -580,29 +660,29 @@ export function EditJobPost() {
                   onChange={(e) =>
                     setFormData({ ...formData, experience: e.target.value })
                   }
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value=''>Select experience level</option>
-                  <option value='entry'>Entry Level (0-1 years)</option>
-                  <option value='junior'>Junior (2-3 years)</option>
-                  <option value='mid'>Mid Level (4-6 years)</option>
-                  <option value='senior'>Senior (7-10 years)</option>
-                  <option value='lead'>Lead/Manager (10+ years)</option>
+                  <option value="">Select experience level</option>
+                  <option value="entry">Entry Level (0-1 years)</option>
+                  <option value="junior">Junior (2-3 years)</option>
+                  <option value="mid">Mid Level (4-6 years)</option>
+                  <option value="senior">Senior (7-10 years)</option>
+                  <option value="lead">Lead/Manager (10+ years)</option>
                 </select>
               </div>
             </div>
 
-            <div className='mt-6'>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Job Description *
               </label>
-              <div className='mb-4'>
-                <div className='flex items-center space-x-4 mb-2'>
+              <div className="mb-4">
+                <div className="flex items-center space-x-4 mb-2">
                   <label
-                    htmlFor='file-upload'
-                    className='flex items-center space-x-2 cursor-pointer text-blue-600 hover:text-blue-700 text-sm'
+                    htmlFor="file-upload"
+                    className="flex items-center space-x-2 cursor-pointer text-blue-600 hover:text-blue-700 text-sm"
                   >
-                    <Upload className='h-4 w-4' />
+                    <Upload className="h-4 w-4" />
                     <span>
                       {jdFromPdfLoading
                         ? 'Extracting Text from File...'
@@ -611,10 +691,10 @@ export function EditJobPost() {
                   </label>
                   <input
                     disabled={jdFromPdfLoading}
-                    id='file-upload'
-                    type='file'
-                    accept='.pdf,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                    className='hidden'
+                    id="file-upload"
+                    type="file"
+                    accept=".pdf,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
@@ -622,8 +702,8 @@ export function EditJobPost() {
                       }
                     }}
                   />
-                  <span className='text-gray-400'>or</span>
-                  <span className='text-sm text-gray-600'>
+                  <span className="text-gray-400">or</span>
+                  <span className="text-sm text-gray-600">
                     Type/paste description below
                   </span>
                 </div>
@@ -633,13 +713,13 @@ export function EditJobPost() {
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows={6}
-                placeholder='Describe the role, responsibilities, and what makes this position exciting...'
+                placeholder="Describe the role, responsibilities, and what makes this position exciting..."
               />
             </div>
 
-            <div className='flex justify-end mt-8'>
+            <div className="flex justify-end mt-8">
               <button
                 onClick={async () => {
                   setContinueLoading(true);
@@ -649,7 +729,7 @@ export function EditJobPost() {
                   ) {
                     const generatedresponsibilities: string[] =
                       await getJobPostResponsibilityFromJD(
-                        formData.description
+                        formData.description,
                       );
                     setFormData({
                       ...formData,
@@ -659,7 +739,7 @@ export function EditJobPost() {
                   setStep(2);
                   setContinueLoading(false);
                 }}
-                className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors'
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
                 disabled={
                   jdFromPdfLoading ||
                   !formData.title ||
@@ -668,7 +748,7 @@ export function EditJobPost() {
                 }
               >
                 {continueLoading ? (
-                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-white-600 mx-5'></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white-600 mx-5"></div>
                 ) : (
                   <>Continue</>
                 )}
@@ -678,165 +758,165 @@ export function EditJobPost() {
         )}
 
         {step === 2 && (
-          <div className='bg-white rounded-2xl shadow-lg p-8'>
-            <h2 className='text-2xl font-bold text-gray-900 mb-6'>
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Requirements & Details
             </h2>
 
             {/* Requirements */}
-            <div className='mb-8'>
-              <label className='block text-sm font-medium text-gray-700 mb-4'>
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-4">
                 Requirements
               </label>
               {formData.requirements.map((req, index) => (
-                <div key={index} className='flex items-center space-x-2 mb-2'>
+                <div key={index} className="flex items-center space-x-2 mb-2">
                   <input
-                    type='text'
+                    type="text"
                     value={req}
                     onChange={(e) =>
                       updateArrayField('requirements', index, e.target.value)
                     }
-                    className='flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                    placeholder='Enter requirement'
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter requirement"
                   />
                   <button
                     onClick={() => removeArrayField('requirements', index)}
-                    className='text-red-600 hover:text-red-700'
+                    className="text-red-600 hover:text-red-700"
                   >
-                    <Trash2 className='h-4 w-4' />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ))}
               <button
                 onClick={() => addArrayField('requirements')}
-                className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
               >
-                <Plus className='h-4 w-4' />
+                <Plus className="h-4 w-4" />
                 <span>Add Requirement</span>
               </button>
             </div>
 
             {/* Responsibilities */}
-            <div className='mb-8'>
-              <label className='block text-sm font-medium text-gray-700 mb-4'>
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-4">
                 Key Responsibilities
               </label>
               {formData.responsibilities.map((resp, index) => (
-                <div key={index} className='flex items-center space-x-2 mb-2'>
+                <div key={index} className="flex items-center space-x-2 mb-2">
                   <input
-                    type='text'
+                    type="text"
                     value={resp}
                     onChange={(e) =>
                       updateArrayField(
                         'responsibilities',
                         index,
-                        e.target.value
+                        e.target.value,
                       )
                     }
-                    className='flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                    placeholder='Enter responsibility'
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter responsibility"
                   />
                   <button
                     onClick={() => removeArrayField('responsibilities', index)}
-                    className='text-red-600 hover:text-red-700'
+                    className="text-red-600 hover:text-red-700"
                   >
-                    <Trash2 className='h-4 w-4' />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ))}
               <button
                 onClick={() => addArrayField('responsibilities')}
-                className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
               >
-                <Plus className='h-4 w-4' />
+                <Plus className="h-4 w-4" />
                 <span>Add Responsibility</span>
               </button>
             </div>
 
             {/* Skills */}
-            <div className='mb-8'>
-              <label className='block text-sm font-medium text-gray-700 mb-4'>
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-4">
                 Required Skills
               </label>
               {formData.skills.map((skill, index) => (
-                <div key={index} className='flex items-center space-x-2 mb-2'>
+                <div key={index} className="flex items-center space-x-2 mb-2">
                   <input
-                    type='text'
+                    type="text"
                     value={skill}
                     onChange={(e) =>
                       updateArrayField('skills', index, e.target.value)
                     }
-                    className='flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                    placeholder='Enter skill'
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter skill"
                   />
                   <button
                     onClick={() => removeArrayField('skills', index)}
-                    className='text-red-600 hover:text-red-700'
+                    className="text-red-600 hover:text-red-700"
                   >
-                    <Trash2 className='h-4 w-4' />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ))}
               <button
                 onClick={() => addArrayField('skills')}
-                className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
               >
-                <Plus className='h-4 w-4' />
+                <Plus className="h-4 w-4" />
                 <span>Add Skill</span>
               </button>
             </div>
 
             {/* Salary */}
-            <div className='mb-8'>
-              <label className='block text-sm font-medium text-gray-700 mb-4'>
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-4">
                 Salary Range (Optional)
               </label>
-              <div className='grid grid-cols-3 gap-4'>
+              <div className="grid grid-cols-3 gap-4">
                 <input
-                  type='number'
+                  type="number"
                   value={formData.salaryMin}
                   onChange={(e) =>
                     setFormData({ ...formData, salaryMin: e.target.value })
                   }
-                  className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                  placeholder='Min salary'
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Min salary"
                 />
                 <input
-                  type='number'
+                  type="number"
                   value={formData.salaryMax}
                   onChange={(e) =>
                     setFormData({ ...formData, salaryMax: e.target.value })
                   }
-                  className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                  placeholder='Max salary'
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Max salary"
                 />
                 <select
                   value={formData.currency}
                   onChange={(e) =>
                     setFormData({ ...formData, currency: e.target.value })
                   }
-                  className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value='INR'>INR</option>
-                  <option value='USD'>USD</option>
-                  <option value='SR'>SR</option>
-                  <option value='EUR'>EUR</option>
-                  <option value='GBP'>GBP</option>
+                  <option value="INR">INR</option>
+                  <option value="USD">USD</option>
+                  <option value="SR">SR</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
                 </select>
               </div>
             </div>
 
             {/* Interview Schedule */}
-            <div className='mb-8 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm'>
-              <div className='flex items-center gap-2 mb-3'>
-                <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600'>
-                  <Calendar className='h-4 w-4' />
+            <div className="mb-8 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                  <Calendar className="h-4 w-4" />
                 </div>
-                <h3 className='text-sm font-semibold text-slate-900'>
+                <h3 className="text-sm font-semibold text-slate-900">
                   Interview Schedule
                 </h3>
               </div>
-              <p className='text-xs text-slate-500 mb-4'>
+              <p className="text-xs text-slate-500 mb-4">
                 Set when this interview is scheduled to start.
               </p>
               <input
@@ -854,29 +934,35 @@ export function EditJobPost() {
                   const selected = new Date(e.target.value);
                   const now = new Date();
                   if (selected < now) {
-                    setInterviewStartDateTimeError('Interview start date & time must be in the future.');
+                    setInterviewStartDateTimeError(
+                      'Interview start date & time must be in the future.',
+                    );
                   } else {
                     setInterviewStartDateTimeError(null);
                   }
                 }}
                 className="w-full max-w-xs rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
               />
-              {interviewStartDateTimeError && <p className='text-red-600 text-sm mt-2'>{interviewStartDateTimeError}</p>}
+              {interviewStartDateTimeError && (
+                <p className="text-red-600 text-sm mt-2">
+                  {interviewStartDateTimeError}
+                </p>
+              )}
             </div>
 
             {/* Interview Recording Options */}
-            <div className='mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50'>
-              <h3 className='text-sm font-semibold text-gray-900 mb-2'>
+            <div className="mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
                 Interview Recording Options
               </h3>
-              <p className='text-xs text-gray-500 mb-3'>
+              <p className="text-xs text-gray-500 mb-3">
                 Choose whether candidates record <strong>video + audio</strong>{' '}
                 during the interview.
               </p>
-              <label className='inline-flex items-start space-x-3 cursor-pointer'>
+              <label className="inline-flex items-start space-x-3 cursor-pointer">
                 <input
-                  type='checkbox'
-                  className='mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded'
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded"
                   checked={formData.enableVideoRecording}
                   onChange={(e) =>
                     setFormData({
@@ -885,9 +971,9 @@ export function EditJobPost() {
                     })
                   }
                 />
-                <span className='text-sm text-gray-700'>
-                  <span className='font-medium'>Enable Video Recording</span>
-                  <span className='block text-xs text-gray-500 mt-1'>
+                <span className="text-sm text-gray-700">
+                  <span className="font-medium">Enable Video Recording</span>
+                  <span className="block text-xs text-gray-500 mt-1">
                     When enabled, candidates will record both video and audio.
                     When disabled, they will only record audio responses.
                   </span>
@@ -895,27 +981,27 @@ export function EditJobPost() {
               </label>
             </div>
 
-            <div className='flex justify-between'>
+            <div className="flex justify-between">
               <button
                 onClick={() => setStep(1)}
-                className='border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors'
+                className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Back
               </button>
               <button
                 onClick={() => {
                   if (!formData.interviewStartDateTime.trim()) {
-                    setInterviewStartDateTimeError('Interview start date & time is required.');
+                    setInterviewStartDateTimeError(
+                      'Interview start date & time is required.',
+                    );
                     return;
                   } else if (Boolean(interviewStartDateTimeError)) {
                     setInterviewStartDateTimeError(null);
                   }
                   setStep(3);
                 }}
-                disabled={
-                  Boolean(interviewStartDateTimeError)
-                }
-                className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                disabled={Boolean(interviewStartDateTimeError)}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue
               </button>
@@ -924,29 +1010,144 @@ export function EditJobPost() {
         )}
 
         {step === 3 && (
-          <div className='space-y-8'>
+          <div className="space-y-8">
             {/* AI Question Generation */}
-            <div className='bg-white rounded-2xl shadow-lg p-8'>
-              <div className='flex items-center justify-between mb-6'>
-                <h2 className='text-2xl font-bold text-gray-900'>
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
                   Interview Questions
                 </h2>
-                <button
-                  onClick={generateQuestionsFromJD}
-                  disabled={questionsFromJdLoading}
-                  className='flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors'
-                >
-                  <Wand2 className='h-4 w-4' />
-                  <span>Generate from JD</span>
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={generateQuestionsFromJD}
+                    disabled={questionsFromJdLoading}
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    <span>Generate from JD</span>
+                  </button>
+                  <button
+                    onClick={() => setShowFilteredGenerator(true)}
+                    disabled={filteredQuestionsLoading}
+                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Generate by Type</span>
+                  </button>
+                </div>
               </div>
 
+              {/* Filtered Question Generator Modal */}
+              {showFilteredGenerator && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-bold text-gray-900">
+                        Generate Questions by Type
+                      </h3>
+                      <button
+                        onClick={() => setShowFilteredGenerator(false)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-6 w-6" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-6">
+                      {/* Question Type Selector */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Question Type
+                        </label>
+                        <select
+                          value={filteredQuestionType}
+                          onChange={(e) =>
+                            setFilteredQuestionType(e.target.value)
+                          }
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          {questionTypes.map((type) => (
+                            <option key={type.value} value={type.value}>
+                              {type.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Question Count Selector */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Number of Questions
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={filteredQuestionCount}
+                          onChange={(e) =>
+                            setFilteredQuestionCount(
+                              parseInt(e.target.value) || 1,
+                            )
+                          }
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Enter a number between 1 and 20
+                        </p>
+                      </div>
+
+                      {/* Info Message */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-start">
+                          <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                          <div className="text-sm text-blue-800">
+                            <p className="font-medium mb-1">Note:</p>
+                            <p>
+                              Generated questions will be appended to your
+                              existing question list. You can edit or delete
+                              them afterward.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          onClick={() => setShowFilteredGenerator(false)}
+                          className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={generateFilteredQuestions}
+                          disabled={filteredQuestionsLoading}
+                          className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                        >
+                          {filteredQuestionsLoading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              <span>Generating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 className="h-4 w-4" />
+                              <span>Generate</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {questionsFromJdLoading ? (
-                <div className='flex justify-center items-center py-8'>
-                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-white-600'></div>
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white-600"></div>
                 </div>
               ) : questions.length === 0 ? (
-                <div className='text-center py-8 text-gray-500'>
+                <div className="text-center py-8 text-gray-500">
                   <p>
                     No questions added yet. Generate questions from job
                     description or add manually.
@@ -955,18 +1156,18 @@ export function EditJobPost() {
               ) : (
                 <>
                   {/* Questions List */}
-                  <div className='space-y-4 mb-8'>
+                  <div className="space-y-4 mb-8">
                     {questions.map((question, index) => (
                       <div
                         key={index}
-                        className='border border-gray-200 rounded-lg p-4'
+                        className="border border-gray-200 rounded-lg p-4"
                       >
                         {editingQuestion?.id === question.id ? (
-                          <div className=''>
-                            <h3 className='text-lg font-medium text-gray-900 mb-4'>
+                          <div className="">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">
                               Update Question
                             </h3>
-                            <div className='space-y-4'>
+                            <div className="space-y-4">
                               <textarea
                                 value={editingQuestion.question}
                                 onChange={(e) =>
@@ -975,12 +1176,12 @@ export function EditJobPost() {
                                     question: e.target.value,
                                   })
                                 }
-                                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 rows={3}
-                                placeholder='Enter your interview question...'
+                                placeholder="Enter your interview question..."
                               />
 
-                              <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <select
                                   value={editingQuestion.type}
                                   onChange={(e) =>
@@ -989,14 +1190,13 @@ export function EditJobPost() {
                                       type: e.target.value as any,
                                     })
                                   }
-                                  className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
-                                  <option value='behavioral'>Behavioral</option>
-                                  <option value='technical'>Technical</option>
-                                  <option value='general'>General</option>
-                                  <option value='situational'>
-                                    Situational
-                                  </option>
+                                  {questionTypes.map((type) => (
+                                    <option key={type.value} value={type.value}>
+                                      {type.label}
+                                    </option>
+                                  ))}
                                 </select>
 
                                 <select
@@ -1007,30 +1207,30 @@ export function EditJobPost() {
                                       difficulty: e.target.value as any,
                                     })
                                   }
-                                  className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
-                                  <option value='easy'>Easy</option>
-                                  <option value='medium'>Medium</option>
-                                  <option value='hard'>Hard</option>
+                                  <option value="easy">Easy</option>
+                                  <option value="medium">Medium</option>
+                                  <option value="hard">Hard</option>
                                 </select>
 
                                 <input
-                                  type='number'
+                                  type="number"
                                   value={editingQuestion.expectedDuration}
                                   onChange={(e) =>
                                     setEditingQuestion({
                                       ...editingQuestion,
                                       expectedDuration: parseInt(
-                                        e.target.value
+                                        e.target.value,
                                       ),
                                     })
                                   }
-                                  className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                                  placeholder='Duration (seconds)'
+                                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="Duration (seconds)"
                                 />
 
                                 <input
-                                  type='text'
+                                  type="text"
                                   value={editingQuestion.category}
                                   onChange={(e) =>
                                     setEditingQuestion({
@@ -1038,13 +1238,13 @@ export function EditJobPost() {
                                       category: e.target.value,
                                     })
                                   }
-                                  className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                                  placeholder='Category'
+                                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="Category"
                                 />
                               </div>
 
                               <div>
-                                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                   Suggested Answer Points (Optional)
                                 </label>
                                 {editingQuestion !== undefined &&
@@ -1052,10 +1252,10 @@ export function EditJobPost() {
                                     (answer, index) => (
                                       <div
                                         key={index}
-                                        className='flex items-center space-x-2 mb-2'
+                                        className="flex items-center space-x-2 mb-2"
                                       >
                                         <input
-                                          type='text'
+                                          type="text"
                                           value={answer}
                                           onChange={(e) => {
                                             const updated = [
@@ -1068,26 +1268,26 @@ export function EditJobPost() {
                                               suggestedAnswers: updated,
                                             });
                                           }}
-                                          className='flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                                          placeholder='Enter suggested answer point'
+                                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                          placeholder="Enter suggested answer point"
                                         />
                                         <button
                                           onClick={() => {
                                             const updated =
                                               editingQuestion?.suggestedAnswers?.filter(
-                                                (_, i) => i !== index
+                                                (_, i) => i !== index,
                                               );
                                             setEditingQuestion({
                                               ...editingQuestion,
                                               suggestedAnswers: updated,
                                             });
                                           }}
-                                          className='text-red-600 hover:text-red-700'
+                                          className="text-red-600 hover:text-red-700"
                                         >
-                                          <Trash2 className='h-4 w-4' />
+                                          <Trash2 className="h-4 w-4" />
                                         </button>
                                       </div>
-                                    )
+                                    ),
                                   )}
                                 <button
                                   onClick={() => {
@@ -1100,19 +1300,20 @@ export function EditJobPost() {
                                       ],
                                     });
                                   }}
-                                  className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
                                 >
-                                  <Plus className='h-4 w-4' />
+                                  <Plus className="h-4 w-4" />
                                   <span>Add Answer Point</span>
                                 </button>
                               </div>
 
                               <div>
-                                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                  Options for multiple choice (optional, non-communication only)
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Options for multiple choice (optional,
+                                  non-communication only)
                                 </label>
                                 {(editingQuestion?.options || []).length ===
-                                  0 ? (
+                                0 ? (
                                   <button
                                     onClick={() => {
                                       setEditingQuestion({
@@ -1120,9 +1321,9 @@ export function EditJobPost() {
                                         options: [''],
                                       });
                                     }}
-                                    className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                                    className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
                                   >
-                                    <Plus className='h-4 w-4' />
+                                    <Plus className="h-4 w-4" />
                                     <span>Add options to show as MCQs</span>
                                   </button>
                                 ) : (
@@ -1131,10 +1332,10 @@ export function EditJobPost() {
                                       (opt, index) => (
                                         <div
                                           key={index}
-                                          className='flex items-center space-x-2 mb-2'
+                                          className="flex items-center space-x-2 mb-2"
                                         >
                                           <input
-                                            type='text'
+                                            type="text"
                                             value={opt}
                                             onChange={(e) => {
                                               const arr = [
@@ -1147,26 +1348,33 @@ export function EditJobPost() {
                                                 options: arr,
                                               });
                                             }}
-                                            className='flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder={`Option ${index + 1}`}
                                           />
                                           <button
                                             onClick={() => {
-                                              const prev = editingQuestion?.options || [];
+                                              const prev =
+                                                editingQuestion?.options || [];
                                               const removed = prev[index];
-                                              const arr = prev.filter((_, i) => i !== index);
+                                              const arr = prev.filter(
+                                                (_, i) => i !== index,
+                                              );
                                               setEditingQuestion({
                                                 ...editingQuestion,
                                                 options: arr,
-                                                rightAnswer: removed === editingQuestion?.rightAnswer ? '' : editingQuestion?.rightAnswer,
+                                                rightAnswer:
+                                                  removed ===
+                                                  editingQuestion?.rightAnswer
+                                                    ? ''
+                                                    : editingQuestion?.rightAnswer,
                                               });
                                             }}
-                                            className='text-red-600 hover:text-red-700'
+                                            className="text-red-600 hover:text-red-700"
                                           >
-                                            <Trash2 className='h-4 w-4' />
+                                            <Trash2 className="h-4 w-4" />
                                           </button>
                                         </div>
-                                      )
+                                      ),
                                     )}
                                     <button
                                       onClick={() => {
@@ -1178,33 +1386,40 @@ export function EditJobPost() {
                                           ],
                                         });
                                       }}
-                                      className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                                      className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
                                     >
-                                      <Plus className='h-4 w-4' />
+                                      <Plus className="h-4 w-4" />
                                       <span>Add option</span>
                                     </button>
-                                    <div className='mt-3'>
-                                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                                    <div className="mt-3">
+                                      <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Right answer (optional)
                                       </label>
                                       <select
-                                        value={
-                                          (() => {
-                                            const opts = (editingQuestion?.options || []).map((o) => String(o || '').trim()).filter(Boolean);
-                                            return editingQuestion?.rightAnswer && opts.includes(editingQuestion.rightAnswer)
-                                              ? editingQuestion.rightAnswer
-                                              : '';
-                                          })()
-                                        }
+                                        value={(() => {
+                                          const opts = (
+                                            editingQuestion?.options || []
+                                          )
+                                            .map((o) => String(o || '').trim())
+                                            .filter(Boolean);
+                                          return editingQuestion?.rightAnswer &&
+                                            opts.includes(
+                                              editingQuestion.rightAnswer,
+                                            )
+                                            ? editingQuestion.rightAnswer
+                                            : '';
+                                        })()}
                                         onChange={(e) =>
                                           setEditingQuestion({
                                             ...editingQuestion,
                                             rightAnswer: e.target.value || '',
                                           })
                                         }
-                                        className='w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                        className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                       >
-                                        <option value=''>Select right answer (optional)</option>
+                                        <option value="">
+                                          Select right answer (optional)
+                                        </option>
                                         {(editingQuestion?.options || [])
                                           .map((o) => String(o || '').trim())
                                           .filter(Boolean)
@@ -1214,31 +1429,32 @@ export function EditJobPost() {
                                             </option>
                                           ))}
                                       </select>
-                                      <p className='text-xs text-gray-500 mt-1'>
-                                        Must be one of the options above. Used for auto-grading MCQ.
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Must be one of the options above. Used
+                                        for auto-grading MCQ.
                                       </p>
                                     </div>
                                   </>
                                 )}
                               </div>
 
-                              <div className='flex space-x-4 items-center'>
+                              <div className="flex space-x-4 items-center">
                                 <button
                                   onClick={() =>
                                     updateQuestion(
                                       question?.id,
-                                      editingQuestion
+                                      editingQuestion,
                                     )
                                   }
                                   disabled={!editingQuestion.question.trim()}
-                                  className='bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400'
+                                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
                                 >
                                   Update Question
                                 </button>
                                 <button
                                   onClick={() => setEditingQuestion(undefined)}
                                   disabled={!editingQuestion.question.trim()}
-                                  className='border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:bg-gray-400'
+                                  className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:bg-gray-400"
                                 >
                                   Cancel
                                 </button>
@@ -1247,46 +1463,48 @@ export function EditJobPost() {
                           </div>
                         ) : (
                           <>
-                            <div className='flex items-start justify-between mb-2'>
-                              <div className='flex-1'>
-                                <div className='flex items-center space-x-2 mb-2'>
-                                  <span className='bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium'>
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
                                     {question.type}
                                   </span>
-                                  <span className='bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium'>
+                                  <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium">
                                     {question.difficulty}
                                   </span>
-                                  <span className='text-sm text-gray-500'>
+                                  <span className="text-sm text-gray-500">
                                     {question.expectedDuration}s
                                   </span>
                                 </div>
-                                <p className='text-gray-900 font-medium'>
+                                <p className="text-gray-900 font-medium">
                                   {question.question}
                                 </p>
                                 {question.category && (
-                                  <p className='text-sm text-gray-600 mt-1'>
+                                  <p className="text-sm text-gray-600 mt-1">
                                     Category: {question.category}
                                   </p>
                                 )}
-                                {question.options && question.options.length > 0 && question.rightAnswer && (
-                                  <p className='text-sm text-green-700 mt-1'>
-                                    ✓ Right answer: {question.rightAnswer}
-                                  </p>
-                                )}
+                                {question.options &&
+                                  question.options.length > 0 &&
+                                  question.rightAnswer && (
+                                    <p className="text-sm text-green-700 mt-1">
+                                      ✓ Right answer: {question.rightAnswer}
+                                    </p>
+                                  )}
                               </div>
-                              <div className='flex items-center space-x-2'>
+                              <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => setEditingQuestion(question)}
-                                  className='text-gray-600 hover:text-gray-900'
+                                  className="text-gray-600 hover:text-gray-900"
                                 >
-                                  <Edit className='h-4 w-4' />
+                                  <Edit className="h-4 w-4" />
                                 </button>
                                 {question.id !== 'aboutself' && (
                                   <button
                                     onClick={() => deleteQuestion(question.id)}
-                                    className='text-red-600 hover:text-red-700'
+                                    className="text-red-600 hover:text-red-700"
                                   >
-                                    <Trash2 className='h-4 w-4' />
+                                    <Trash2 className="h-4 w-4" />
                                   </button>
                                 )}
                               </div>
@@ -1294,15 +1512,15 @@ export function EditJobPost() {
 
                             {question.suggestedAnswers &&
                               question.suggestedAnswers.length > 0 && (
-                                <div className='mt-3'>
-                                  <p className='text-sm font-medium text-gray-700 mb-1'>
+                                <div className="mt-3">
+                                  <p className="text-sm font-medium text-gray-700 mb-1">
                                     Suggested Answer Points:
                                   </p>
-                                  <ul className='text-sm text-gray-600 list-disc list-inside'>
+                                  <ul className="text-sm text-gray-600 list-disc list-inside">
                                     {question.suggestedAnswers.map(
                                       (answer, idx) => (
                                         <li key={idx}>{answer}</li>
-                                      )
+                                      ),
                                     )}
                                   </ul>
                                 </div>
@@ -1316,11 +1534,11 @@ export function EditJobPost() {
               )}
 
               {/* Add New Question */}
-              <div className='border-t pt-6'>
-                <h3 className='text-lg font-medium text-gray-900 mb-4'>
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Add New Question
                 </h3>
-                <div className='space-y-4'>
+                <div className="space-y-4">
                   <textarea
                     value={newQuestion.question}
                     onChange={(e) =>
@@ -1329,12 +1547,12 @@ export function EditJobPost() {
                         question: e.target.value,
                       })
                     }
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={3}
-                    placeholder='Enter your interview question...'
+                    placeholder="Enter your interview question..."
                   />
 
-                  <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <select
                       value={newQuestion.type}
                       onChange={(e) =>
@@ -1343,12 +1561,13 @@ export function EditJobPost() {
                           type: e.target.value as any,
                         })
                       }
-                      className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value='behavioral'>Behavioral</option>
-                      <option value='technical'>Technical</option>
-                      <option value='general'>General</option>
-                      <option value='situational'>Situational</option>
+                      {questionTypes.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
                     </select>
 
                     <select
@@ -1359,15 +1578,15 @@ export function EditJobPost() {
                           difficulty: e.target.value as any,
                         })
                       }
-                      className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value='easy'>Easy</option>
-                      <option value='medium'>Medium</option>
-                      <option value='hard'>Hard</option>
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
                     </select>
 
                     <input
-                      type='number'
+                      type="number"
                       value={newQuestion.expectedDuration}
                       onChange={(e) =>
                         setNewQuestion({
@@ -1375,12 +1594,12 @@ export function EditJobPost() {
                           expectedDuration: parseInt(e.target.value),
                         })
                       }
-                      className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                      placeholder='Duration (seconds)'
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Duration (seconds)"
                     />
 
                     <input
-                      type='text'
+                      type="text"
                       value={newQuestion.category}
                       onChange={(e) =>
                         setNewQuestion({
@@ -1388,22 +1607,22 @@ export function EditJobPost() {
                           category: e.target.value,
                         })
                       }
-                      className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                      placeholder='Category'
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Category"
                     />
                   </div>
 
                   <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Suggested Answer Points (Optional)
                     </label>
                     {newQuestion.suggestedAnswers.map((answer, index) => (
                       <div
                         key={index}
-                        className='flex items-center space-x-2 mb-2'
+                        className="flex items-center space-x-2 mb-2"
                       >
                         <input
-                          type='text'
+                          type="text"
                           value={answer}
                           onChange={(e) => {
                             const updated = [...newQuestion.suggestedAnswers];
@@ -1413,22 +1632,22 @@ export function EditJobPost() {
                               suggestedAnswers: updated,
                             });
                           }}
-                          className='flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                          placeholder='Enter suggested answer point'
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter suggested answer point"
                         />
                         <button
                           onClick={() => {
                             const updated = newQuestion.suggestedAnswers.filter(
-                              (_, i) => i !== index
+                              (_, i) => i !== index,
                             );
                             setNewQuestion({
                               ...newQuestion,
                               suggestedAnswers: updated,
                             });
                           }}
-                          className='text-red-600 hover:text-red-700'
+                          className="text-red-600 hover:text-red-700"
                         >
-                          <Trash2 className='h-4 w-4' />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     ))}
@@ -1442,16 +1661,17 @@ export function EditJobPost() {
                           ],
                         })
                       }
-                      className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                      className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
                     >
-                      <Plus className='h-4 w-4' />
+                      <Plus className="h-4 w-4" />
                       <span>Add Answer Point</span>
                     </button>
                   </div>
 
                   <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Options for multiple choice (optional, non-communication only)
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Options for multiple choice (optional, non-communication
+                      only)
                     </label>
                     {(newQuestion.options || []).length === 0 ? (
                       <button
@@ -1461,9 +1681,9 @@ export function EditJobPost() {
                             options: [''],
                           })
                         }
-                        className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
                       >
-                        <Plus className='h-4 w-4' />
+                        <Plus className="h-4 w-4" />
                         <span>Add options to show as MCQs</span>
                       </button>
                     ) : (
@@ -1471,10 +1691,10 @@ export function EditJobPost() {
                         {(newQuestion.options || []).map((opt, index) => (
                           <div
                             key={index}
-                            className='flex items-center space-x-2 mb-2'
+                            className="flex items-center space-x-2 mb-2"
                           >
                             <input
-                              type='text'
+                              type="text"
                               value={opt}
                               onChange={(e) => {
                                 const arr = [...(newQuestion.options || [])];
@@ -1484,7 +1704,7 @@ export function EditJobPost() {
                                   options: arr,
                                 });
                               }}
-                              className='flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               placeholder={`Option ${index + 1} (e.g. A) First choice)`}
                             />
                             <button
@@ -1495,12 +1715,15 @@ export function EditJobPost() {
                                 setNewQuestion({
                                   ...newQuestion,
                                   options: arr,
-                                  rightAnswer: removed === newQuestion.rightAnswer ? '' : newQuestion.rightAnswer,
+                                  rightAnswer:
+                                    removed === newQuestion.rightAnswer
+                                      ? ''
+                                      : newQuestion.rightAnswer,
                                 });
                               }}
-                              className='text-red-600 hover:text-red-700'
+                              className="text-red-600 hover:text-red-700"
                             >
-                              <Trash2 className='h-4 w-4' />
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
                         ))}
@@ -1508,39 +1731,39 @@ export function EditJobPost() {
                           onClick={() =>
                             setNewQuestion({
                               ...newQuestion,
-                              options: [
-                                ...(newQuestion.options || []),
-                                '',
-                              ],
+                              options: [...(newQuestion.options || []), ''],
                             })
                           }
-                          className='flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm'
+                          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
                         >
-                          <Plus className='h-4 w-4' />
+                          <Plus className="h-4 w-4" />
                           <span>Add option</span>
                         </button>
-                        <div className='mt-3'>
-                          <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        <div className="mt-3">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
                             Right answer (optional)
                           </label>
                           <select
-                            value={
-                              (() => {
-                                const opts = (newQuestion.options || []).map((o) => String(o || '').trim()).filter(Boolean);
-                                return newQuestion.rightAnswer && opts.includes(newQuestion.rightAnswer)
-                                  ? newQuestion.rightAnswer
-                                  : '';
-                              })()
-                            }
+                            value={(() => {
+                              const opts = (newQuestion.options || [])
+                                .map((o) => String(o || '').trim())
+                                .filter(Boolean);
+                              return newQuestion.rightAnswer &&
+                                opts.includes(newQuestion.rightAnswer)
+                                ? newQuestion.rightAnswer
+                                : '';
+                            })()}
                             onChange={(e) =>
                               setNewQuestion({
                                 ...newQuestion,
                                 rightAnswer: e.target.value || '',
                               })
                             }
-                            className='w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                            className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
-                            <option value=''>Select right answer (optional)</option>
+                            <option value="">
+                              Select right answer (optional)
+                            </option>
                             {(newQuestion.options || [])
                               .map((o) => String(o || '').trim())
                               .filter(Boolean)
@@ -1550,8 +1773,9 @@ export function EditJobPost() {
                                 </option>
                               ))}
                           </select>
-                          <p className='text-xs text-gray-500 mt-1'>
-                            Must be one of the options above. Used for auto-grading MCQ.
+                          <p className="text-xs text-gray-500 mt-1">
+                            Must be one of the options above. Used for
+                            auto-grading MCQ.
                           </p>
                         </div>
                       </>
@@ -1561,7 +1785,7 @@ export function EditJobPost() {
                   <button
                     onClick={addQuestion}
                     disabled={!newQuestion.question.trim()}
-                    className='bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400'
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
                   >
                     Add Question
                   </button>
@@ -1570,23 +1794,26 @@ export function EditJobPost() {
             </div>
 
             {/* Final Actions */}
-            <div className='bg-white rounded-2xl shadow-lg p-8'>
-              <div className='flex justify-between'>
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="flex justify-between">
                 <button
                   onClick={() => setStep(2)}
                   disabled={continueLoading}
-                  className='border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors'
+                  className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Back
                 </button>
-                <div className='flex items-center space-x-4'>
+                <div className="flex items-center space-x-4">
                   <button
-                    disabled={continueLoading || !formData.interviewStartDateTime?.trim()}
+                    disabled={
+                      continueLoading ||
+                      !formData.interviewStartDateTime?.trim()
+                    }
                     onClick={() => handleSubmit()}
-                    className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {continueLoading ? (
-                      <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-white-600 mx-[45px]'></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white-600 mx-[45px]"></div>
                     ) : (
                       <>Update Job Post</>
                     )}

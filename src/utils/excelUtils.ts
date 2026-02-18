@@ -3,7 +3,7 @@ import { InterviewQuestion } from '../types';
 
 export interface ExcelQuestionRow {
   question: string;
-  type: 'behavioral' | 'technical' | 'general' | 'situational';
+  type: 'behavioral' | 'technical' | 'general' | 'aptitude' | 'communication' | 'reasoning' | 'arithmetic' | 'subjective';
   difficulty: 'easy' | 'medium' | 'hard';
   expectedDuration: number;
   category: string;
@@ -48,16 +48,6 @@ export const downloadSampleExcel = () => {
       isRequired: "no"
     },
     {
-      question: "How do you handle conflicts with team members?",
-      type: "situational",
-      difficulty: "medium",
-      expectedDuration: 150,
-      category: "Teamwork",
-      suggestedAnswers: "Stay calm and professional | Listen to understand | Find common ground | Suggest solutions",
-      evaluationCriteria: "Emotional intelligence | Communication | Conflict resolution",
-      isRequired: "no"
-    },
-    {
       question: "Explain a technical concept to a non-technical person.",
       type: "technical",
       difficulty: "hard",
@@ -94,7 +84,7 @@ export const downloadSampleExcel = () => {
     { Instruction: "" },
     { Instruction: "1. Fill in interview questions in the 'Interview Questions' sheet" },
     { Instruction: "2. QUESTION: Write your interview question (Required)" },
-    { Instruction: "3. TYPE: Choose from: behavioral, technical, general, situational" },
+    { Instruction: "3. TYPE: Choose from: behavioral, technical, general, aptitude, communication, reasoning, arithmetic, subjective" },
     { Instruction: "4. DIFFICULTY: Choose from: easy, medium, hard" },
     { Instruction: "5. EXPECTED DURATION: Time in seconds (e.g., 120 for 2 minutes)" },
     { Instruction: "6. CATEGORY: Category or topic of the question" },
@@ -154,7 +144,7 @@ export const parseExcelFile = async (file: File): Promise<InterviewQuestion[]> =
           }
 
           // Validate type
-          const validTypes = ['behavioral', 'technical', 'general', 'situational'];
+          const validTypes = ['behavioral', 'technical', 'general', 'aptitude', 'communication', 'reasoning', 'arithmetic', 'subjective'];
           const type = row.type?.toLowerCase() as any;
           if (!validTypes.includes(type)) {
             errors.push(`Row ${rowNum}: Invalid type. Must be one of: ${validTypes.join(', ')}`);

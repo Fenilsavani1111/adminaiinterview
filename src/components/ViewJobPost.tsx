@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, Calendar } from "lucide-react";
-import { useApp } from "../context/AppContext";
-import { InterviewQuestion } from "../types";
-import * as pdfjsLib from "pdfjs-dist";
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Calendar } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { InterviewQuestion } from '../types';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min?url';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -12,26 +12,26 @@ export function ViewJobPost() {
   const [step, setStep] = useState(1);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [formData, setFormData] = useState({
-    title: "",
-    company: "",
-    department: "",
-    location: [""],
-    type: "full-time" as "full-time" | "part-time" | "contract" | "internship",
-    experience: "",
-    description: "",
-    requirements: [""],
-    responsibilities: [""],
-    skills: [""],
-    salaryMin: "",
-    salaryMax: "",
-    currency: "USD",
-    interviewStartDateTime: "",
+    title: '',
+    company: '',
+    department: '',
+    location: [''],
+    type: 'full-time' as 'full-time' | 'part-time' | 'contract' | 'internship',
+    experience: '',
+    description: '',
+    requirements: [''],
+    responsibilities: [''],
+    skills: [''],
+    salaryMin: '',
+    salaryMax: '',
+    currency: 'USD',
+    interviewStartDateTime: '',
   });
 
   const updateArrayField = (
-    field: "requirements" | "responsibilities" | "skills",
+    field: 'requirements' | 'responsibilities' | 'skills',
     index: number,
-    value: string
+    value: string,
   ) => {
     const updated = [...formData[field]];
     updated[index] = value;
@@ -47,23 +47,29 @@ export function ViewJobPost() {
         title: job.title,
         company: job.company,
         department: job.department,
-        location: Array.isArray(job.location) ? (job.location.length > 0 ? job.location : [""]) : (job.location ? [job.location] : [""]),
+        location: Array.isArray(job.location)
+          ? job.location.length > 0
+            ? job.location
+            : ['']
+          : job.location
+            ? [job.location]
+            : [''],
         type: job.type,
         experience: job.experience,
         description: job.description,
-        requirements: job.requirements.length > 0 ? job.requirements : [""],
+        requirements: job.requirements.length > 0 ? job.requirements : [''],
         responsibilities:
-          job.responsibilities.length > 0 ? job.responsibilities : [""],
-        skills: job.skills.length > 0 ? job.skills : [""],
-        salaryMin: job.salary?.min?.toString() || "",
-        salaryMax: job.salary?.max?.toString() || "",
-        currency: job.salary?.currency || "USD",
+          job.responsibilities.length > 0 ? job.responsibilities : [''],
+        skills: job.skills.length > 0 ? job.skills : [''],
+        salaryMin: job.salary?.min?.toString() || '',
+        salaryMax: job.salary?.max?.toString() || '',
+        currency: job.salary?.currency || 'USD',
         interviewStartDateTime: job.interviewStartDateTime
           ? new Date(job.interviewStartDateTime).toLocaleString(undefined, {
-            dateStyle: "medium",
-            timeStyle: "short",
-          })
-          : "",
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })
+          : '',
       });
       let damiquestions = job.questions?.sort((a: any, b: any) => a.id - b.id);
       setQuestions([...damiquestions]);
@@ -79,7 +85,7 @@ export function ViewJobPost() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() =>
-                  dispatch({ type: "SET_VIEW", payload: "job-posts" })
+                  dispatch({ type: 'SET_VIEW', payload: 'job-posts' })
                 }
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
@@ -274,7 +280,7 @@ export function ViewJobPost() {
                     type="text"
                     value={req}
                     onChange={(e) =>
-                      updateArrayField("requirements", index, e.target.value)
+                      updateArrayField('requirements', index, e.target.value)
                     }
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter requirement"
@@ -296,9 +302,9 @@ export function ViewJobPost() {
                     value={resp}
                     onChange={(e) =>
                       updateArrayField(
-                        "responsibilities",
+                        'responsibilities',
                         index,
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -320,7 +326,7 @@ export function ViewJobPost() {
                     type="text"
                     value={skill}
                     onChange={(e) =>
-                      updateArrayField("skills", index, e.target.value)
+                      updateArrayField('skills', index, e.target.value)
                     }
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter skill"
@@ -494,7 +500,6 @@ export function ViewJobPost() {
                       <option value="behavioral">Behavioral</option>
                       <option value="technical">Technical</option>
                       <option value="general">General</option>
-                      <option value="situational">Situational</option>
                     </select>
 
                     <select

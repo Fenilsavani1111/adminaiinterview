@@ -276,8 +276,18 @@ export const jobPostAPI = {
   },
 
   // Send job link to email (Public)
-  sendJobLink: async (jobId: string, email: string[]): Promise<void> => {
-    await api.post('/jobposts/send-job-link', { jobId, email });
+  sendJobLink: async (
+    jobId: string,
+    email: string[],
+    subject?: string,
+    messageTemplate?: string,
+  ): Promise<void> => {
+    await api.post('/jobposts/send-job-link', {
+      jobId,
+      email,
+      subject,
+      messageTemplate,
+    });
   },
 
   // Send student exam link to emails (NEW)
@@ -285,13 +295,15 @@ export const jobPostAPI = {
     jobId: string,
     emails: string[],
     messageTemplate?: string,
-    students?: Array<{ name: string; email: string }>
+    students?: Array<{ name: string; email: string }>,
+    subject?: string,
   ): Promise<void> => {
     await api.post('/jobposts/send-student-exam-link', {
       jobId,
       emails,
       messageTemplate,
       students,
+      subject,
     });
   },
 

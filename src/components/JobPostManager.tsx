@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React, { Fragment, useState, useEffect } from 'react';
 import {
   ArrowLeft,
   Plus,
@@ -16,19 +16,19 @@ import {
   Send,
   X,
   AlertCircle,
-} from "lucide-react";
-import { useApp } from "../context/AppContext";
-import { JobApplicationsList } from "./JobApplicationsList";
-import { useJobPosts } from "../hooks/useJobPosts";
-import { jobPostAPI, studentAPI, Student } from "../services/api";
-import { JobInterviewListing } from "./JobInterviewListing";
-import { StudentListManager } from "./StudentListManager";
+} from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { JobApplicationsList } from './JobApplicationsList';
+import { useJobPosts } from '../hooks/useJobPosts';
+import { jobPostAPI, studentAPI, Student } from '../services/api';
+import { JobInterviewListing } from './JobInterviewListing';
+import { StudentListManager } from './StudentListManager';
 
 export function JobPostManager() {
   const { state, dispatch } = useApp();
   const { jobPosts, loading, error, deleteJobPost } = useJobPosts();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [selectedJobForApplications, setSelectedJobForApplications] = useState<{
     id: string;
@@ -48,17 +48,19 @@ export function JobPostManager() {
     jobTitle: string;
   }>({
     isOpen: false,
-    jobId: "",
-    jobTitle: "",
+    jobId: '',
+    jobTitle: '',
   });
 
-  const [candidateCounts, setCandidateCounts] = useState<Record<string, number>>({});
+  const [candidateCounts, setCandidateCounts] = useState<
+    Record<string, number>
+  >({});
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
   const phoneRegex = /^(?:\+91|91)?[6-9]\d{9}$/;
 
   const [shareModalData, setShareModalData] = useState<{
     isOpenModal: boolean;
-    activeTab: "Email" | "Whatsapp" | "Linkedin" | "CandidateList";
+    activeTab: 'Email' | 'Whatsapp' | 'Linkedin' | 'CandidateList';
     jobId: string;
     data: string;
     isValid: boolean;
@@ -67,32 +69,35 @@ export function JobPostManager() {
     students: Student[];
     loadingStudents: boolean;
     emailMessage: string;
+    subject: string;
   }>({
     isOpenModal: false,
-    activeTab: "Email",
-    jobId: "",
-    data: "",
+    activeTab: 'Email',
+    jobId: '',
+    data: '',
     isValid: true,
     loading: false,
-    jobToken: "",
+    jobToken: '',
     students: [],
     loadingStudents: false,
-    emailMessage: "",
+    emailMessage: '',
+    subject: '',
   });
 
   // Helper function to reset share modal
   const resetShareModal = () => {
     setShareModalData({
       isOpenModal: false,
-      activeTab: "Email",
-      jobId: "",
-      data: "",
+      activeTab: 'Email',
+      jobId: '',
+      data: '',
       isValid: true,
       loading: false,
-      jobToken: "",
+      jobToken: '',
       students: [],
       loadingStudents: false,
-      emailMessage: "",
+      emailMessage: '',
+      subject: '',
     });
   };
 
@@ -107,7 +112,10 @@ export function JobPostManager() {
           const response = await studentAPI.getStudentCount(job.id);
           counts[job.id] = response.count || 0;
         } catch (err) {
-          console.error(`Failed to fetch candidate count for job ${job.id}:`, err);
+          console.error(
+            `Failed to fetch candidate count for job ${job.id}:`,
+            err,
+          );
           counts[job.id] = 0;
         }
       }
@@ -133,17 +141,17 @@ export function JobPostManager() {
     const jobId = candidateListModal.jobId;
     setCandidateListModal({
       isOpen: false,
-      jobId: "",
-      jobTitle: "",
+      jobId: '',
+      jobTitle: '',
     });
 
     // Refresh candidate count for the job
     if (jobId) {
       try {
         const response = await studentAPI.getStudentCount(jobId);
-        setCandidateCounts(prev => ({
+        setCandidateCounts((prev) => ({
           ...prev,
-          [jobId]: response.count || 0
+          [jobId]: response.count || 0,
         }));
       } catch (err) {
         console.error('Failed to refresh candidate count:', err);
@@ -154,19 +162,19 @@ export function JobPostManager() {
   // Load candidates when Candidate List tab is opened
   const loadCandidatesForJob = async (jobId: string) => {
     try {
-      setShareModalData(prev => ({ ...prev, loadingStudents: true }));
+      setShareModalData((prev) => ({ ...prev, loadingStudents: true }));
       const response = await studentAPI.getStudentsByJobPost(jobId);
-      setShareModalData(prev => ({
+      setShareModalData((prev) => ({
         ...prev,
         students: response.students || [],
-        loadingStudents: false
+        loadingStudents: false,
       }));
     } catch (err) {
       console.error('Failed to load candidates:', err);
-      setShareModalData(prev => ({
+      setShareModalData((prev) => ({
         ...prev,
         students: [],
-        loadingStudents: false
+        loadingStudents: false,
       }));
     }
   };
@@ -217,89 +225,89 @@ export function JobPostManager() {
       job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.department?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === "all" || job.status === filterStatus;
+    const matchesFilter = filterStatus === 'all' || job.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "paused":
-        return "bg-yellow-100 text-yellow-800";
-      case "draft":
-        return "bg-gray-100 text-gray-800";
-      case "closed":
-        return "bg-red-100 text-red-800";
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'paused':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      case 'closed':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
-      "full-time": "bg-blue-100 text-blue-800",
-      "part-time": "bg-purple-100 text-purple-800",
-      contract: "bg-orange-100 text-orange-800",
-      internship: "bg-teal-100 text-teal-800",
+      'full-time': 'bg-blue-100 text-blue-800',
+      'part-time': 'bg-purple-100 text-purple-800',
+      contract: 'bg-orange-100 text-orange-800',
+      internship: 'bg-teal-100 text-teal-800',
     };
-    return colors[type] || "bg-gray-100 text-gray-800";
+    return colors[type] || 'bg-gray-100 text-gray-800';
   };
 
   // share or open job post interview links
   const getJobLink = async (
     jobId: string,
-    type: "open" | "whatsapp" | "linkedin" | "copy"
+    type: 'open' | 'whatsapp' | 'linkedin' | 'copy',
   ) => {
     try {
-      if (type === "whatsapp") {
+      if (type === 'whatsapp') {
         if (shareModalData.data?.length <= 0) {
-          alert("Please enter phone number.");
+          alert('Please enter phone number.');
           return;
         }
       }
       let response = await jobPostAPI.generateTokenForJobInterviewLink(jobId);
       if (response?.token?.length > 0) {
-        let interviewlink = `https://aiinterview.deepvox.ai/?token=${response?.token}`;
-        if (type === "copy") {
+        let interviewlink = `${import.meta.env.VITE_AIINTERVIEW_FRONTEND_URL}/?token=${response?.token}`;
+        if (type === 'copy') {
           await navigator.clipboard.writeText(interviewlink);
           setCopiedUrl(jobId);
           setTimeout(() => setCopiedUrl(null), 2000);
-        } else if (type === "open") {
-          window.open(interviewlink, "_blank");
-        } else if (type === "whatsapp") {
+        } else if (type === 'open') {
+          window.open(interviewlink, '_blank');
+        } else if (type === 'whatsapp') {
           setShareModalData({ ...shareModalData, loading: true });
           const whatsappURL = `https://wa.me/${shareModalData?.data}?text=${encodeURIComponent(
-            `Hi! Here is a link for interview: ${interviewlink}`
+            `Hi! Here is a link for interview: ${interviewlink}`,
           )}`;
-          window.open(whatsappURL, "_blank");
+          window.open(whatsappURL, '_blank');
           resetShareModal();
-        } else if (type === "linkedin") {
+        } else if (type === 'linkedin') {
           setShareModalData({ ...shareModalData, loading: true });
           const linkedinURL = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-            interviewlink
+            interviewlink,
           )}`;
-          window.open(linkedinURL, "_blank");
+          window.open(linkedinURL, '_blank');
           resetShareModal();
         }
       }
     } catch (error) {
-      console.log("Failed to open job Link:", error);
-      alert("Failed to open job Link. Please try again.");
+      console.log('Failed to open job Link:', error);
+      alert('Failed to open job Link. Please try again.');
     }
   };
 
   const handleDeleteJob = async (jobId: string) => {
     if (
       window.confirm(
-        "Are you sure you want to delete this job post? This action cannot be undone."
+        'Are you sure you want to delete this job post? This action cannot be undone.',
       )
     ) {
       setDeletingJobId(jobId);
       try {
         await deleteJobPost(jobId);
       } catch (err) {
-        console.error("Failed to delete job post:", err);
+        console.error('Failed to delete job post:', err);
       } finally {
         setDeletingJobId(null);
       }
@@ -307,60 +315,75 @@ export function JobPostManager() {
   };
 
   const handleEditJob = (jobId: string) => {
-    dispatch({ type: "SET_VIEW", payload: "edit-job" });
+    dispatch({ type: 'SET_VIEW', payload: 'edit-job' });
     const job = jobPosts.find((j) => j.id === jobId);
     if (job) {
-      dispatch({ type: "SET_CURRENT_JOB_POST", payload: job });
+      dispatch({ type: 'SET_CURRENT_JOB_POST', payload: job });
     }
   };
 
   const handleViewJob = (jobId: string) => {
-    dispatch({ type: "SET_VIEW", payload: "view-job" });
+    dispatch({ type: 'SET_VIEW', payload: 'view-job' });
     const job = jobPosts.find((j) => j.id === jobId);
     if (job) {
-      dispatch({ type: "SET_CURRENT_JOB_POST", payload: job });
+      dispatch({ type: 'SET_CURRENT_JOB_POST', payload: job });
     }
   };
 
   const handleSubmit = async () => {
     if (!shareModalData.data) {
-      alert("Please enter an email address.");
+      alert('Please enter an email address.');
       return;
     }
     try {
       setShareModalData({ ...shareModalData, loading: true });
-      let emails = shareModalData.data?.split(",");
-      await jobPostAPI.sendJobLink(shareModalData.jobId, emails);
-      alert("Job link sent successfully!");
+      let emails = shareModalData.data?.split(',');
+      await jobPostAPI.sendJobLink(
+        shareModalData.jobId,
+        emails,
+        shareModalData.subject,
+        shareModalData.emailMessage,
+      );
+      alert('Job link sent successfully!');
       resetShareModal();
     } catch (error) {
-      console.log("Failed to send mail:", error);
+      console.log('Failed to send mail:', error);
       resetShareModal();
-      alert("Failed to send job link. Please try again.");
+      alert('Failed to send job link. Please try again.');
     }
   };
 
   // Handle sending candidate list emails
   const handleSendCandidateEmails = async () => {
     if (shareModalData.students.length === 0) {
-      alert("No candidates found to send emails.");
+      alert('No candidates found to send emails.');
       return;
     }
 
-    if (!window.confirm(`Send examination link to ${shareModalData.students.length} candidate(s)?`)) {
+    if (
+      !window.confirm(
+        `Send examination link to ${shareModalData.students.length} candidate(s)?`,
+      )
+    ) {
       return;
     }
 
     try {
-      setShareModalData(prev => ({ ...prev, loading: true }));
+      setShareModalData((prev) => ({ ...prev, loading: true }));
 
       // Get the custom message template or use default
       const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
       const interviewLink = shareModalData.jobToken
-        ? `https://aiinterview.deepvox.ai/?token=${shareModalData.jobToken}`
+        ? `${import.meta.env.VITE_AIINTERVIEW_FRONTEND_URL}/?token=${shareModalData.jobToken}`
         : '';
 
-      const messageTemplate = shareModalData.emailMessage || `Dear {studentName},
+      const subject =
+        shareModalData?.subject ||
+        `Assessment Invitation - ${job?.title} at ${job?.company}`;
+
+      const messageTemplate =
+        shareModalData.emailMessage ||
+        `Dear {studentName},
 
 You have been invited to participate in an interview for the position of ${job?.title} at ${job?.company}.
 
@@ -376,18 +399,24 @@ HR Team`;
       // Send emails with candidate data for personalization
       await jobPostAPI.sendStudentExamLink(
         shareModalData.jobId,
-        shareModalData.students.map(s => s.email),
+        shareModalData.students.map((s) => s.email),
         messageTemplate,
-        shareModalData.students.map(s => ({ name: s.name, email: s.email }))
+        shareModalData.students.map((s) => ({ name: s.name, email: s.email })),
+        subject,
       );
 
-      alert(`Examination link sent successfully to ${shareModalData.students.length} candidate(s)!`);
+      alert(
+        `Examination link sent successfully to ${shareModalData.students.length} candidate(s)!`,
+      );
 
       resetShareModal();
     } catch (error: any) {
-      console.error("Failed to send candidate emails:", error);
-      alert(error?.response?.data?.message || "Failed to send emails. Please try again.");
-      setShareModalData(prev => ({ ...prev, loading: false }));
+      console.error('Failed to send candidate emails:', error);
+      alert(
+        error?.response?.data?.message ||
+          'Failed to send emails. Please try again.',
+      );
+      setShareModalData((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -399,16 +428,20 @@ HR Team`;
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => dispatch({ type: "SET_VIEW", payload: "admin" })}
+                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin' })}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
                 <span className="hidden sm:inline">Back to Dashboard</span>
               </button>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Job Posts</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                Job Posts
+              </h1>
             </div>
             <button
-              onClick={() => dispatch({ type: "SET_VIEW", payload: "create-job" })}
+              onClick={() =>
+                dispatch({ type: 'SET_VIEW', payload: 'create-job' })
+              }
               className="flex items-center space-x-2 bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-5 w-5" />
@@ -424,8 +457,16 @@ HR Team`;
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="ml-3">
@@ -442,7 +483,9 @@ HR Team`;
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Jobs</p>
-                <p className="text-3xl font-bold text-gray-900">{processedJobPosts.length}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {processedJobPosts.length}
+                </p>
               </div>
               <div className="bg-blue-100 p-3 rounded-lg">
                 <Briefcase className="h-6 w-6 text-blue-600" />
@@ -455,7 +498,10 @@ HR Team`;
               <div>
                 <p className="text-sm text-gray-600 mb-1">Active Jobs</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {processedJobPosts.filter((job) => job.status === "draft").length}
+                  {
+                    processedJobPosts.filter((job) => job.status === 'draft')
+                      .length
+                  }
                 </p>
               </div>
               <div className="bg-green-100 p-3 rounded-lg">
@@ -469,7 +515,10 @@ HR Team`;
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Applicants</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {processedJobPosts.reduce((sum, job) => sum + (job.applicants || 0), 0)}
+                  {processedJobPosts.reduce(
+                    (sum, job) => sum + (job.applicants || 0),
+                    0,
+                  )}
                 </p>
               </div>
               <div className="bg-purple-100 p-3 rounded-lg">
@@ -483,7 +532,10 @@ HR Team`;
               <div>
                 <p className="text-sm text-gray-600 mb-1">Interviews</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {processedJobPosts.reduce((sum, job) => sum + (job.interviews || 0), 0)}
+                  {processedJobPosts.reduce(
+                    (sum, job) => sum + (job.interviews || 0),
+                    0,
+                  )}
                 </p>
               </div>
               <div className="bg-yellow-100 p-3 rounded-lg">
@@ -567,36 +619,47 @@ HR Team`;
                     <tr key={job.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{job.title}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {job.title}
+                          </div>
                           <div className="text-sm text-gray-500">
                             {job.company} • {job.department}
                           </div>
                           <div className="text-sm text-gray-500">
                             {Array.isArray(job.location)
-                              ? job.location.join(", ")
-                              : job.location || "Not specified"}
+                              ? job.location.join(', ')
+                              : job.location || 'Not specified'}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-2">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(job.type)}`}>
-                            {job.type.charAt(0).toUpperCase() + job.type.slice(1).replace("-", " ")}
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(job.type)}`}
+                          >
+                            {job.type.charAt(0).toUpperCase() +
+                              job.type.slice(1).replace('-', ' ')}
                           </span>
                           <br />
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}>
-                            {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}
+                          >
+                            {job.status.charAt(0).toUpperCase() +
+                              job.status.slice(1)}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${job.enableVideoRecording
-                              ? "bg-indigo-100 text-indigo-800"
-                              : "bg-gray-100 text-gray-700"
-                            }`}
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            job.enableVideoRecording
+                              ? 'bg-indigo-100 text-indigo-800'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}
                         >
-                          {job.enableVideoRecording ? "Video + Audio" : "Audio Only"}
+                          {job.enableVideoRecording
+                            ? 'Video + Audio'
+                            : 'Audio Only'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -632,7 +695,7 @@ HR Team`;
                           {/* Copy URL / Share buttons */}
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => getJobLink(job.id, "copy")}
+                              onClick={() => getJobLink(job.id, 'copy')}
                               className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-xs"
                             >
                               {copiedUrl === job.id ? (
@@ -652,15 +715,16 @@ HR Team`;
                                 // Open modal with loading state
                                 setShareModalData({
                                   isOpenModal: true,
-                                  activeTab: "Email",
+                                  activeTab: 'Email',
                                   jobId: job.id,
-                                  data: "",
+                                  data: '',
                                   isValid: true,
                                   loading: false,
-                                  jobToken: "",
+                                  jobToken: '',
                                   students: [],
                                   loadingStudents: false,
-                                  emailMessage: "",
+                                  emailMessage: '',
+                                  subject: `Assessment Invitation - ${job.title} at ${job.company}`,
                                 });
 
                                 // Generate token and load candidates in background
@@ -669,9 +733,9 @@ HR Team`;
 
                                 // Update with token
                                 if (token) {
-                                  setShareModalData(prev => ({
+                                  setShareModalData((prev) => ({
                                     ...prev,
-                                    jobToken: token
+                                    jobToken: token,
                                   }));
                                 }
                               }}
@@ -684,7 +748,9 @@ HR Team`;
 
                           {/* Candidate List Upload Button */}
                           <button
-                            onClick={() => handleOpenCandidateList(job.id, job.title)}
+                            onClick={() =>
+                              handleOpenCandidateList(job.id, job.title)
+                            }
                             className="flex items-center space-x-1 text-purple-600 hover:text-purple-700 text-xs font-medium"
                           >
                             <UploadIcon className="h-3 w-3" />
@@ -734,18 +800,38 @@ HR Team`;
         {/* Job Posts List - Mobile */}
         {!loading && (
           <div className="md:hidden space-y-4">
-            {filteredJobs.map(job => (
+            {filteredJobs.map((job) => (
               <div key={job.id} className="bg-white rounded-xl shadow-sm p-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="text-md font-bold text-gray-900">{job.title}</div>
-                    <div className="text-sm text-gray-600">{job.company} • {job.department}</div>
-                    <div className="text-sm text-gray-500 mt-1">{job.location}</div>
+                    <div className="text-md font-bold text-gray-900">
+                      {job.title}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {job.company} • {job.department}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      {job.location}
+                    </div>
                   </div>
                   <div className="flex items-center space-x-2 ml-2">
-                    <button onClick={() => handleViewJob(job.id)} className="p-2 text-blue-600"><Eye className="h-5 w-5" /></button>
-                    <button onClick={() => handleEditJob(job.id)} className="p-2 text-gray-600"><Edit className="h-5 w-5" /></button>
-                    <button onClick={() => handleDeleteJob(job.id)} disabled={deletingJobId === job.id} className="p-2 text-red-600 disabled:opacity-50">
+                    <button
+                      onClick={() => handleViewJob(job.id)}
+                      className="p-2 text-blue-600"
+                    >
+                      <Eye className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => handleEditJob(job.id)}
+                      className="p-2 text-gray-600"
+                    >
+                      <Edit className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteJob(job.id)}
+                      disabled={deletingJobId === job.id}
+                      className="p-2 text-red-600 disabled:opacity-50"
+                    >
                       {deletingJobId === job.id ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
                       ) : (
@@ -757,10 +843,15 @@ HR Team`;
 
                 <div className="mt-4 flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(job.type)}`}>
-                      {job.type.charAt(0).toUpperCase() + job.type.slice(1).replace("-", " ")}
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(job.type)}`}
+                    >
+                      {job.type.charAt(0).toUpperCase() +
+                        job.type.slice(1).replace('-', ' ')}
                     </span>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}
+                    >
                       {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                     </span>
                   </div>
@@ -768,24 +859,40 @@ HR Team`;
 
                 <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-center">
                   <button
-                    onClick={() => setSelectedJobForApplications({ id: job.id, title: job.title, company: job.company })}
+                    onClick={() =>
+                      setSelectedJobForApplications({
+                        id: job.id,
+                        title: job.title,
+                        company: job.company,
+                      })
+                    }
                     className="bg-gray-50 p-2 rounded-lg"
                   >
-                    <div className="font-bold text-blue-600">{job.applicants}</div>
+                    <div className="font-bold text-blue-600">
+                      {job.applicants}
+                    </div>
                     <div className="text-xs text-gray-600">Applicants</div>
                   </button>
                   <button
-                    onClick={() => setSelectedJobForInterviews({ id: job.id, title: job.title, company: job.company })}
+                    onClick={() =>
+                      setSelectedJobForInterviews({
+                        id: job.id,
+                        title: job.title,
+                        company: job.company,
+                      })
+                    }
                     className="bg-gray-50 p-2 rounded-lg"
                   >
-                    <div className="font-bold text-purple-600">{job.interviews}</div>
+                    <div className="font-bold text-purple-600">
+                      {job.interviews}
+                    </div>
                     <div className="text-xs text-gray-600">Interviews</div>
                   </button>
                 </div>
 
                 <div className="mt-4 border-t pt-4 flex flex-col space-y-3">
                   <button
-                    onClick={() => getJobLink(job.id, "copy")}
+                    onClick={() => getJobLink(job.id, 'copy')}
                     className="flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-700 text-sm"
                   >
                     {copiedUrl === job.id ? (
@@ -821,16 +928,20 @@ HR Team`;
         {!loading && filteredJobs.length === 0 && (
           <div className="text-center py-12">
             <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No job posts found</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              No job posts found
+            </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || filterStatus !== "all"
-                ? "Try adjusting your search or filter criteria."
-                : "Get started by creating your first job post."}
+              {searchTerm || filterStatus !== 'all'
+                ? 'Try adjusting your search or filter criteria.'
+                : 'Get started by creating your first job post.'}
             </p>
-            {!searchTerm && filterStatus === "all" && (
+            {!searchTerm && filterStatus === 'all' && (
               <div className="mt-6">
                 <button
-                  onClick={() => dispatch({ type: "SET_VIEW", payload: "create-job" })}
+                  onClick={() =>
+                    dispatch({ type: 'SET_VIEW', payload: 'create-job' })
+                  }
                   className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -867,23 +978,24 @@ HR Team`;
             {/* FIXED Share Tabs - Now properly visible */}
             <div className="flex border-b bg-gray-50">
               {[
-                { id: "Email", label: "Email" },
-                { id: "Whatsapp", label: "WhatsApp" },
-                { id: "Linkedin", label: "LinkedIn" },
-                { id: "CandidateList", label: "Candidate List" }
+                { id: 'Email', label: 'Email' },
+                { id: 'Whatsapp', label: 'WhatsApp' },
+                { id: 'Linkedin', label: 'LinkedIn' },
+                { id: 'CandidateList', label: 'Candidate List' },
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  className={`flex-1 py-3 px-3 text-sm font-medium transition-all ${shareModalData.activeTab === tab.id
-                      ? "border-b-2 border-blue-600 text-blue-600 bg-white"
-                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-100"
-                    }`}
+                  className={`flex-1 py-3 px-3 text-sm font-medium transition-all ${
+                    shareModalData.activeTab === tab.id
+                      ? 'border-b-2 border-blue-600 text-blue-600 bg-white'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'
+                  }`}
                   onClick={() => {
                     setShareModalData({
                       ...shareModalData,
                       activeTab: tab.id as any,
                     });
-                    if (tab.id === "CandidateList") {
+                    if (tab.id === 'CandidateList') {
                       loadCandidatesForJob(shareModalData.jobId);
                     }
                   }}
@@ -895,20 +1007,30 @@ HR Team`;
 
             {/* Tab Content */}
             <div className="p-4 space-y-4 overflow-y-auto flex-1">
-              {shareModalData.activeTab === "Email" && (
+              {shareModalData.activeTab === 'Email' && (
                 <Fragment>
                   {(() => {
-                    const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
+                    const job = processedJobPosts.find(
+                      (j) => j.id === shareModalData.jobId,
+                    );
                     if (!job) return null;
+
+                    const interviewLink = `${window.location.origin}/interview/${shareModalData.jobToken}`;
 
                     return (
                       <div className="space-y-4">
                         <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-gray-900">{job.title}</h4>
-                          <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
+                          <h4 className="font-medium text-gray-900">
+                            {job.title}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {job.company} • {job.location}
+                          </p>
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-sm font-medium text-gray-700">Email *</label>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Email *
+                          </label>
                           <input
                             type="text"
                             value={shareModalData.data}
@@ -923,9 +1045,69 @@ HR Team`;
                             placeholder="Example@gmail.com"
                           />
                           <p className="text-gray-500 text-sm">
-                            Note: Add emails separated by commas (e.g., user1@example.com, user2@example.com)
+                            Note: Add emails separated by commas (e.g.,
+                            user1@example.com, user2@example.com)
                           </p>
                         </div>
+
+                        {/* Email Subject */}
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                          <h5 className="font-semibold text-gray-900 mb-2 flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-2 text-green-600" />
+                            Email Subject (Editable)
+                          </h5>
+                          <input
+                            type="text"
+                            value={shareModalData.subject}
+                            onChange={(e) =>
+                              setShareModalData((prev) => ({
+                                ...prev,
+                                subject: e.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Enter email subject..."
+                          />
+                        </div>
+
+                        {/* Email Description - Editable */}
+                        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                          <h5 className="font-semibold text-gray-900 mb-2 flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-2 text-yellow-600" />
+                            Email Description (Editable)
+                          </h5>
+                          <textarea
+                            value={
+                              shareModalData.emailMessage ||
+                              `Dear Candidate,
+
+You have been invited to participate in an assessment for the position of ${job.title} at ${job.company}.
+
+Please use the examination link provided to access the assessment. This link should not be shared with others.
+
+Interview Link: ${interviewLink}
+
+Please complete the assessment at your earliest convenience. If you have any questions, please contact the HR department.
+
+Best regards,
+HR Team`
+                            }
+                            onChange={(e) =>
+                              setShareModalData((prev) => ({
+                                ...prev,
+                                emailMessage: e.target.value,
+                              }))
+                            }
+                            className="w-full min-h-[300px] px-3 py-2 text-sm text-gray-700 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent resize-y"
+                            placeholder="Enter email message..."
+                          />
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs text-gray-600">
+                              ℹ️ You can edit this message before sending.
+                            </p>
+                          </div>
+                        </div>
+
                         {shareModalData.loading ? (
                           <div className="flex justify-center mt-4">
                             <div className="h-6 w-6 border-4 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
@@ -952,20 +1134,28 @@ HR Team`;
                 </Fragment>
               )}
 
-              {shareModalData.activeTab === "Whatsapp" && (
+              {shareModalData.activeTab === 'Whatsapp' && (
                 <Fragment>
                   {(() => {
-                    const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
+                    const job = processedJobPosts.find(
+                      (j) => j.id === shareModalData.jobId,
+                    );
                     if (!job) return null;
 
                     return (
                       <div className="space-y-4">
                         <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-gray-900">{job.title}</h4>
-                          <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
+                          <h4 className="font-medium text-gray-900">
+                            {job.title}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {job.company} • {job.location}
+                          </p>
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-sm font-medium text-gray-700">Phone Number *</label>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Phone Number *
+                          </label>
                           <input
                             type="text"
                             value={shareModalData.data}
@@ -982,7 +1172,9 @@ HR Team`;
                             placeholder="Enter Mobile number"
                           />
                           {!shareModalData.isValid && (
-                            <p className="text-red-500 text-sm">Please enter valid phone number</p>
+                            <p className="text-red-500 text-sm">
+                              Please enter valid phone number
+                            </p>
                           )}
                         </div>
                         {shareModalData.loading ? (
@@ -993,7 +1185,7 @@ HR Team`;
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <button
                               onClick={() => {
-                                getJobLink(shareModalData.jobId, "whatsapp");
+                                getJobLink(shareModalData.jobId, 'whatsapp');
                               }}
                               className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                             >
@@ -1013,17 +1205,23 @@ HR Team`;
                 </Fragment>
               )}
 
-              {shareModalData.activeTab === "Linkedin" && (
+              {shareModalData.activeTab === 'Linkedin' && (
                 <Fragment>
                   {(() => {
-                    const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
+                    const job = processedJobPosts.find(
+                      (j) => j.id === shareModalData.jobId,
+                    );
                     if (!job) return null;
 
                     return (
                       <div className="space-y-4">
                         <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-gray-900">{job.title}</h4>
-                          <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
+                          <h4 className="font-medium text-gray-900">
+                            {job.title}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {job.company} • {job.location}
+                          </p>
                         </div>
                         {shareModalData.loading ? (
                           <div className="flex justify-center mt-4">
@@ -1033,7 +1231,7 @@ HR Team`;
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <button
                               onClick={() => {
-                                getJobLink(shareModalData.jobId, "linkedin");
+                                getJobLink(shareModalData.jobId, 'linkedin');
                               }}
                               className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                             >
@@ -1054,24 +1252,32 @@ HR Team`;
               )}
 
               {/* Candidate List Tab */}
-              {shareModalData.activeTab === "CandidateList" && (
+              {shareModalData.activeTab === 'CandidateList' && (
                 <div className="space-y-4">
                   {(() => {
-                    const job = processedJobPosts.find((j) => j.id === shareModalData.jobId);
+                    const job = processedJobPosts.find(
+                      (j) => j.id === shareModalData.jobId,
+                    );
                     if (!job) return null;
 
                     const interviewLink = shareModalData.jobToken
-                      ? `https://aiinterview.deepvox.ai/?token=${shareModalData.jobToken}`
+                      ? `${import.meta.env.VITE_AIINTERVIEW_FRONTEND_URL}/?token=${shareModalData.jobToken}`
                       : 'Loading token...';
 
                     return (
                       <>
                         {/* Job Details */}
                         <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
-                          <h4 className="font-bold text-gray-900 text-lg">{job.title}</h4>
-                          <p className="text-sm text-gray-700 mt-1">{job.company} • {job.location}</p>
+                          <h4 className="font-bold text-gray-900 text-lg">
+                            {job.title}
+                          </h4>
+                          <p className="text-sm text-gray-700 mt-1">
+                            {job.company} • {job.location}
+                          </p>
                           <div className="mt-3 pt-3 border-t border-blue-200">
-                            <p className="text-xs font-medium text-gray-600 mb-1">Interview Link:</p>
+                            <p className="text-xs font-medium text-gray-600 mb-1">
+                              Interview Link:
+                            </p>
                             <div className="flex items-center space-x-2">
                               {shareModalData.jobToken ? (
                                 <>
@@ -1080,7 +1286,9 @@ HR Team`;
                                   </code>
                                   <button
                                     onClick={() => {
-                                      navigator.clipboard.writeText(interviewLink);
+                                      navigator.clipboard.writeText(
+                                        interviewLink,
+                                      );
                                       alert('Link copied!');
                                     }}
                                     className="text-blue-600 hover:text-blue-700"
@@ -1092,11 +1300,33 @@ HR Team`;
                               ) : (
                                 <div className="flex items-center space-x-2 text-gray-500">
                                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                                  <span className="text-xs">Generating link...</span>
+                                  <span className="text-xs">
+                                    Generating link...
+                                  </span>
                                 </div>
                               )}
                             </div>
                           </div>
+                        </div>
+
+                        {/* Email Subject */}
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                          <h5 className="font-semibold text-gray-900 mb-2 flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-2 text-green-600" />
+                            Email Subject (Editable)
+                          </h5>
+                          <input
+                            type="text"
+                            value={shareModalData.subject}
+                            onChange={(e) =>
+                              setShareModalData((prev) => ({
+                                ...prev,
+                                subject: e.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Enter email subject..."
+                          />
                         </div>
 
                         {/* Email Description - Editable */}
@@ -1106,28 +1336,41 @@ HR Team`;
                             Email Description (Editable)
                           </h5>
                           <textarea
-                            value={shareModalData.emailMessage || `Dear {studentName},
+                            value={
+                              shareModalData.emailMessage ||
+                              `Dear {studentName},
 
-You have been invited to participate in an interview for the position of ${job.title} at ${job.company}.
+You have been invited to participate in an assessment for the position of ${job.title} at ${job.company}.
 
-Please use the examination link provided to access the interview. This link is unique to you and should not be shared with others.
+Please use the examination link provided to access the assessment. This link is unique to you and should not be shared with others.
 
 Interview Link: ${interviewLink}
 
-Please complete the interview at your earliest convenience. If you have any questions, please contact the HR department.
+Please complete the assessment at your earliest convenience. If you have any questions, please contact the HR department.
 
 Best regards,
-HR Team`}
-                            onChange={(e) => setShareModalData(prev => ({ ...prev, emailMessage: e.target.value }))}
+HR Team`
+                            }
+                            onChange={(e) =>
+                              setShareModalData((prev) => ({
+                                ...prev,
+                                emailMessage: e.target.value,
+                              }))
+                            }
                             className="w-full min-h-[300px] px-3 py-2 text-sm text-gray-700 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent resize-y"
                             placeholder="Enter email message..."
                           />
                           <div className="mt-2 space-y-1">
                             <p className="text-xs text-gray-600">
-                              ℹ️ You can edit this message before sending. Use <code className="bg-gray-200 px-1 rounded">{'{studentName}'}</code> to personalize with each candidate's name.
+                              ℹ️ You can edit this message before sending. Use{' '}
+                              <code className="bg-gray-200 px-1 rounded">
+                                {'{studentName}'}
+                              </code>{' '}
+                              to personalize with each candidate's name.
                             </p>
                             <p className="text-xs text-blue-600">
-                              Example: "Dear {'{studentName}'}" will become "Dear John" for each candidate.
+                              Example: "Dear {'{studentName}'}" will become
+                              "Dear John" for each candidate.
                             </p>
                           </div>
                         </div>
@@ -1144,34 +1387,62 @@ HR Team`}
                           {shareModalData.loadingStudents ? (
                             <div className="flex justify-center items-center py-8">
                               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                              <span className="ml-3 text-gray-600 text-sm">Loading candidates...</span>
+                              <span className="ml-3 text-gray-600 text-sm">
+                                Loading candidates...
+                              </span>
                             </div>
                           ) : shareModalData.students.length === 0 ? (
                             <div className="text-center py-8">
                               <Users className="mx-auto h-8 w-8 text-gray-300" />
-                              <p className="mt-2 text-sm text-gray-500">No candidates uploaded yet</p>
-                              <p className="text-xs text-gray-400 mt-1">Upload candidate list to send exam links</p>
+                              <p className="mt-2 text-sm text-gray-500">
+                                No candidates uploaded yet
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                Upload candidate list to send exam links
+                              </p>
                             </div>
                           ) : (
                             <div className="max-h-64 overflow-y-auto">
                               <table className="w-full">
                                 <thead className="bg-gray-50 sticky top-0">
                                   <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">#</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Name</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Email</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Phone</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
+                                      #
+                                    </th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
+                                      Name
+                                    </th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
+                                      Email
+                                    </th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
+                                      Phone
+                                    </th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                  {shareModalData.students.map((student, index) => (
-                                    <tr key={student.id || index} className="hover:bg-gray-50">
-                                      <td className="px-4 py-2 text-sm text-gray-500">{index + 1}</td>
-                                      <td className="px-4 py-2 text-sm text-gray-900">{student.name}</td>
-                                      <td className="px-4 py-2 text-sm text-gray-600">{student.email}</td>
-                                      <td className="px-4 py-2 text-sm text-gray-600">{student.phoneNumber || student.mobile}</td>
-                                    </tr>
-                                  ))}
+                                  {shareModalData.students.map(
+                                    (student, index) => (
+                                      <tr
+                                        key={student.id || index}
+                                        className="hover:bg-gray-50"
+                                      >
+                                        <td className="px-4 py-2 text-sm text-gray-500">
+                                          {index + 1}
+                                        </td>
+                                        <td className="px-4 py-2 text-sm text-gray-900">
+                                          {student.name}
+                                        </td>
+                                        <td className="px-4 py-2 text-sm text-gray-600">
+                                          {student.email}
+                                        </td>
+                                        <td className="px-4 py-2 text-sm text-gray-600">
+                                          {student.phoneNumber ||
+                                            student.mobile}
+                                        </td>
+                                      </tr>
+                                    ),
+                                  )}
                                 </tbody>
                               </table>
                             </div>
@@ -1191,7 +1462,13 @@ HR Team`}
                               className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                             >
                               <Send className="h-4 w-4" />
-                              <span>Send to {shareModalData.students.length} Candidate{shareModalData.students.length !== 1 ? 's' : ''}</span>
+                              <span>
+                                Send to {shareModalData.students.length}{' '}
+                                Candidate
+                                {shareModalData.students.length !== 1
+                                  ? 's'
+                                  : ''}
+                              </span>
                             </button>
                             <button
                               onClick={resetShareModal}
