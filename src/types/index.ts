@@ -174,6 +174,7 @@ export interface InterviewQuestion {
   question: string;
   type: 'behavioral' | 'communication' | 'reasoning' | 'arithmetic' | 'subjective';
   expectedDuration: number; // in seconds
+  questionFormat?: 'mcq' | 'open-ended' | 'mix';
   difficulty: 'easy' | 'medium' | 'hard';
   category: string;
   suggestedAnswers?: string[];

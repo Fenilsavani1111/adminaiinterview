@@ -370,12 +370,22 @@ export const useJobPosts = () => {
         'id' | 'createdAt' | 'updatedAt' | 'questions' | 'status' | 'createdBy'
       >,
       questionType: string,
-      questionCount: number
+      questionCount: number,
+      questionFormat: 'mcq' | 'open-ended' | 'mix' = 'mix',
+      existingQuestions: InterviewQuestion[] = []
     ) => {
       setLoading(true);
       setError(null);
       try {
         const client = await getValidatedOpenAiClient();
+        
+        // Extract only relevant fields from existing questions to send to OpenAI
+        const simplifiedExistingQuestions = existingQuestions.map(q => ({
+          question: q.question,
+          type: q.type,
+          questionFormat: q.questionFormat as 'mcq' | 'open-ended' | 'mix',
+          category: q.category
+        }));
         
         // Type-specific guidelines
         const typeGuidelines: Record<string, string> = {
@@ -434,6 +444,14 @@ GENERAL questions:
 - Examples: career goals, work preferences, learning approach, professional development`
         };
 
+        // Format-specific instructions
+        const formatInstructions = 
+          questionFormat === 'mcq'
+            ? 'ALL questions MUST be MULTIPLE-CHOICE (MCQ) format only.'
+            : questionFormat === 'open-ended'
+            ? 'ALL questions MUST be OPEN-ENDED format only.'
+            : 'Include a mix of both open-ended and MCQ questions (at least 30% should be MCQ).';
+
         const response = await client.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [
@@ -446,7 +464,7 @@ You are an expert interview-question generator for hiring teams.
 
 1. Generate EXACTLY ${questionCount} interview questions.
 2. ALL questions MUST be of type: "${questionType}".
-3. Include a mix of both open-ended and MCQ questions (at least 30% should be MCQ).
+3. QUESTION FORMAT REQUIREMENT: ${formatInstructions}
 4. All questions MUST be directly derived from the provided job post.
 5. Questions MUST adapt to the experience level:
    - Entry-level → fundamentals, basic scenarios
@@ -468,6 +486,10 @@ You are an expert interview-question generator for hiring teams.
 16. category MUST clearly reflect the role or skill being assessed.
 17. isRequired MUST always be true.
 18. Output ONLY valid JSON — no explanations, no markdown, no extra text.
+19. CRITICAL: DO NOT generate questions that are duplicates or meaningfully similar to the existing questions provided.
+    - Avoid questions covering the same topic, scenario, or concept
+    - Generate unique questions that test different aspects of the role
+    - If existing questions cover a topic, explore different angles or related topics
 
 ==================== TYPE-SPECIFIC GUIDELINES ====================
 
@@ -511,16 +533,32 @@ For MULTIPLE-CHOICE questions:
 CRITICAL REQUIREMENTS:
 - Total count MUST be exactly ${questionCount} questions
 - ALL questions must be of type "${questionType}"
+- ${formatInstructions}
 - Include a good mix of difficulty levels
 - MCQ questions must NOT have suggestedAnswers field
 - Open-ended questions must NOT have options or rightAnswer fields
 - rightAnswer MUST exactly match one of the options
+- DO NOT create questions similar to the existing questions provided
 `,
             },
             {
               role: 'user',
               content: `
 Generate ${questionCount} interview questions of type "${questionType}" strictly following all system rules.
+
+QUESTION FORMAT: ${
+  questionFormat === 'mcq'
+    ? 'Generate ONLY MULTIPLE-CHOICE (MCQ) questions.'
+    : questionFormat === 'open-ended'
+    ? 'Generate ONLY OPEN-ENDED questions.'
+    : 'Generate a mix of both MCQ and open-ended questions.'
+}
+
+==================== EXISTING QUESTIONS (AVOID DUPLICATES) ====================
+
+${simplifiedExistingQuestions.length > 0 
+  ? `The following questions already exist. DO NOT generate similar or duplicate questions:\n\n${simplifiedExistingQuestions.map((q, idx) => `${idx + 1}. [${q.type}] [${q.questionFormat}] [${q.category}] ${q.question}`).join('\n')}\n\nIMPORTANT: Generate completely NEW questions that are meaningfully different from the above.`
+  : 'No existing questions yet. You can generate any relevant questions.'}
 
 ==================== JOB POST DETAILS ====================
 
@@ -554,7 +592,14 @@ ${
 }
 
 REMINDER: Generate EXACTLY ${questionCount} questions, ALL of type "${questionType}".
-Make them highly relevant to this specific role and company.
+${
+  questionFormat === 'mcq'
+    ? 'ALL questions MUST be MCQ format.'
+    : questionFormat === 'open-ended'
+    ? 'ALL questions MUST be open-ended format.'
+    : ''
+}
+Make them highly relevant to this specific role and company, and ensure they are NOT duplicates or similar to existing questions.
 `,
             },
           ],
