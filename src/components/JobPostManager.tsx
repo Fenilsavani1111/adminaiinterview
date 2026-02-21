@@ -47,7 +47,7 @@ const generateEmailTemplate = (
     : null;
   return `${isCandidateList ? 'Dear Candidate' : 'Dear {studentName}'},
 
-You have been invited to participate in an assessment for the position of ${job.title} at ${job.company}.
+You have been invited to participate in the assessment for the position of ${job.title}.
 
 Please use the examination link provided to access the assessment. This link should not be shared with others.
 
@@ -1066,7 +1066,7 @@ export function JobPostManager() {
                     );
                     if (!job) return null;
 
-                    const interviewLink = `${window.location.origin}/interview/${shareModalData.jobToken}`;
+                    const interviewLink = `${import.meta.env.VITE_AIINTERVIEW_FRONTEND_URL}/?token=${shareModalData.jobToken}`;
 
                     return (
                       <div className="space-y-4">

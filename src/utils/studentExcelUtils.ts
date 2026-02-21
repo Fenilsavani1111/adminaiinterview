@@ -21,30 +21,30 @@ export interface Student {
 export const downloadSampleStudentExcel = () => {
   const sampleData: ExcelStudentRow[] = [
     {
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phoneNumber: "9876543210"
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      phoneNumber: '9876543210',
     },
     {
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      phoneNumber: "9876543211"
+      name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      phoneNumber: '9876543211',
     },
     {
-      name: "Robert Johnson",
-      email: "robert.j@example.com",
-      phoneNumber: "9876543212"
+      name: 'Robert Johnson',
+      email: 'robert.j@example.com',
+      phoneNumber: '9876543212',
     },
     {
-      name: "Emily Davis",
-      email: "emily.davis@example.com",
-      phoneNumber: "9876543213"
+      name: 'Emily Davis',
+      email: 'emily.davis@example.com',
+      phoneNumber: '9876543213',
     },
     {
-      name: "Michael Brown",
-      email: "michael.b@example.com",
-      phoneNumber: "9876543214"
-    }
+      name: 'Michael Brown',
+      email: 'michael.b@example.com',
+      phoneNumber: '9876543214',
+    },
   ];
 
   // Create worksheet
@@ -63,26 +63,29 @@ export const downloadSampleStudentExcel = () => {
 
   // Add instructions sheet
   const instructions = [
-    { Instruction: "HOW TO USE THIS TEMPLATE:" },
-    { Instruction: "" },
+    { Instruction: 'HOW TO USE THIS TEMPLATE:' },
+    { Instruction: '' },
     { Instruction: "1. Fill in student details in the 'Students List' sheet" },
-    { Instruction: "2. NAME: Full name of the student (Required)" },
-    { Instruction: "3. EMAIL: Valid email address (Required)" },
-    { Instruction: "4. PHONE NUMBER: 10-digit mobile number (Required)" },
-    { Instruction: "" },
-    { Instruction: "IMPORTANT NOTES:" },
-    { Instruction: "- Do not change the column headers" },
-    { Instruction: "- All fields are mandatory" },
-    { Instruction: "- Email must be in valid format (e.g., user@example.com)" },
-    { Instruction: "- Phone number should be 10 digits (e.g., 9876543210)" },
-    { Instruction: "- Phone number should not contain spaces or special characters" },
-    { Instruction: "- Each email should be unique" },
-    { Instruction: "- Delete the sample rows and add your own students" },
-    { Instruction: "" },
-    { Instruction: "EXAMPLE:" },
-    { Instruction: "Name: John Doe" },
-    { Instruction: "Email: john.doe@example.com" },
-    { Instruction: "Phone Number: 9876543210" },
+    { Instruction: '2. NAME: Full name of the student (Required)' },
+    { Instruction: '3. EMAIL: Valid email address (Required)' },
+    { Instruction: '4. PHONE NUMBER: 10-digit mobile number (Required)' },
+    { Instruction: '' },
+    { Instruction: 'IMPORTANT NOTES:' },
+    { Instruction: '- Do not change the column headers' },
+    { Instruction: '- All fields are mandatory' },
+    { Instruction: '- Email must be in valid format (e.g., user@example.com)' },
+    { Instruction: '- Phone number should be 10 digits (e.g., 9876543210)' },
+    {
+      Instruction:
+        '- Phone number should not contain spaces or special characters',
+    },
+    { Instruction: '- Each email should be unique' },
+    { Instruction: '- Delete the sample rows and add your own students' },
+    { Instruction: '' },
+    { Instruction: 'EXAMPLE:' },
+    { Instruction: 'Name: John Doe' },
+    { Instruction: 'Email: john.doe@example.com' },
+    { Instruction: 'Phone Number: 9876543210' },
   ];
 
   const wsInstructions = XLSX.utils.json_to_sheet(instructions);
@@ -110,10 +113,13 @@ export const parseStudentExcelFile = async (file: File): Promise<Student[]> => {
         const worksheet = workbook.Sheets[sheetName];
 
         // Convert to JSON
-        const jsonData: ExcelStudentRow[] = XLSX.utils.sheet_to_json(worksheet, {
-          raw: false,
-          defval: ''
-        });
+        const jsonData: ExcelStudentRow[] = XLSX.utils.sheet_to_json(
+          worksheet,
+          {
+            raw: false,
+            defval: '',
+          },
+        );
 
         // Validate and transform data
         const students: Student[] = [];
@@ -161,7 +167,9 @@ export const parseStudentExcelFile = async (file: File): Promise<Student[]> => {
 
           const phone = row.phoneNumber.trim().replace(/\D/g, ''); // Remove non-digits
           if (!phoneRegex.test(phone)) {
-            errors.push(`Row ${rowNum}: Invalid phone number. Must be 10 digits starting with 6-9`);
+            errors.push(
+              `Row ${rowNum}: Invalid phone number. Must be 10 digits starting with 6-9`,
+            );
             return;
           }
 
@@ -170,7 +178,7 @@ export const parseStudentExcelFile = async (file: File): Promise<Student[]> => {
             id: `student_${Date.now()}_${index}`,
             name: row.name.trim(),
             email: email,
-            phoneNumber: phone
+            phoneNumber: phone,
           });
         });
 
@@ -186,7 +194,11 @@ export const parseStudentExcelFile = async (file: File): Promise<Student[]> => {
 
         resolve(students);
       } catch (error) {
-        reject(new Error(`Failed to parse Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`));
+        reject(
+          new Error(
+            `Failed to parse Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ),
+        );
       }
     };
 
@@ -227,10 +239,13 @@ export const validateStudentExcelStructure = (file: File): Promise<boolean> => {
 
         // Required headers (flexible matching)
         const requiredHeaders = ['name', 'email', 'phonenumber'];
-        const hasRequiredHeaders = requiredHeaders.every(h =>
-          headers.some(header =>
-            header.replace(/\s+/g, '').replace(/_/g, '').includes(h.replace(/\s+/g, ''))
-          )
+        const hasRequiredHeaders = requiredHeaders.every((h) =>
+          headers.some((header) =>
+            header
+              .replace(/\s+/g, '')
+              .replace(/_/g, '')
+              .includes(h.replace(/\s+/g, '')),
+          ),
         );
 
         resolve(hasRequiredHeaders);

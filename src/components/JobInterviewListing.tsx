@@ -78,13 +78,25 @@ const formatCategoryPercentage = (categoryPercentage: any) => {
     totalScore,
     overallPercentage,
     categoryWisePercentage,
+    categoryWiseScore,
   } = categoryPercentage;
 
   let text = `Overall Score: ${overallScore ?? 0} / ${totalScore ?? 0}\n`;
   text += `Overall Percentage: ${overallPercentage ?? 0}%\n\n`;
   text += `Category-wise Percentage:\n\n`;
 
-  if (categoryWisePercentage && typeof categoryWisePercentage === 'object') {
+  if (categoryWiseScore && typeof categoryWiseScore === 'object') {
+    Object.entries(categoryWiseScore).forEach(([key, data]: [string, any]) => {
+      const score =
+        (data?.total ?? 0) > 0
+          ? Math.round(((data?.score ?? 0) / (data?.total ?? 0)) * 100)
+          : 0;
+      text += `${key}: ${score}%\n\n`;
+    });
+  } else if (
+    categoryWisePercentage &&
+    typeof categoryWisePercentage === 'object'
+  ) {
     Object.entries(categoryWisePercentage).forEach(([key, value]) => {
       text += `${key}: ${value}%\n\n`;
     });
@@ -264,28 +276,30 @@ export function JobInterviewListing({
         ySplit: 1,
       },
     ];
-
+    console.log('jobpost', jobpost);
     candidates
       ?.sort((a, b) => Number(a.id) - Number(b.id))
       ?.filter((interview) => interview?.interviewDate)
       ?.forEach((item) => {
         worksheet.addRow([
-          item.designation || '', // Job Title
-          'Demo testing', // Job Created User
+          jobpost?.title || '', // Job Title
+          'TekPages', // Job Created User
           jobpost?.createdAt ? formatDate(jobpost?.createdAt) : 'N/A', // Job Created Date
           jobpost?.interviews ?? 0, // Total Assessment Count
           jobpost?.title || 'N/A', // Assessment Name
           'MIXED_QUESTIONS', // jobpost?.type || "N/A",                         // Assessment Type
 
-          // Assessment Duration (safe reduce)
-          Array.isArray(jobpost?.questions)
-            ? secondsToHrMin(
-                jobpost.questions.reduce(
-                  (acc, q) => acc + (q.expectedDuration || 0),
-                  0,
-                ),
-              )
-            : 0,
+          // Assessment Duration
+          jobpost?.durationMode === 'interview'
+            ? secondsToHrMin((jobpost?.interviewDuration || 0) * 60)
+            : jobpost && jobpost.questions?.length > 0
+              ? secondsToHrMin(
+                  jobpost.questions.reduce(
+                    (acc, q) => acc + (q.expectedDuration || 0),
+                    0,
+                  ),
+                )
+              : 0,
 
           jobpost?.createdAt ? formatDate(jobpost?.createdAt) : 'N/A', // Assessment Created Date
           jobpost?.applicants ?? 0, // Total Invite Count
@@ -328,17 +342,11 @@ export function JobInterviewListing({
   const averageScore =
     sortedInterviews.reduce(
       (sum, interview) =>
-        sum +
-        (interview?.categoryPercentage?.overallPercentage ??
-          interview?.categoryPercentage?.overallScore ??
-          0),
+        sum + (interview?.categoryPercentage?.overallScore ?? 0),
       0,
     ) / sortedInterviews.length;
   const highPerformers = sortedInterviews.filter(
-    (interview) =>
-      (interview?.categoryPercentage?.overallPercentage ??
-        interview?.categoryPercentage?.overallScore ??
-        0) >= 85,
+    (interview) => (interview?.categoryPercentage?.overallScore ?? 0) >= 85,
   ).length;
   const averageDuration =
     sortedInterviews.reduce((sum, interview) => sum + interview.duration, 0) /

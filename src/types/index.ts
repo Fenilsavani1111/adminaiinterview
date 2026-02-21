@@ -45,6 +45,8 @@ export interface JobPost {
   interviewStartDateTime?: string | null;
   /** Company/role logo image URL. */
   logoUrl?: string | null;
+  durationMode?: 'question' | 'interview';
+  interviewDuration?: number;
 }
 
 export interface JobApplication {
@@ -136,8 +138,12 @@ export interface Candidate {
     totalScore: number;
     overallScore: number;
     overallPercentage: number;
-    categoryWisePercentage: {
-      [key: string]: number; // Dynamic keys for different categories like technical, confidence, leadership, etc.
+    categoryWiseScore: {
+      [key: string]: {
+        score: number;
+        total: number;
+        percentage: number;
+      };
     };
   };
   proctoringStatus?: string;

@@ -100,6 +100,8 @@ export function CreateJobPost() {
     enableVideoRecording: false,
     interviewStartDateTime: '',
     logoUrl: '',
+    durationMode: 'question' as 'question' | 'interview',
+    interviewDuration: '',
   });
   const [logoUploading, setLogoUploading] = useState(false);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([
@@ -146,6 +148,8 @@ export function CreateJobPost() {
       enableVideoRecording: clone.enableVideoRecording ?? false,
       interviewStartDateTime: '',
       logoUrl: clone.logoUrl || '',
+      durationMode: clone.durationMode || 'question',
+      interviewDuration: clone.interviewDuration?.toString() || '',
     });
     if (clone.questions && clone.questions.length > 0) {
       setQuestions([...clone.questions]);
@@ -493,6 +497,11 @@ export function CreateJobPost() {
         createdBy: 'admin',
         students: students, // Include students in job post data
         logoUrl: formData.logoUrl || undefined,
+        durationMode: formData.durationMode,
+        interviewDuration:
+          formData.durationMode === 'interview' && formData.interviewDuration
+            ? parseInt(formData.interviewDuration)
+            : undefined,
       };
 
       await createJobPost(jobPostData);
@@ -1058,6 +1067,84 @@ export function CreateJobPost() {
                   </span>
                 </span>
               </label>
+            </div>
+
+            {/* Interview Duration Options */}
+            <div className="mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                Interview Duration Settings
+              </h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Decide whether candidates have a specific duration for the
+                entire interview or per question.
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="durationMode"
+                      value="question"
+                      checked={formData.durationMode === 'question'}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          durationMode: e.target.value as
+                            | 'question'
+                            | 'interview',
+                        })
+                      }
+                      className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Per Question Duration
+                    </span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="durationMode"
+                      value="interview"
+                      checked={formData.durationMode === 'interview'}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          durationMode: e.target.value as
+                            | 'question'
+                            | 'interview',
+                        })
+                      }
+                      className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Total Interview Duration
+                    </span>
+                  </label>
+                </div>
+
+                {formData.durationMode === 'interview' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Total Interview Duration (minutes) *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={formData.interviewDuration}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          interviewDuration: e.target.value,
+                        })
+                      }
+                      className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., 30"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between gap-4">

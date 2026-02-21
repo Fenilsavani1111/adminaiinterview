@@ -110,6 +110,8 @@ export function EditJobPost() {
     enableVideoRecording: false,
     interviewStartDateTime: '',
     logoUrl: '',
+    durationMode: 'question' as 'question' | 'interview',
+    interviewDuration: '',
   });
   const [logoUploading, setLogoUploading] = useState(false);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([
@@ -144,9 +146,9 @@ export function EditJobPost() {
     type: 'subjective' as const,
     expectedDuration: 120,
     difficulty: 'medium' as const,
-    category: 'Equipment & Safety',
+    category: '',
     suggestedAnswers: [],
-    options: ['', '', '', ''] as string[],
+    options: [] as string[],
     rightAnswer: '' as string,
     evaluationCriteria: [],
     isRequired: true,
@@ -266,9 +268,9 @@ export function EditJobPost() {
       type: 'subjective',
       expectedDuration: 120,
       difficulty: 'medium',
-      category: 'Equipment & Safety',
+      category: '',
       suggestedAnswers: [],
-      options: ['', '', '', ''] as string[],
+      options: [] as string[],
       rightAnswer: '',
       evaluationCriteria: [],
       isRequired: true,
@@ -395,6 +397,8 @@ export function EditJobPost() {
               .format('YYYY-MM-DDTHH:mm')
           : '',
         logoUrl: job.logoUrl || '',
+        durationMode: job.durationMode || 'question',
+        interviewDuration: job.interviewDuration?.toString() || '',
       });
       // Store original description to track changes
       setOriginalDescription(job.description || '');
@@ -430,6 +434,11 @@ export function EditJobPost() {
         status: jobPost.status,
         enableVideoRecording: formData.enableVideoRecording,
         logoUrl: formData.logoUrl || undefined,
+        durationMode: formData.durationMode,
+        interviewDuration:
+          formData.durationMode === 'interview' && formData.interviewDuration
+            ? parseInt(formData.interviewDuration)
+            : undefined,
         interviewStartDateTime: formData.interviewStartDateTime?.trim()
           ? new Date(formData.interviewStartDateTime).toISOString()
           : (() => {
@@ -1018,6 +1027,84 @@ export function EditJobPost() {
                   </span>
                 </span>
               </label>
+            </div>
+
+            {/* Interview Duration Options */}
+            <div className="mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                Interview Duration Settings
+              </h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Decide whether candidates have a specific duration for the
+                entire interview or per question.
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="durationMode"
+                      value="question"
+                      checked={formData.durationMode === 'question'}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          durationMode: e.target.value as
+                            | 'question'
+                            | 'interview',
+                        })
+                      }
+                      className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Per Question Duration
+                    </span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="durationMode"
+                      value="interview"
+                      checked={formData.durationMode === 'interview'}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          durationMode: e.target.value as
+                            | 'question'
+                            | 'interview',
+                        })
+                      }
+                      className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Total Interview Duration
+                    </span>
+                  </label>
+                </div>
+
+                {formData.durationMode === 'interview' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Total Interview Duration (minutes) *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={formData.interviewDuration}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          interviewDuration: e.target.value,
+                        })
+                      }
+                      className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., 30"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-between">

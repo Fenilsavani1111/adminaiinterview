@@ -16,7 +16,12 @@ export function ViewJobPost() {
     company: '',
     department: '',
     location: [''],
-    type: 'full-time' as 'full-time' | 'part-time' | 'contract' | 'internship',
+    type: 'full-time' as
+      | 'full-time'
+      | 'part-time'
+      | 'contract'
+      | 'internship'
+      | 'apprentice',
     experience: '',
     description: '',
     requirements: [''],
@@ -25,7 +30,11 @@ export function ViewJobPost() {
     salaryMin: '',
     salaryMax: '',
     currency: 'USD',
+    enableVideoRecording: false,
     interviewStartDateTime: '',
+    logoUrl: '',
+    durationMode: 'question' as 'question' | 'interview',
+    interviewDuration: '',
   });
 
   const updateArrayField = (
@@ -64,12 +73,16 @@ export function ViewJobPost() {
         salaryMin: job.salary?.min?.toString() || '',
         salaryMax: job.salary?.max?.toString() || '',
         currency: job.salary?.currency || 'USD',
+        enableVideoRecording: job.enableVideoRecording ?? false,
         interviewStartDateTime: job.interviewStartDateTime
           ? new Date(job.interviewStartDateTime).toLocaleString(undefined, {
               dateStyle: 'medium',
               timeStyle: 'short',
             })
           : '',
+        logoUrl: job.logoUrl || '',
+        durationMode: job.durationMode || 'question',
+        interviewDuration: job.interviewDuration?.toString() || '',
       });
       let damiquestions = job.questions?.sort((a: any, b: any) => a.id - b.id);
       setQuestions([...damiquestions]);
@@ -155,6 +168,25 @@ export function ViewJobPost() {
                 />
               </div>
 
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company / Role logo
+                </label>
+                <div className="flex items-center gap-4">
+                  {formData.logoUrl ? (
+                    <img
+                      src={formData.logoUrl}
+                      alt="Logo"
+                      className="w-16 h-16 rounded-lg object-contain border border-gray-200 bg-gray-50"
+                    />
+                  ) : (
+                    <span className="text-gray-500 text-sm">
+                      No logo provided
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Department *
@@ -205,6 +237,7 @@ export function ViewJobPost() {
                   <option value="part-time">Part-time</option>
                   <option value="contract">Contract</option>
                   <option value="internship">Internship</option>
+                  <option value="apprentice">Apprentice</option>
                 </select>
               </div>
 
@@ -390,6 +423,91 @@ export function ViewJobPost() {
                   <option value="EUR">EUR</option>
                   <option value="GBP">GBP</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Interview Recording Options */}
+            <div className="mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                Interview Recording Options
+              </h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Shows whether candidates record <strong>video + audio</strong>{' '}
+                during the interview.
+              </p>
+              <label className="inline-flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  disabled={true}
+                  className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded opacity-70"
+                  checked={formData.enableVideoRecording}
+                  readOnly
+                />
+                <span className="text-sm text-gray-700">
+                  <span className="font-medium">Enable Video Recording</span>
+                  <span className="block text-xs text-gray-500 mt-1">
+                    When enabled, candidates will record both video and audio.
+                    When disabled, they will only record audio responses.
+                  </span>
+                </span>
+              </label>
+            </div>
+
+            {/* Interview Duration Options */}
+            <div className="mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                Interview Duration Settings
+              </h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Decide whether candidates have a specific duration for the
+                entire interview or per question.
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="durationMode"
+                      value="question"
+                      disabled={true}
+                      checked={formData.durationMode === 'question'}
+                      readOnly
+                      className="h-4 w-4 text-blue-600 border-gray-300 opacity-70"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Per Question Duration
+                    </span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="durationMode"
+                      value="interview"
+                      disabled={true}
+                      checked={formData.durationMode === 'interview'}
+                      readOnly
+                      className="h-4 w-4 text-blue-600 border-gray-300 opacity-70"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Total Interview Duration
+                    </span>
+                  </label>
+                </div>
+
+                {formData.durationMode === 'interview' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Total Interview Duration (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      disabled={true}
+                      value={formData.interviewDuration}
+                      className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

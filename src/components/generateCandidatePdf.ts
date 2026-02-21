@@ -416,7 +416,7 @@ export const generateCandidatePdf = async (
     },
   );
 
-  // await renderScreenshotSection(doc, candidateData);
+  await renderScreenshotSection(doc, candidateData);
 
   y = renderSkillAssessmentSection(doc, candidateData, comparisonData);
 
@@ -438,7 +438,7 @@ const renderScreenshotSection = async (doc: jsPDF, candidateData: any) => {
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(31, 41, 55);
-  doc.text('Screenshot / Identity Verification', marginX, y);
+  doc.text('Identity Verification', marginX, y);
   y += 4;
 
   doc.setDrawColor(200);
@@ -464,18 +464,22 @@ const renderScreenshotSection = async (doc: jsPDF, candidateData: any) => {
     tileY: number,
     tileW: number,
     tileH: number,
+    extra?: { docNumber?: string; status?: string; isVerified?: boolean },
   ) => {
-    const imgArea = {
-      x: tileX + 4,
-      y: tileY + 14,
-      w: tileW - 8,
-      h: tileH - 22,
-    };
-
     // Card border
     doc.setDrawColor(200);
     doc.setFillColor(248, 250, 252);
     doc.roundedRect(tileX, tileY, tileW, tileH, 3, 3, 'FD');
+
+    // Make space for extra text
+    const headerH = extra?.docNumber ? 16 : 10;
+
+    const imgArea = {
+      x: tileX + 4,
+      y: tileY + headerH + 4,
+      w: tileW - 8,
+      h: tileH - headerH - 8,
+    };
 
     // Label
     doc.setFont('helvetica', 'bold');
@@ -483,17 +487,39 @@ const renderScreenshotSection = async (doc: jsPDF, candidateData: any) => {
     doc.setTextColor(55, 65, 81);
     doc.text(label, tileX + 4, tileY + 9);
 
+    if (extra?.docNumber) {
+      // Document Number
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(107, 114, 128);
+      doc.text(`No: ${extra.docNumber}`, tileX + 4, tileY + 14);
+    }
+
+    if (extra?.status) {
+      // Verification Status
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      if (extra.isVerified) {
+        doc.setTextColor(22, 163, 74); // green
+      } else {
+        doc.setTextColor(220, 38, 38); // red
+      }
+      doc.text(
+        extra.status,
+        tileX + tileW - 4,
+        tileY + (extra?.docNumber ? 14 : 9),
+        { align: 'right' },
+      );
+    }
+
+    // Reset color
+    doc.setTextColor(0);
     if (imageUrl) {
       try {
         const base64 = await getImageBase64(imageUrl);
-        const imgType: 'PNG' | 'JPEG' = (base64 || '')
-          .toLowerCase()
-          .startsWith('data:image/png')
-          ? 'PNG'
-          : 'JPEG';
         doc.addImage(
           base64,
-          imgType,
+          getImageType(base64),
           imgArea.x,
           imgArea.y,
           imgArea.w,
@@ -506,9 +532,14 @@ const renderScreenshotSection = async (doc: jsPDF, candidateData: any) => {
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(8);
         doc.setTextColor(156, 163, 175);
-        doc.text('Image unavailable', tileX + tileW / 2, tileY + tileH / 2, {
-          align: 'center',
-        });
+        doc.text(
+          'Image unavailable',
+          tileX + tileW / 2,
+          tileY + tileH / 2 + 4,
+          {
+            align: 'center',
+          },
+        );
       }
     } else {
       // No URL placeholder
@@ -517,7 +548,7 @@ const renderScreenshotSection = async (doc: jsPDF, candidateData: any) => {
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(8);
       doc.setTextColor(156, 163, 175);
-      doc.text('Not provided', tileX + tileW / 2, tileY + tileH / 2, {
+      doc.text('Not provided', tileX + tileW / 2, tileY + tileH / 2 + 4, {
         align: 'center',
       });
     }
@@ -533,7 +564,13 @@ const renderScreenshotSection = async (doc: jsPDF, candidateData: any) => {
   const gapY = 8;
 
   // Build the list of images to show
-  type ImageEntry = { label: string; url: string | null | undefined };
+  type ImageEntry = {
+    label: string;
+    url: string | null | undefined;
+    docNumber?: string;
+    status?: string;
+    isVerified?: boolean;
+  };
   const images: ImageEntry[] = [];
 
   // 1. Live photo (captured during assessment)
@@ -547,14 +584,36 @@ const renderScreenshotSection = async (doc: jsPDF, candidateData: any) => {
   // 2. Government proof images
   if (Array.isArray(candidateData?.governmentProof)) {
     candidateData.governmentProof.forEach((proof: any, idx: number) => {
-      const url =
-        proof?.url || proof?.imageUrl || proof?.fileUrl || proof?.value || null;
+      let url = proof?.image_url;
+      null;
+      if (
+        !url &&
+        typeof proof?.value === 'string' &&
+        proof.value.startsWith('http')
+      ) {
+        url = proof.value;
+      }
+
       const docType =
         proof?.type || proof?.documentType || `Government ID ${idx + 1}`;
+
       const verified = proof?.verified;
-      const verifiedLabel =
-        verified === true ? ' ✓' : verified === false ? ' ✗' : '';
-      images.push({ label: `${docType}${verifiedLabel}`, url });
+      let status = '';
+      if (verified === true) status = 'Verified ✓';
+      else if (verified === false) status = 'Unverified ✗';
+
+      const docNumber =
+        proof?.value && !proof.value.startsWith('http')
+          ? proof.value
+          : undefined;
+
+      images.push({
+        label: docType.charAt(0).toUpperCase() + docType.slice(1),
+        url,
+        docNumber,
+        status,
+        isVerified: verified === true,
+      });
     });
   }
 
@@ -592,6 +651,7 @@ const renderScreenshotSection = async (doc: jsPDF, candidateData: any) => {
         newTileY,
         tileW,
         tileH,
+        images[i],
       );
     } else {
       await drawImageTile(
@@ -601,6 +661,7 @@ const renderScreenshotSection = async (doc: jsPDF, candidateData: any) => {
         tileY,
         tileW,
         tileH,
+        images[i],
       );
     }
   }
@@ -630,7 +691,6 @@ const renderSkillAssessmentSection = (
   candidateData: any,
   comparisonData: any,
 ) => {
-  // add new page
   doc.addPage();
   let y = 20;
 
@@ -642,13 +702,69 @@ const renderSkillAssessmentSection = (
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
 
-  Object.entries(candidateData?.performanceBreakdown || {}).forEach(
-    ([skill, data]: any) => {
-      if (['culturalFit', 'behavior', 'body_language'].includes(skill)) return;
+  const categoryScores = Object.keys(
+    candidateData?.categoryPercentage?.categoryWiseScore || {},
+  )
+    .filter(
+      (skill) => !['culturalFit', 'behavior', 'body_language'].includes(skill),
+    )
+    .map((skill) => {
+      const data = candidateData?.categoryPercentage?.categoryWiseScore[skill];
+      const scoreRatio =
+        (data?.total ?? 0) > 0
+          ? Math.round(((data?.score ?? 0) / (data?.total ?? 0)) * 100)
+          : 0;
+      let defaultSummary = '';
+      if (scoreRatio >= 90) {
+        defaultSummary = 'Excellent understanding and application of concepts.';
+      } else if (scoreRatio >= 80) {
+        defaultSummary =
+          'Strong grasp of core principles with good proficiency.';
+      } else if (scoreRatio >= 70) {
+        defaultSummary =
+          'Solid foundational knowledge, though some areas need refinement.';
+      } else if (scoreRatio >= 50) {
+        defaultSummary =
+          'Basic knowledge demonstrated; further improvement recommended.';
+      } else {
+        defaultSummary =
+          'Significant gaps identified; requires focused development.';
+      }
 
-      const score = data?.overallAveragePercentage ?? 0;
+      return {
+        skill: skill?.replace(/_/g, ' '),
+        scoreRatio,
+        scoreText: `${data?.score} / ${data?.total} (${scoreRatio}%)`,
+        summary: defaultSummary,
+      };
+    });
 
-      doc.text(`${camelToLabel(skill)}: ${score}%`, 20, y);
+  const performanceKeys = [
+    'confidenceLevel',
+    'leadershipPotential',
+    'culturalFit',
+  ];
+  const performanceScores = performanceKeys
+    .map((skill) => {
+      const data = candidateData?.performanceBreakdown?.[skill];
+      if (!data) return null;
+      return {
+        skill: skill === 'culturalFit' ? 'professionalAttire' : skill,
+        scoreRatio: data.overallAveragePercentage ?? 0,
+        scoreText: `${data.overallAveragePercentage ?? 0}%`,
+        summary: data.summary,
+      };
+    })
+    .filter(Boolean as any);
+
+  [...categoryScores, ...performanceScores].forEach(
+    ({ skill, scoreRatio, scoreText, summary }: any) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.text(`${camelToLabel(skill)}: ${scoreText}`, 20, y);
       y += 2;
 
       // Progress bar background
@@ -656,6 +772,7 @@ const renderSkillAssessmentSection = (
       doc.rect(20, y, 170, 3, 'F');
 
       // Progress bar value
+      const score = scoreRatio;
       doc.setFillColor(
         score >= 90 ? 34 : score >= 80 ? 59 : score >= 70 ? 234 : 220,
         score >= 90 ? 197 : score >= 80 ? 130 : score >= 70 ? 179 : 38,
@@ -665,11 +782,14 @@ const renderSkillAssessmentSection = (
 
       y += 8;
 
-      if (data?.summary) {
+      if (summary) {
         doc.setFontSize(9);
         doc.setTextColor(100);
-        doc.text(doc.splitTextToSize(data.summary, 170), 20, y);
-        y += 8;
+        const splitText = doc.splitTextToSize(summary, 170);
+        doc.text(splitText, 20, y);
+        y += splitText.length * 4 + 4;
+      } else {
+        y += 4;
       }
 
       doc.setTextColor(0);
@@ -677,7 +797,7 @@ const renderSkillAssessmentSection = (
     },
   );
 
-  y = renderSkillComparisonSection(doc, candidateData, comparisonData, y + 10);
+  // y = renderSkillComparisonSection(doc, candidateData, comparisonData, y + 10);
 
   return y;
 };
@@ -689,6 +809,11 @@ const renderSkillComparisonSection = (
   startY: number,
 ) => {
   let y = startY;
+
+  if (y > 250) {
+    doc.addPage();
+    y = 20;
+  }
 
   doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
@@ -709,12 +834,44 @@ const renderSkillComparisonSection = (
   );
   y += 8;
 
-  Object.entries(candidateData?.performanceBreakdown || {}).forEach(
-    ([skill, data]: any) => {
-      if (['culturalFit', 'behavior', 'body_language'].includes(skill)) return;
+  const categoryComparisons = Object.keys(
+    candidateData?.categoryPercentage?.categoryWiseScore || {},
+  )
+    .filter(
+      (skill) => !['culturalFit', 'behavior', 'body_language'].includes(skill),
+    )
+    .map((skill) => {
+      const data = candidateData?.categoryPercentage?.categoryWiseScore[skill];
+      return {
+        skill,
+        candidateScore: data?.percentage || 0,
+        averageScore: comparisonData?.averageScores?.[skill] || 0,
+      };
+    });
 
-      const candidateScore = data?.overallAveragePercentage || 0;
-      const averageScore = comparisonData?.averageScores?.[skill] || 0;
+  const performanceKeys = [
+    'confidenceLevel',
+    'leadershipPotential',
+    'culturalFit',
+  ];
+  const performanceComparisons = performanceKeys
+    .map((skill) => {
+      const data = candidateData?.performanceBreakdown?.[skill];
+      if (!data) return null;
+      return {
+        skill: skill === 'culturalFit' ? 'professionalAttire' : skill,
+        candidateScore: data.overallAveragePercentage || 0,
+        averageScore: comparisonData?.averageScores?.[skill] || 0,
+      };
+    })
+    .filter(Boolean as any);
+
+  [...categoryComparisons, ...performanceComparisons].forEach(
+    ({ skill, candidateScore, averageScore }: any) => {
+      if (y > 260) {
+        doc.addPage();
+        y = 20;
+      }
       const difference = candidateScore - averageScore;
 
       doc.setFont('helvetica', 'bold');
@@ -792,7 +949,7 @@ const renderBehavioralSection = (doc: jsPDF, behavioralData: any) => {
   doc.setFont('helvetica', 'normal');
 
   Object.entries(behavioralData || {}).forEach(([key, value]: any) => {
-    doc.text(`${camelToLabel(key)}: ${value}%`, 20, y);
+    doc.text(`${camelToLabel(key?.replace(/_/g, ' '))}: ${value}%`, 20, y);
     y += 2;
 
     doc.setFillColor(220, 220, 220);
