@@ -31,7 +31,9 @@ export const questionTypes = [
   { value: 'general', label: 'General' },
   { value: 'behavioral', label: 'Behavioral' },
   { value: 'communication', label: 'Communication' },
+  { value: 'textCommunication', label: 'Text Communication' },
   { value: 'reasoning', label: 'Reasoning' },
+  { value: 'reasoning_return', label: 'Reasoning & Return' },
   { value: 'arithmetic', label: 'Arithmetic' },
   { value: 'subjective', label: 'Subjective' },
   { value: 'aptitude', label: 'Aptitude' },
@@ -91,7 +93,12 @@ export function EditJobPost() {
     company: '',
     department: '',
     location: [''],
-    type: 'full-time' as 'full-time' | 'part-time' | 'contract' | 'internship',
+    type: 'full-time' as
+      | 'full-time'
+      | 'part-time'
+      | 'contract'
+      | 'internship'
+      | 'apprentice',
     experience: '',
     description: '',
     requirements: [''],
@@ -111,16 +118,37 @@ export function EditJobPost() {
   const [editingQuestion, setEditingQuestion] = useState<
     InterviewQuestion | undefined
   >(undefined);
-  const [newQuestion, setNewQuestion] = useState({
+  const [newQuestion, setNewQuestion] = useState<{
+    question: string;
+    type:
+      | 'general'
+      | 'behavioral'
+      | 'communication'
+      | 'textCommunication'
+      | 'reasoning'
+      | 'reasoning_return'
+      | 'arithmetic'
+      | 'subjective'
+      | 'aptitude'
+      | 'technical';
+    expectedDuration: number;
+    difficulty: 'easy' | 'medium' | 'hard';
+    category: string;
+    suggestedAnswers: string[];
+    options: string[];
+    rightAnswer: string;
+    evaluationCriteria: string[];
+    isRequired: boolean;
+  }>({
     question: '',
-    type: 'behavioral' as const,
+    type: 'subjective' as const,
     expectedDuration: 120,
     difficulty: 'medium' as const,
-    category: '',
-    suggestedAnswers: [''],
-    options: [] as string[],
+    category: 'Equipment & Safety',
+    suggestedAnswers: [],
+    options: ['', '', '', ''] as string[],
     rightAnswer: '' as string,
-    evaluationCriteria: [''],
+    evaluationCriteria: [],
     isRequired: true,
   });
   const [interviewStartDateTimeError, setInterviewStartDateTimeError] =
@@ -235,14 +263,14 @@ export function EditJobPost() {
     setQuestions([...questions, question]);
     setNewQuestion({
       question: '',
-      type: 'behavioral',
+      type: 'subjective',
       expectedDuration: 120,
       difficulty: 'medium',
-      category: '',
-      suggestedAnswers: [''],
-      options: [],
+      category: 'Equipment & Safety',
+      suggestedAnswers: [],
+      options: ['', '', '', ''] as string[],
       rightAnswer: '',
-      evaluationCriteria: [''],
+      evaluationCriteria: [],
       isRequired: true,
     });
   };
@@ -658,6 +686,7 @@ export function EditJobPost() {
                   <option value="part-time">Part-time</option>
                   <option value="contract">Contract</option>
                   <option value="internship">Internship</option>
+                  <option value="apprentice">Apprentice</option>
                 </select>
               </div>
 
@@ -1186,8 +1215,19 @@ export function EditJobPost() {
               ) : (
                 <>
                   {/* show total questions count */}
-                  <div className="py-4 text-gray-800">
-                    <p>Total Questions: {questions.length}</p>
+                  <div className="flex justify-between items-center">
+                    <div className="py-4 text-gray-800">
+                      <p>Total Questions: {questions.length}</p>
+                    </div>
+                    {/* clear question button */}
+                    {questions.length > 0 && (
+                      <button
+                        onClick={() => setQuestions([])}
+                        className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        Clear All Questions
+                      </button>
+                    )}
                   </div>
                   {/* Questions List */}
                   <div className="space-y-4 mb-8">
@@ -1774,43 +1814,68 @@ export function EditJobPost() {
                           <span>Add option</span>
                         </button>
                         <div className="mt-3">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Right answer (optional)
-                          </label>
-                          <select
-                            value={(() => {
-                              const opts = (newQuestion.options || [])
-                                .map((o) => String(o || '').trim())
-                                .filter(Boolean);
-                              return newQuestion.rightAnswer &&
-                                opts.includes(newQuestion.rightAnswer)
-                                ? newQuestion.rightAnswer
-                                : '';
-                            })()}
-                            onChange={(e) =>
-                              setNewQuestion({
-                                ...newQuestion,
-                                rightAnswer: e.target.value || '',
-                              })
-                            }
-                            className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          >
-                            <option value="">
-                              Select right answer (optional)
-                            </option>
-                            {(newQuestion.options || [])
+                          {(() => {
+                            const filledOpts = (newQuestion.options || [])
                               .map((o) => String(o || '').trim())
-                              .filter(Boolean)
-                              .map((opt) => (
-                                <option key={opt} value={opt}>
-                                  {opt}
-                                </option>
-                              ))}
-                          </select>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Must be one of the options above. Used for
-                            auto-grading MCQ.
-                          </p>
+                              .filter(Boolean);
+                            const isRightAnswerRequired = filledOpts.length > 0;
+                            const isRightAnswerMissing =
+                              isRightAnswerRequired && !newQuestion.rightAnswer;
+                            return (
+                              <>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Right answer
+                                  {isRightAnswerRequired && (
+                                    <span className="text-red-500 ml-1">*</span>
+                                  )}
+                                </label>
+                                <select
+                                  value={(() => {
+                                    return newQuestion.rightAnswer &&
+                                      filledOpts.includes(
+                                        newQuestion.rightAnswer,
+                                      )
+                                      ? newQuestion.rightAnswer
+                                      : '';
+                                  })()}
+                                  onChange={(e) =>
+                                    setNewQuestion({
+                                      ...newQuestion,
+                                      rightAnswer: e.target.value || '',
+                                    })
+                                  }
+                                  className={`w-full max-w-xs px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                    isRightAnswerMissing
+                                      ? 'border-red-400 bg-red-50'
+                                      : 'border-gray-300'
+                                  }`}
+                                >
+                                  <option value="">
+                                    {isRightAnswerRequired
+                                      ? '— Select right answer (required) —'
+                                      : 'Select right answer (optional)'}
+                                  </option>
+                                  {filledOpts.map((opt) => (
+                                    <option key={opt} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ))}
+                                </select>
+                                {isRightAnswerMissing && (
+                                  <p className="text-xs text-red-600 mt-1">
+                                    Right answer is required when options are
+                                    provided.
+                                  </p>
+                                )}
+                                {!isRightAnswerMissing && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Must be one of the options above. Used for
+                                    auto-grading MCQ.
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </>
                     )}
@@ -1818,8 +1883,16 @@ export function EditJobPost() {
 
                   <button
                     onClick={addQuestion}
-                    disabled={!newQuestion.question.trim()}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                    disabled={(() => {
+                      if (!newQuestion.question.trim()) return true;
+                      const filledOpts = (newQuestion.options || [])
+                        .map((o) => String(o || '').trim())
+                        .filter(Boolean);
+                      if (filledOpts.length > 0 && !newQuestion.rightAnswer)
+                        return true;
+                      return false;
+                    })()}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     Add Question
                   </button>

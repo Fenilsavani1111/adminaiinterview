@@ -1,10 +1,17 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { User, InterviewSession, AdminStats, JobPost, JobApplication } from '../types';
+import {
+  User,
+  InterviewSession,
+  AdminStats,
+  JobPost,
+  JobApplication,
+} from '../types';
 
 interface AppState {
   currentUser: User | null;
   currentSession: InterviewSession | null;
   currentJobPost: JobPost | null;
+  cloneJobPost: JobPost | null;
   currentApplication: JobApplication | null;
   users: User[];
   sessions: InterviewSession[];
@@ -12,28 +19,29 @@ interface AppState {
   applications: JobApplication[];
   adminStats: AdminStats;
   currentView:
-  | 'landing'
-  | 'login'
-  | 'register'
-  | 'profile'
-  | 'interview'
-  | 'results'
-  | 'admin'
-  | 'job-posts'
-  | 'create-job'
-  | 'edit-job'
-  | 'view-job'
-  | 'job-selection'
-  | 'job-application'
-  | 'candidate-interview'
-  | 'interview-analytics'
-  | 'llm-key';
+    | 'landing'
+    | 'login'
+    | 'register'
+    | 'profile'
+    | 'interview'
+    | 'results'
+    | 'admin'
+    | 'job-posts'
+    | 'create-job'
+    | 'edit-job'
+    | 'view-job'
+    | 'job-selection'
+    | 'job-application'
+    | 'candidate-interview'
+    | 'interview-analytics'
+    | 'llm-key';
 }
 
 type AppAction =
   | { type: 'SET_CURRENT_USER'; payload: User }
   | { type: 'SET_CURRENT_SESSION'; payload: InterviewSession }
   | { type: 'SET_CURRENT_JOB_POST'; payload: JobPost }
+  | { type: 'SET_CLONE_JOB_POST'; payload: JobPost | null }
   | { type: 'SET_CURRENT_APPLICATION'; payload: JobApplication }
   | { type: 'ADD_USER'; payload: User }
   | { type: 'ADD_JOB_POST'; payload: JobPost }
@@ -49,6 +57,7 @@ const initialState: AppState = {
   currentUser: null,
   currentSession: null,
   currentJobPost: null,
+  cloneJobPost: null,
   currentApplication: null,
   users: [],
   sessions: [],
@@ -74,6 +83,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, currentSession: action.payload };
     case 'SET_CURRENT_JOB_POST':
       return { ...state, currentJobPost: action.payload };
+    case 'SET_CLONE_JOB_POST':
+      return { ...state, cloneJobPost: action.payload };
     case 'SET_CURRENT_APPLICATION':
       return { ...state, currentApplication: action.payload };
     case 'ADD_USER':
@@ -81,28 +92,42 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'ADD_JOB_POST':
       const jobWithUrl = {
         ...action.payload,
-        shareableUrl: `${window.location.origin}/job/${action.payload.id}`
+        shareableUrl: `${window.location.origin}/job/${action.payload.id}`,
       };
       return { ...state, jobPosts: [...state.jobPosts, jobWithUrl] };
     case 'ADD_APPLICATION':
-      return { ...state, applications: [...state.applications, action.payload] };
+      return {
+        ...state,
+        applications: [...state.applications, action.payload],
+      };
     case 'UPDATE_JOB_POST':
-      const updatedJobPosts = state.jobPosts.map(job =>
-        job.id === action.payload.id ? action.payload : job
+      const updatedJobPosts = state.jobPosts.map((job) =>
+        job.id === action.payload.id ? action.payload : job,
       );
       return { ...state, jobPosts: updatedJobPosts };
     case 'DELETE_JOB_POST':
-      return { ...state, jobPosts: state.jobPosts.filter(job => job.id !== action.payload) };
+      return {
+        ...state,
+        jobPosts: state.jobPosts.filter((job) => job.id !== action.payload),
+      };
     case 'UPDATE_SESSION':
-      const updatedSessions = state.sessions.map(session =>
-        session.id === action.payload.id ? action.payload : session
+      const updatedSessions = state.sessions.map((session) =>
+        session.id === action.payload.id ? action.payload : session,
       );
-      return { ...state, sessions: updatedSessions, currentSession: action.payload };
+      return {
+        ...state,
+        sessions: updatedSessions,
+        currentSession: action.payload,
+      };
     case 'LOAD_JOB_BY_URL':
       const jobId = action.payload;
-      const job = state.jobPosts.find(j => j.id === jobId);
+      const job = state.jobPosts.find((j) => j.id === jobId);
       if (job && job.status === 'active') {
-        return { ...state, currentJobPost: job, currentView: 'job-application' };
+        return {
+          ...state,
+          currentJobPost: job,
+          currentView: 'job-application',
+        };
       }
       return state;
     case 'SET_VIEW':
@@ -129,14 +154,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Save to localStorage whenever state changes
   React.useEffect(() => {
-    localStorage.setItem('ai-interview-data', JSON.stringify({
-      users: state.users,
-      sessions: state.sessions,
-      jobPosts: state.jobPosts,
-      applications: state.applications,
-      adminStats: state.adminStats,
-    }));
-  }, [state.users, state.sessions, state.jobPosts, state.applications, state.adminStats]);
+    localStorage.setItem(
+      'ai-interview-data',
+      JSON.stringify({
+        users: state.users,
+        sessions: state.sessions,
+        jobPosts: state.jobPosts,
+        applications: state.applications,
+        adminStats: state.adminStats,
+      }),
+    );
+  }, [
+    state.users,
+    state.sessions,
+    state.jobPosts,
+    state.applications,
+    state.adminStats,
+  ]);
 
   // Restore authentication and view on app start
   React.useEffect(() => {

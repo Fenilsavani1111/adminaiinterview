@@ -1748,6 +1748,7 @@ export function CandidatePerformanceDetail({
                               Education History
                             </div>
                             {candidateData.educations.map((edu, index) => {
+                              console.log('edu', edu);
                               // Map education type to display name
                               const getEducationTitle = (type: string) => {
                                 const typeMap = {

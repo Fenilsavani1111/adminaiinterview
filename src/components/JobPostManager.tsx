@@ -6,6 +6,7 @@ import {
   Edit,
   Trash2,
   Eye,
+  ClipboardCopy,
   Users,
   Calendar,
   Briefcase,
@@ -23,6 +24,41 @@ import { useJobPosts } from '../hooks/useJobPosts';
 import { jobPostAPI, studentAPI, Student } from '../services/api';
 import { JobInterviewListing } from './JobInterviewListing';
 import { StudentListManager } from './StudentListManager';
+
+const generateEmailTemplate = (
+  job: any,
+  interviewLink: string,
+  isCandidateList = false,
+) => {
+  const interviewStartDateTime = job?.interviewStartDateTime;
+  const isFutureInterviewDate =
+    interviewStartDateTime && new Date(interviewStartDateTime) > new Date();
+
+  const formattedInterviewStartTime = isFutureInterviewDate
+    ? new Date(interviewStartDateTime!).toLocaleString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      })
+    : null;
+  return `${isCandidateList ? 'Dear Candidate' : 'Dear {studentName}'},
+
+You have been invited to participate in an assessment for the position of ${job.title} at ${job.company}.
+
+Please use the examination link provided to access the assessment. This link should not be shared with others.
+
+Interview Link: ${interviewLink}
+${formattedInterviewStartTime ? `\nInterview Scheduled On: ${formattedInterviewStartTime}\n` : ''}
+
+Please complete the assessment at your earliest convenience. If you have any questions, please contact the HR department.
+
+Best regards,
+HR Team`;
+};
 
 export function JobPostManager() {
   const { state, dispatch } = useApp();
@@ -322,6 +358,14 @@ export function JobPostManager() {
     }
   };
 
+  const handleCloneJob = (jobId: string) => {
+    const job = jobPosts.find((j) => j.id === jobId);
+    if (job) {
+      dispatch({ type: 'SET_CLONE_JOB_POST', payload: job });
+      dispatch({ type: 'SET_VIEW', payload: 'create-job' });
+    }
+  };
+
   const handleViewJob = (jobId: string) => {
     dispatch({ type: 'SET_VIEW', payload: 'view-job' });
     const job = jobPosts.find((j) => j.id === jobId);
@@ -383,18 +427,7 @@ export function JobPostManager() {
 
       const messageTemplate =
         shareModalData.emailMessage ||
-        `Dear {studentName},
-
-You have been invited to participate in an interview for the position of ${job?.title} at ${job?.company}.
-
-Please use the examination link provided to access the interview. This link is unique to you and should not be shared with others.
-
-Interview Link: ${interviewLink}
-
-Please complete the interview at your earliest convenience. If you have any questions, please contact the HR department.
-
-Best regards,
-HR Team`;
+        generateEmailTemplate(job, interviewLink, true);
 
       // Send emails with candidate data for personalization
       await jobPostAPI.sendStudentExamLink(
@@ -767,14 +800,23 @@ HR Team`;
                           <button
                             onClick={() => handleViewJob(job.id)}
                             className="text-blue-600 hover:text-blue-900 transition-colors"
+                            title="View"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleEditJob(job.id)}
                             className="text-gray-600 hover:text-gray-900 transition-colors"
+                            title="Edit"
                           >
                             <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleCloneJob(job.id)}
+                            className="text-green-600 hover:text-green-900 transition-colors"
+                            title="Clone / Duplicate"
+                          >
+                            <ClipboardCopy className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteJob(job.id)}
@@ -818,14 +860,23 @@ HR Team`;
                     <button
                       onClick={() => handleViewJob(job.id)}
                       className="p-2 text-blue-600"
+                      title="View"
                     >
                       <Eye className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => handleEditJob(job.id)}
                       className="p-2 text-gray-600"
+                      title="Edit"
                     >
                       <Edit className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => handleCloneJob(job.id)}
+                      className="p-2 text-green-600"
+                      title="Clone / Duplicate"
+                    >
+                      <ClipboardCopy className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => handleDeleteJob(job.id)}
@@ -1079,18 +1130,7 @@ HR Team`;
                           <textarea
                             value={
                               shareModalData.emailMessage ||
-                              `Dear Candidate,
-
-You have been invited to participate in an assessment for the position of ${job.title} at ${job.company}.
-
-Please use the examination link provided to access the assessment. This link should not be shared with others.
-
-Interview Link: ${interviewLink}
-
-Please complete the assessment at your earliest convenience. If you have any questions, please contact the HR department.
-
-Best regards,
-HR Team`
+                              generateEmailTemplate(job, interviewLink, true)
                             }
                             onChange={(e) =>
                               setShareModalData((prev) => ({
@@ -1338,18 +1378,7 @@ HR Team`
                           <textarea
                             value={
                               shareModalData.emailMessage ||
-                              `Dear {studentName},
-
-You have been invited to participate in an assessment for the position of ${job.title} at ${job.company}.
-
-Please use the examination link provided to access the assessment. This link is unique to you and should not be shared with others.
-
-Interview Link: ${interviewLink}
-
-Please complete the assessment at your earliest convenience. If you have any questions, please contact the HR department.
-
-Best regards,
-HR Team`
+                              generateEmailTemplate(job, interviewLink, true)
                             }
                             onChange={(e) =>
                               setShareModalData((prev) => ({

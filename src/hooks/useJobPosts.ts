@@ -12,13 +12,19 @@ const KEY_VALIDATION_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 const mapOpenAiKeyError = (error: any): string => {
   const status: number | undefined =
-    error?.status ?? error?.response?.status ?? error?.error?.status ?? error?.cause?.status;
+    error?.status ??
+    error?.response?.status ??
+    error?.error?.status ??
+    error?.cause?.status;
   const msg: string = error?.message || 'OpenAI request failed';
 
   // Requested mapping
-  if (status === 401) return `❌ OpenAI key failed (401 Invalid / revoked key). ${msg}`;
-  if (status === 429) return `❌ OpenAI key failed (429 Quota exceeded / billing issue). ${msg}`;
-  if (status === 403) return `❌ OpenAI key failed (403 Org / project access issue). ${msg}`;
+  if (status === 401)
+    return `❌ OpenAI key failed (401 Invalid / revoked key). ${msg}`;
+  if (status === 429)
+    return `❌ OpenAI key failed (429 Quota exceeded / billing issue). ${msg}`;
+  if (status === 403)
+    return `❌ OpenAI key failed (403 Org / project access issue). ${msg}`;
 
   return `❌ OpenAI key failed. ${msg}${status ? ` (HTTP ${status})` : ''}`;
 };
@@ -38,7 +44,7 @@ export const useJobPosts = () => {
 
       if (!key || String(key).trim() === '') {
         throw new Error(
-          'Job post LLM key is missing. Please set it in LLM Key Manager, then try again.'
+          'Job post LLM key is missing. Please set it in LLM Key Manager, then try again.',
         );
       }
 
@@ -62,7 +68,10 @@ export const useJobPosts = () => {
           model: 'gpt-4.1-mini',
           input: 'Say hello in one word',
         });
-        keyValidationRef.current = { key: normalizedKey, validatedAt: Date.now() };
+        keyValidationRef.current = {
+          key: normalizedKey,
+          validatedAt: Date.now(),
+        };
       }
 
       return client;
@@ -81,7 +90,9 @@ export const useJobPosts = () => {
       const data = await jobPostAPI.getAll();
       setJobPosts(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch job posts');
+      setError(
+        err instanceof Error ? err.message : 'Failed to fetch job posts',
+      );
     } finally {
       setLoading(false);
     }
@@ -97,30 +108,39 @@ export const useJobPosts = () => {
         setJobPosts((prev) => [...prev, newJobPost]);
         return newJobPost;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create job post');
+        setError(
+          err instanceof Error ? err.message : 'Failed to create job post',
+        );
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Update a job post
-  const updateJobPost = useCallback(async (id: string, jobPostData: Partial<JobPost>) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const updatedJobPost = await jobPostAPI.update(id, jobPostData);
-      setJobPosts((prev) => prev.map((job) => (job.id === id ? updatedJobPost : job)));
-      return updatedJobPost;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update job post');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const updateJobPost = useCallback(
+    async (id: string, jobPostData: Partial<JobPost>) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const updatedJobPost = await jobPostAPI.update(id, jobPostData);
+        setJobPosts((prev) =>
+          prev.map((job) => (job.id === id ? updatedJobPost : job)),
+        );
+        return updatedJobPost;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to update job post',
+        );
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Delete a job post
   const deleteJobPost = useCallback(async (id: string) => {
@@ -130,7 +150,9 @@ export const useJobPosts = () => {
       await jobPostAPI.delete(id);
       setJobPosts((prev) => prev.filter((job) => job.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete job post');
+      setError(
+        err instanceof Error ? err.message : 'Failed to delete job post',
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -161,7 +183,11 @@ export const useJobPosts = () => {
       setJobPosts(data);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch job posts by status');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to fetch job posts by status',
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -174,7 +200,7 @@ export const useJobPosts = () => {
       jobdata: Omit<
         JobPost,
         'id' | 'createdAt' | 'updatedAt' | 'questions' | 'status' | 'createdBy'
-      >
+      >,
     ) => {
       setLoading(true);
       setError(null);
@@ -353,13 +379,15 @@ export const useJobPosts = () => {
         let data: InterviewQuestion[] = evaluation?.questions ?? [];
         return data;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to generate Questions');
+        setError(
+          err instanceof Error ? err.message : 'Failed to generate Questions',
+        );
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [getValidatedOpenAiClient]
+    [getValidatedOpenAiClient],
   );
 
   // Generate filtered questions by type
@@ -372,21 +400,21 @@ export const useJobPosts = () => {
       questionType: string,
       questionCount: number,
       questionFormat: 'mcq' | 'open-ended' | 'mix' = 'mix',
-      existingQuestions: InterviewQuestion[] = []
+      existingQuestions: InterviewQuestion[] = [],
     ) => {
       setLoading(true);
       setError(null);
       try {
         const client = await getValidatedOpenAiClient();
-        
+
         // Extract only relevant fields from existing questions to send to OpenAI
-        const simplifiedExistingQuestions = existingQuestions.map(q => ({
+        const simplifiedExistingQuestions = existingQuestions.map((q) => ({
           question: q.question,
           type: q.type,
           questionFormat: q.questionFormat as 'mcq' | 'open-ended' | 'mix',
-          category: q.category
+          category: q.category,
         }));
-        
+
         // Type-specific guidelines
         const typeGuidelines: Record<string, string> = {
           reasoning: `
@@ -441,16 +469,30 @@ GENERAL questions:
 - Cover broad professional and interpersonal topics
 - Assess overall fit, motivation, and career alignment
 - Include company culture, work ethic, and professional values
-- Examples: career goals, work preferences, learning approach, professional development`
+- Examples: career goals, work preferences, learning approach, professional development`,
+          textCommunication: `
+TEXT COMMUNICATION questions:
+- Assess written communication clarity, tone, and professionalism
+- Focus specifically on text-based interactions: emails, reports, chat messages, documentation
+- MCQ format: choose the best-written response, identify tone errors, select the most professional phrasing
+- Open-ended: draft a professional email, write a summary, compose a response to a stakeholder message
+- Examples: writing a follow-up email, summarizing a project update in writing, crafting a clear and concise message under constraints, correcting poorly written communications`,
+          reasoning_return: `
+REASONING & RETURN questions:
+- Combine logical reasoning with the ability to clearly communicate the conclusion or solution back
+- Candidate must not only solve or analyse a problem but also articulate their thought process and return a structured response
+- MCQ format: identify the correct reasoning step, choose the best explanation for a given outcome, select the most logically sound conclusion
+- Open-ended: walk through a problem step-by-step and present findings, explain why a decision was made, justify an approach with evidence
+- Examples: analysing a scenario and writing a structured recommendation, diagnosing an issue and explaining the fix, evaluating options and returning a ranked justification, solving a logic puzzle and describing each reasoning step`,
         };
 
         // Format-specific instructions
-        const formatInstructions = 
+        const formatInstructions =
           questionFormat === 'mcq'
             ? 'ALL questions MUST be MULTIPLE-CHOICE (MCQ) format only.'
             : questionFormat === 'open-ended'
-            ? 'ALL questions MUST be OPEN-ENDED format only.'
-            : 'Include a mix of both open-ended and MCQ questions (at least 30% should be MCQ).';
+              ? 'ALL questions MUST be OPEN-ENDED format only.'
+              : 'Include a mix of both open-ended and MCQ questions (at least 30% should be MCQ).';
 
         const response = await client.chat.completions.create({
           model: 'gpt-4o-mini',
@@ -547,18 +589,20 @@ CRITICAL REQUIREMENTS:
 Generate ${questionCount} interview questions of type "${questionType}" strictly following all system rules.
 
 QUESTION FORMAT: ${
-  questionFormat === 'mcq'
-    ? 'Generate ONLY MULTIPLE-CHOICE (MCQ) questions.'
-    : questionFormat === 'open-ended'
-    ? 'Generate ONLY OPEN-ENDED questions.'
-    : 'Generate a mix of both MCQ and open-ended questions.'
-}
+                questionFormat === 'mcq'
+                  ? 'Generate ONLY MULTIPLE-CHOICE (MCQ) questions.'
+                  : questionFormat === 'open-ended'
+                    ? 'Generate ONLY OPEN-ENDED questions.'
+                    : 'Generate a mix of both MCQ and open-ended questions.'
+              }
 
 ==================== EXISTING QUESTIONS (AVOID DUPLICATES) ====================
 
-${simplifiedExistingQuestions.length > 0 
-  ? `The following questions already exist. DO NOT generate similar or duplicate questions:\n\n${simplifiedExistingQuestions.map((q, idx) => `${idx + 1}. [${q.type}] [${q.questionFormat}] [${q.category}] ${q.question}`).join('\n')}\n\nIMPORTANT: Generate completely NEW questions that are meaningfully different from the above.`
-  : 'No existing questions yet. You can generate any relevant questions.'}
+${
+  simplifiedExistingQuestions.length > 0
+    ? `The following questions already exist. DO NOT generate similar or duplicate questions:\n\n${simplifiedExistingQuestions.map((q, idx) => `${idx + 1}. [${q.type}] [${q.questionFormat}] [${q.category}] ${q.question}`).join('\n')}\n\nIMPORTANT: Generate completely NEW questions that are meaningfully different from the above.`
+    : 'No existing questions yet. You can generate any relevant questions.'
+}
 
 ==================== JOB POST DETAILS ====================
 
@@ -596,8 +640,8 @@ ${
   questionFormat === 'mcq'
     ? 'ALL questions MUST be MCQ format.'
     : questionFormat === 'open-ended'
-    ? 'ALL questions MUST be open-ended format.'
-    : ''
+      ? 'ALL questions MUST be open-ended format.'
+      : ''
 }
 Make them highly relevant to this specific role and company, and ensure they are NOT duplicates or similar to existing questions.
 `,
@@ -608,20 +652,24 @@ Make them highly relevant to this specific role and company, and ensure they are
             type: 'json_object',
           },
         });
-        
+
         let responseText = response.choices[0]?.message?.content ?? '';
         const evaluation = JSON.parse(responseText);
         console.log('Filtered questions evaluation', evaluation);
         let data: InterviewQuestion[] = evaluation?.questions ?? [];
         return data;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to generate filtered questions');
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to generate filtered questions',
+        );
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [getValidatedOpenAiClient]
+    [getValidatedOpenAiClient],
   );
 
   // Get job responsibilities from job description using chatgtp openai
@@ -658,14 +706,14 @@ Make them highly relevant to this specific role and company, and ensure they are
         setError(
           err instanceof Error
             ? err.message
-            : 'Failed to generate responsibilities from job description'
+            : 'Failed to generate responsibilities from job description',
         );
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [getValidatedOpenAiClient]
+    [getValidatedOpenAiClient],
   );
 
   // Get job description from uploaded pdf using chatgtp openai
@@ -707,13 +755,17 @@ PDF text:
         let data: string = evaluation?.job_description ?? '';
         return data;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to generate job description pdf',
+        );
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [getValidatedOpenAiClient]
+    [getValidatedOpenAiClient],
   );
 
   // Get recent candidates
@@ -724,7 +776,11 @@ PDF text:
       const data = await jobPostAPI.getRecentCandidates();
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to generate job description pdf',
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -739,7 +795,11 @@ PDF text:
       const data = await jobPostAPI.getAdminDashboard();
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to generate job description pdf',
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -754,7 +814,11 @@ PDF text:
       const data = await jobPostAPI.getAnalyticsDashboard();
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate job description pdf');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to generate job description pdf',
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -784,7 +848,11 @@ PDF text:
       const data = await jobPostAPI.getPerformanceComparison(jobPostId);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch performance comparison');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to fetch performance comparison',
+      );
       throw err;
     } finally {
       setLoading(false);

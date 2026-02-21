@@ -18,7 +18,7 @@ export interface JobPost {
   company: string;
   department: string;
   location: string[];
-  type: 'full-time' | 'part-time' | 'contract' | 'internship';
+  type: 'full-time' | 'part-time' | 'contract' | 'internship' | 'apprentice';
   experience: string;
   description: string;
   requirements: string[];
@@ -137,7 +137,11 @@ export interface Candidate {
     };
   };
   proctoringStatus?: string;
-  proctoringAlerts?: Array<{ message?: string; type?: string; [k: string]: unknown }>;
+  proctoringAlerts?: Array<{
+    message?: string;
+    type?: string;
+    [k: string]: unknown;
+  }>;
   residenceLocation: string;
   region: string;
   governmentProof: any[];
@@ -172,7 +176,17 @@ export interface InterviewSession {
 export interface InterviewQuestion {
   id: string;
   question: string;
-  type: 'behavioral' | 'communication' | 'reasoning' | 'arithmetic' | 'subjective';
+  type:
+    | 'general'
+    | 'behavioral'
+    | 'communication'
+    | 'textCommunication'
+    | 'reasoning'
+    | 'reasoning_return'
+    | 'arithmetic'
+    | 'subjective'
+    | 'aptitude'
+    | 'technical';
   expectedDuration: number; // in seconds
   questionFormat?: 'mcq' | 'open-ended' | 'mix';
   difficulty: 'easy' | 'medium' | 'hard';

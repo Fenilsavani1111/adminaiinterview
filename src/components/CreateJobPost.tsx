@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   Upload,
@@ -42,7 +42,7 @@ const getNowLocal = () => {
 };
 
 export function CreateJobPost() {
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
   const {
     createJobPost,
     getJobPostOpenaiQuestions,
@@ -83,7 +83,12 @@ export function CreateJobPost() {
     company: '',
     department: '',
     location: [''],
-    type: 'full-time' as 'full-time' | 'part-time' | 'contract' | 'internship',
+    type: 'full-time' as
+      | 'full-time'
+      | 'part-time'
+      | 'contract'
+      | 'internship'
+      | 'apprentice',
     experience: '',
     description: '',
     requirements: [''],
@@ -115,6 +120,39 @@ export function CreateJobPost() {
     evaluationCriteria: [''],
     isRequired: true,
   });
+
+  // Pre-fill form when cloning an existing job post
+  useEffect(() => {
+    const clone = state.cloneJobPost;
+    if (!clone) return;
+    setFormData({
+      title: `${clone.title} (Copy)`,
+      company: clone.company,
+      department: clone.department,
+      location:
+        Array.isArray(clone.location) && clone.location.length > 0
+          ? clone.location
+          : [''],
+      type: clone.type,
+      experience: clone.experience,
+      description: clone.description,
+      requirements: clone.requirements.length > 0 ? clone.requirements : [''],
+      responsibilities:
+        clone.responsibilities.length > 0 ? clone.responsibilities : [''],
+      skills: clone.skills.length > 0 ? clone.skills : [''],
+      salaryMin: clone.salary?.min?.toString() || '',
+      salaryMax: clone.salary?.max?.toString() || '',
+      currency: clone.salary?.currency || 'INR',
+      enableVideoRecording: clone.enableVideoRecording ?? false,
+      interviewStartDateTime: '',
+      logoUrl: clone.logoUrl || '',
+    });
+    if (clone.questions && clone.questions.length > 0) {
+      setQuestions([...clone.questions]);
+    }
+    // Clear the clone source so navigating away and back doesn't re-trigger
+    dispatch({ type: 'SET_CLONE_JOB_POST', payload: null });
+  }, [state.cloneJobPost]);
 
   const generateQuestionsFromJD = async () => {
     try {
@@ -694,6 +732,7 @@ export function CreateJobPost() {
                   <option value="part-time">Part-time</option>
                   <option value="contract">Contract</option>
                   <option value="internship">Internship</option>
+                  <option value="apprentice">Apprentice</option>
                 </select>
               </div>
 
@@ -1925,43 +1964,68 @@ export function CreateJobPost() {
                           <span>Add option</span>
                         </button>
                         <div className="mt-3">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Right answer (optional)
-                          </label>
-                          <select
-                            value={(() => {
-                              const opts = (newQuestion.options || [])
-                                .map((o) => String(o || '').trim())
-                                .filter(Boolean);
-                              return newQuestion.rightAnswer &&
-                                opts.includes(newQuestion.rightAnswer)
-                                ? newQuestion.rightAnswer
-                                : '';
-                            })()}
-                            onChange={(e) =>
-                              setNewQuestion({
-                                ...newQuestion,
-                                rightAnswer: e.target.value || '',
-                              })
-                            }
-                            className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          >
-                            <option value="">
-                              Select right answer (optional)
-                            </option>
-                            {(newQuestion.options || [])
+                          {(() => {
+                            const filledOpts = (newQuestion.options || [])
                               .map((o) => String(o || '').trim())
-                              .filter(Boolean)
-                              .map((opt) => (
-                                <option key={opt} value={opt}>
-                                  {opt}
-                                </option>
-                              ))}
-                          </select>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Must be one of the options above. Used for
-                            auto-grading MCQ.
-                          </p>
+                              .filter(Boolean);
+                            const isRightAnswerRequired = filledOpts.length > 0;
+                            const isRightAnswerMissing =
+                              isRightAnswerRequired && !newQuestion.rightAnswer;
+                            return (
+                              <>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Right answer
+                                  {isRightAnswerRequired && (
+                                    <span className="text-red-500 ml-1">*</span>
+                                  )}
+                                </label>
+                                <select
+                                  value={(() => {
+                                    return newQuestion.rightAnswer &&
+                                      filledOpts.includes(
+                                        newQuestion.rightAnswer,
+                                      )
+                                      ? newQuestion.rightAnswer
+                                      : '';
+                                  })()}
+                                  onChange={(e) =>
+                                    setNewQuestion({
+                                      ...newQuestion,
+                                      rightAnswer: e.target.value || '',
+                                    })
+                                  }
+                                  className={`w-full max-w-xs px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                    isRightAnswerMissing
+                                      ? 'border-red-400 bg-red-50'
+                                      : 'border-gray-300'
+                                  }`}
+                                >
+                                  <option value="">
+                                    {isRightAnswerRequired
+                                      ? '— Select right answer (required) —'
+                                      : 'Select right answer (optional)'}
+                                  </option>
+                                  {filledOpts.map((opt) => (
+                                    <option key={opt} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ))}
+                                </select>
+                                {isRightAnswerMissing && (
+                                  <p className="text-xs text-red-600 mt-1">
+                                    Right answer is required when options are
+                                    provided.
+                                  </p>
+                                )}
+                                {!isRightAnswerMissing && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Must be one of the options above. Used for
+                                    auto-grading MCQ.
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </>
                     )}
@@ -1969,8 +2033,16 @@ export function CreateJobPost() {
 
                   <button
                     onClick={addQuestion}
-                    disabled={!newQuestion.question.trim()}
-                    className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                    disabled={(() => {
+                      if (!newQuestion.question.trim()) return true;
+                      const filledOpts = (newQuestion.options || [])
+                        .map((o) => String(o || '').trim())
+                        .filter(Boolean);
+                      if (filledOpts.length > 0 && !newQuestion.rightAnswer)
+                        return true;
+                      return false;
+                    })()}
+                    className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     Add Question
                   </button>
