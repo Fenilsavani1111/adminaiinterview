@@ -231,22 +231,90 @@ export const generateCandidatePdf = async (
         y = 20;
       }
 
+      const eduTypeMap: Record<string, string> = {
+        tenth: '10th Standard / SSC',
+        twelfth: '12th Standard / HSC',
+        plusTwo: '12th Standard / HSC',
+        degree: "Bachelor's Degree",
+        pg: 'Post Graduate Degree',
+        master: "Master's Degree",
+        phd: 'PhD / Doctorate',
+      };
+      const eduLabel = eduTypeMap[edu.type] || edu.type;
+
       doc.setFont('helvetica', 'bold');
-      doc.text(`${index + 1}. ${edu.type}`, leftX, y);
+      doc.text(`${index + 1}. ${eduLabel}`, leftX, y);
       y += 5;
 
       doc.setFont('helvetica', 'normal');
+      const institution = edu.schoolName || edu.collegeName;
+      if (institution)
+        (doc.text(`   Institute: ${institution}`, leftX + 4, y), (y += 4));
       if (edu.stream)
-        (doc.text(`Stream: ${edu.stream}`, leftX + 4, y), (y += 4));
+        (doc.text(`   Stream: ${edu.stream}`, leftX + 4, y), (y += 4));
       if (edu.yearOfPassing)
-        (doc.text(`Year: ${edu.yearOfPassing}`, leftX + 4, y), (y += 4));
+        (doc.text(`   Year: ${edu.yearOfPassing}`, leftX + 4, y), (y += 4));
       if (edu.percentage)
-        (doc.text(`Score: ${edu.percentage}`, leftX + 4, y), (y += 5));
+        (doc.text(`   Score: ${edu.percentage}`, leftX + 4, y), (y += 5));
       y += 2;
     });
   } else {
     doc.text('No education details available', leftX, y);
     y += 8;
+  }
+
+  /* ================= GOVERNMENT ID DOCUMENTS ================= */
+  if (
+    Array.isArray(candidateData?.governmentProof) &&
+    candidateData.governmentProof.length > 0
+  ) {
+    if (y > 250) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('Government ID Documents', leftX, y);
+    y += 6;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+
+    candidateData.governmentProof.forEach((proof: any, index: number) => {
+      if (y > 260) {
+        doc.addPage();
+        y = 20;
+      }
+
+      const isVerified = !!proof.verified;
+      const idLabel = proof.idProofType || `Govt ID ${index + 1}`;
+      const docType = proof.type
+        ? proof.type.charAt(0).toUpperCase() + proof.type.slice(1)
+        : 'N/A';
+      const verifiedText = isVerified ? '✓ Verified' : '✗ Not Verified';
+
+      // Document label
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${index + 1}. ${idLabel} — ${docType}`, leftX, y);
+      y += 5;
+
+      // Value
+      doc.setFont('helvetica', 'normal');
+      if (proof.value)
+        (doc.text(`   Number: ${proof.value}`, leftX + 4, y), (y += 4));
+
+      // Verified status with colour
+      if (isVerified) {
+        doc.setTextColor(22, 163, 74); // green-600
+      } else {
+        doc.setTextColor(220, 38, 38); // red-600
+      }
+      doc.text(`   ${verifiedText}`, leftX + 4, y);
+      doc.setTextColor(0);
+      y += 6;
+    });
+    y += 2;
   }
 
   /* ================= OVERVIEW SECTION (NEW) ================= */

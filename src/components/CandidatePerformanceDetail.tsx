@@ -56,7 +56,9 @@ export const exportCandidateReport = async (
   // Helper functions for formatting
   const formatEducationType = (type: string) => {
     const educationMap: { [key: string]: string } = {
-      tenth: '10th Grade',
+      tenth: '10th Standard / SSC',
+      twelfth: '12th Standard / HSC',
+      plusTwo: '12th Standard / HSC',
       degree: "Bachelor's Degree",
       pg: 'Post Graduate',
       master: "Master's Degree",
@@ -197,9 +199,14 @@ export const exportCandidateReport = async (
           `A${educationTitle.number}:B${educationTitle.number}`,
         );
 
-        const educationDetails = [
+        const institution =
+          education.schoolName || education.collegeName || null;
+        const educationDetails: [string, string][] = [
           ['Type', formatEducationType(education.type || '')],
           ['Stream', education.stream || 'N/A'],
+          ...(institution
+            ? [['Institution', institution] as [string, string]]
+            : []),
           [
             'Percentage',
             education.percentage ? `${education.percentage}%` : 'N/A',
@@ -237,11 +244,18 @@ export const exportCandidateReport = async (
       );
 
       candidateData.governmentProof.forEach((proof, index) => {
-        const proofDetails = [
-          [`Document ${index + 1}`, proof.value || 'N/A'],
+        const docTypeLabel = proof.idProofType || `Document ${index + 1}`;
+        const docTypeDisplay = proof.type
+          ? proof.type.charAt(0).toUpperCase() + proof.type.slice(1)
+          : 'N/A';
+        const isVerified = !!proof.verified;
+
+        const proofDetails: [string, string][] = [
+          [`${docTypeLabel} — Type`, docTypeDisplay],
+          [`${docTypeLabel} — Value`, proof.value || 'N/A'],
           [
-            `Verified Status`,
-            `${getVerificationIcon(proof.verified)} ${proof.verified ? 'Verified' : 'Not Verified'}`,
+            `${docTypeLabel} — Verified`,
+            `${getVerificationIcon(isVerified)} ${isVerified ? 'Verified' : 'Not Verified'}`,
           ],
         ];
 
@@ -250,21 +264,13 @@ export const exportCandidateReport = async (
           row.getCell(1).font = { bold: true };
           row.height = 18;
 
-          // Add color coding for verification status
-          if (field.includes('Verified Status')) {
-            if (proof.verified) {
-              row.getCell(2).fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFD1FAE5' },
-              };
-            } else {
-              row.getCell(2).fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFFECACA' },
-              };
-            }
+          // Color-code verified row
+          if (field.includes('Verified')) {
+            row.getCell(2).fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: isVerified ? 'FFD1FAE5' : 'FFFECACA' },
+            };
           }
         });
       });
@@ -670,6 +676,7 @@ export const exportCandidateReport = async (
         { key: 'education', width: 20 },
         { key: 'type', width: 15 },
         { key: 'stream', width: 25 },
+        { key: 'institution', width: 28 },
         { key: 'percentage', width: 15 },
         { key: 'year', width: 15 },
         { key: 'level', width: 20 },
@@ -683,6 +690,7 @@ export const exportCandidateReport = async (
         '',
         '',
         '',
+        '',
       ]);
       educationTitle.font = {
         size: 16,
@@ -691,7 +699,7 @@ export const exportCandidateReport = async (
       };
       educationTitle.getCell(1).alignment = { horizontal: 'center' };
       educationTitle.height = 25;
-      educationSheet.mergeCells('A1:F1');
+      educationSheet.mergeCells('A1:G1');
 
       educationSheet.addRow([]);
 
@@ -712,11 +720,12 @@ export const exportCandidateReport = async (
         '',
         '',
         '',
+        '',
       ]);
       summaryRow.getCell(1).alignment = { horizontal: 'center' };
       summaryRow.font = { bold: true, color: { argb: 'FF374151' } };
       summaryRow.height = 20;
-      educationSheet.mergeCells(`A${summaryRow.number}:F${summaryRow.number}`);
+      educationSheet.mergeCells(`A${summaryRow.number}:G${summaryRow.number}`);
 
       educationSheet.addRow([]);
 
@@ -725,6 +734,7 @@ export const exportCandidateReport = async (
         'Qualification',
         'Level',
         'Stream/Subject',
+        'Institution',
         'Score (%)',
         'Year',
         'Performance',
@@ -752,10 +762,13 @@ export const exportCandidateReport = async (
           else performanceLevel = 'Below Average';
         }
 
+        const institution =
+          education.schoolName || education.collegeName || 'N/A';
         const row = educationSheet.addRow([
           `${formatEducationType(education.type || '')} ${index + 1}`,
           formatEducationType(education.type || ''),
           education.stream || 'N/A',
+          institution,
           education.percentage ? `${education.percentage}%` : 'N/A',
           education.yearOfPassing || 'N/A',
           performanceLevel,
@@ -763,47 +776,48 @@ export const exportCandidateReport = async (
         row.height = 18;
 
         // Color coding based on performance
+        // Column indices: 1=Qualification, 2=Level, 3=Stream, 4=Institution, 5=Score, 6=Year, 7=Performance
         if (!isNaN(percentage)) {
           if (percentage >= 80) {
-            row.getCell(4).fill = {
+            row.getCell(5).fill = {
               type: 'pattern',
               pattern: 'solid',
               fgColor: { argb: 'FFD1FAE5' },
             };
-            row.getCell(6).fill = {
+            row.getCell(7).fill = {
               type: 'pattern',
               pattern: 'solid',
               fgColor: { argb: 'FFD1FAE5' },
             };
           } else if (percentage >= 70) {
-            row.getCell(4).fill = {
+            row.getCell(5).fill = {
               type: 'pattern',
               pattern: 'solid',
               fgColor: { argb: 'FFFEF3C7' },
             };
-            row.getCell(6).fill = {
+            row.getCell(7).fill = {
               type: 'pattern',
               pattern: 'solid',
               fgColor: { argb: 'FFFEF3C7' },
             };
           } else if (percentage >= 60) {
-            row.getCell(4).fill = {
+            row.getCell(5).fill = {
               type: 'pattern',
               pattern: 'solid',
               fgColor: { argb: 'FFFED7AA' },
             };
-            row.getCell(6).fill = {
+            row.getCell(7).fill = {
               type: 'pattern',
               pattern: 'solid',
               fgColor: { argb: 'FFFED7AA' },
             };
           } else if (percentage < 60) {
-            row.getCell(4).fill = {
+            row.getCell(5).fill = {
               type: 'pattern',
               pattern: 'solid',
               fgColor: { argb: 'FFFECACA' },
             };
-            row.getCell(6).fill = {
+            row.getCell(7).fill = {
               type: 'pattern',
               pattern: 'solid',
               fgColor: { argb: 'FFFECACA' },
@@ -821,6 +835,7 @@ export const exportCandidateReport = async (
         '',
         '',
         '',
+        '',
       ]);
       eduInsightsTitle.font = { bold: true, color: { argb: 'FF374151' } };
       eduInsightsTitle.fill = {
@@ -830,7 +845,7 @@ export const exportCandidateReport = async (
       };
       eduInsightsTitle.height = 20;
       educationSheet.mergeCells(
-        `A${eduInsightsTitle.number}:F${eduInsightsTitle.number}`,
+        `A${eduInsightsTitle.number}:G${eduInsightsTitle.number}`,
       );
 
       // Calculate education insights
@@ -857,11 +872,20 @@ export const exportCandidateReport = async (
           : null;
 
       const insights = [
-        ['Total Qualifications', totalEducations.toString(), '', '', '', ''],
+        [
+          'Total Qualifications',
+          totalEducations.toString(),
+          '',
+          '',
+          '',
+          '',
+          '',
+        ],
         [
           'Highest Education Level',
           formatEducationType(highestEducation.type || ''),
           highestEducation.stream || '',
+          highestEducation.schoolName || highestEducation.collegeName || '',
           '',
           '',
           '',
@@ -872,6 +896,7 @@ export const exportCandidateReport = async (
             ? `${formatEducationType(bestPerformance.type || '')} - ${bestPerformance.percentage}%`
             : 'N/A',
           bestPerformance?.stream || '',
+          bestPerformance?.schoolName || bestPerformance?.collegeName || '',
           '',
           '',
           '🏆 Top Score',
@@ -879,6 +904,7 @@ export const exportCandidateReport = async (
         [
           'Average Performance',
           isNaN(avgPercentage) ? 'N/A' : `${avgPercentage.toFixed(1)}%`,
+          '',
           '',
           '',
           '',
@@ -894,6 +920,7 @@ export const exportCandidateReport = async (
           '',
           '',
           '',
+          '',
           validPercentages.length > 1
             ? Math.max(...validPercentages) - Math.min(...validPercentages) < 10
               ? '📈 Consistent'
@@ -902,18 +929,21 @@ export const exportCandidateReport = async (
         ],
       ];
 
-      insights.forEach(([metric, value, additional, empty1, empty2, note]) => {
-        const row = educationSheet.addRow([
-          metric,
-          value,
-          additional,
-          empty1,
-          empty2,
-          note,
-        ]);
-        row.getCell(1).font = { bold: true };
-        row.height = 18;
-      });
+      insights.forEach(
+        ([metric, value, additional, institution, empty1, empty2, note]) => {
+          const row = educationSheet.addRow([
+            metric,
+            value,
+            additional,
+            institution,
+            empty1,
+            empty2,
+            note,
+          ]);
+          row.getCell(1).font = { bold: true };
+          row.height = 18;
+        },
+      );
     }
 
     // Add Government Proof Analysis sheet (if government proof data exists)
@@ -926,15 +956,17 @@ export const exportCandidateReport = async (
 
       // Set column widths for government proof sheet
       govProofSheet.columns = [
-        { key: 'document', width: 25 },
-        { key: 'value', width: 30 },
-        { key: 'verified', width: 15 },
-        { key: 'status', width: 20 },
+        { key: 'srno', width: 8 },
+        { key: 'idtype', width: 20 },
+        { key: 'doctype', width: 20 },
+        { key: 'value', width: 28 },
+        { key: 'status', width: 22 },
       ];
 
       // Add title for government proof sheet
       const govProofTitle = govProofSheet.addRow([
         'DOCUMENT VERIFICATION STATUS',
+        '',
         '',
         '',
         '',
@@ -946,7 +978,7 @@ export const exportCandidateReport = async (
       };
       govProofTitle.getCell(1).alignment = { horizontal: 'center' };
       govProofTitle.height = 25;
-      govProofSheet.mergeCells('A1:D1');
+      govProofSheet.mergeCells('A1:E1');
 
       govProofSheet.addRow([]);
 
@@ -958,7 +990,8 @@ export const exportCandidateReport = async (
       const verificationRate = ((verifiedDocs / totalDocs) * 100).toFixed(1);
 
       const govSummaryRow = govProofSheet.addRow([
-        `Total Documents: ${totalDocs} | Verified: ${verifiedDocs} | Verification Rate: ${verificationRate}%`,
+        `Total Documents: ${totalDocs} | Verified: ${verifiedDocs} | Pending: ${totalDocs - verifiedDocs} | Verification Rate: ${verificationRate}%`,
+        '',
         '',
         '',
         '',
@@ -967,19 +1000,19 @@ export const exportCandidateReport = async (
       govSummaryRow.font = { bold: true, color: { argb: 'FF374151' } };
       govSummaryRow.height = 20;
       govProofSheet.mergeCells(
-        `A${govSummaryRow.number}:D${govSummaryRow.number}`,
+        `A${govSummaryRow.number}:E${govSummaryRow.number}`,
       );
 
       govProofSheet.addRow([]);
 
       // Add headers
       const govHeaders = govProofSheet.addRow([
+        'Sr#',
+        'ID Proof Type',
         'Document Type',
-        'Document Value',
-        'Verified',
-        'Status',
+        'Document Value / Number',
+        'Verification Status',
       ]);
-      govHeaders.font = { bold: true };
       govHeaders.fill = {
         type: 'pattern',
         pattern: 'solid',
@@ -990,43 +1023,31 @@ export const exportCandidateReport = async (
 
       // Add government proof data
       candidateData.governmentProof.forEach((proof, index) => {
-        const status = proof.verified
-          ? '✅ Verified'
-          : '⏳ Pending Verification';
-        const verificationText = proof.verified ? 'Yes' : 'No';
+        const isVerified = !!proof.verified;
+        const idProofLabel = proof.idProofType || `Govt ID ${index + 1}`;
+        const docTypeLabel = proof.type
+          ? proof.type.charAt(0).toUpperCase() + proof.type.slice(1)
+          : 'N/A';
+        const status = isVerified ? '✅ Verified' : '❌ Not Verified';
 
         const row = govProofSheet.addRow([
-          `Document ${index + 1}`,
+          index + 1,
+          idProofLabel,
+          docTypeLabel,
           proof.value || 'N/A',
-          verificationText,
           status,
         ]);
-        row.height = 18;
+        row.height = 20;
 
         // Color coding based on verification status
-        if (proof.verified) {
-          row.getCell(3).fill = {
+        const fillColor = isVerified ? 'FFD1FAE5' : 'FFFECACA';
+        [4, 5].forEach((col) => {
+          row.getCell(col).fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FFD1FAE5' },
+            fgColor: { argb: fillColor },
           };
-          row.getCell(4).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFD1FAE5' },
-          };
-        } else {
-          row.getCell(3).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFEF3C7' },
-          };
-          row.getCell(4).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFEF3C7' },
-          };
-        }
+        });
       });
 
       // // Add verification insights
@@ -1754,6 +1775,7 @@ export function CandidatePerformanceDetail({
                                 const typeMap = {
                                   tenth: '10th Standard / SSC',
                                   twelfth: '12th Standard / HSC',
+                                  plusTwo: '12th Standard / HSC',
                                   degree: "Bachelor's Degree",
                                   pg: 'Post Graduate Degree',
                                   master: "Master's Degree",
@@ -1784,6 +1806,28 @@ export function CandidatePerformanceDetail({
                                           </span>
                                         )}
                                       </div>
+
+                                      {/* Institution Name */}
+                                      {(edu.schoolName || edu.collegeName) && (
+                                        <div className="flex items-center space-x-1 mb-2">
+                                          <svg
+                                            className="h-3.5 w-3.5 text-indigo-500 flex-shrink-0"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            strokeWidth={2}
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21V9h6v12"
+                                            />
+                                          </svg>
+                                          <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 truncate">
+                                            {edu.schoolName || edu.collegeName}
+                                          </span>
+                                        </div>
+                                      )}
 
                                       {/* Year and Percentage */}
                                       <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
@@ -1826,6 +1870,80 @@ export function CandidatePerformanceDetail({
                           </div>
                         )}
                     </div>
+
+                    {/* Government ID Documents Section */}
+                    {candidateData?.governmentProof &&
+                      candidateData.governmentProof.length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+                            <div className="bg-emerald-100 p-1.5 rounded-lg">
+                              <Shield className="h-4 w-4 text-emerald-600" />
+                            </div>
+                            <span>Government ID Documents</span>
+                          </h3>
+                          <div className="space-y-3">
+                            {candidateData.governmentProof.map(
+                              (proof, index) => {
+                                const isVerified = !!proof.verified;
+                                const docTypeLabel = proof.type
+                                  ? proof.type.charAt(0).toUpperCase() +
+                                    proof.type.slice(1)
+                                  : 'Document';
+                                const idLabel =
+                                  proof.idProofType || `Govt ID ${index + 1}`;
+                                return (
+                                  <div
+                                    key={index}
+                                    className={`relative p-4 rounded-xl border-l-4 transition-all hover:shadow-md ${
+                                      isVerified
+                                        ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-500'
+                                        : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-400'
+                                    }`}
+                                  >
+                                    {/* Verified badge — top right */}
+                                    <span
+                                      className={`absolute top-3 right-3 inline-flex items-center space-x-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                                        isVerified
+                                          ? 'bg-emerald-100 text-emerald-700'
+                                          : 'bg-red-100 text-red-700'
+                                      }`}
+                                    >
+                                      <span>{isVerified ? '✔' : '✘'}</span>
+                                      <span>
+                                        {isVerified
+                                          ? 'Verified'
+                                          : 'Not Verified'}
+                                      </span>
+                                    </span>
+
+                                    {/* Label + Type */}
+                                    <div className="mb-2 pr-28">
+                                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                        {idLabel}
+                                      </span>
+                                      <div className="text-sm font-bold text-gray-900 mt-0.5">
+                                        {docTypeLabel}
+                                      </div>
+                                    </div>
+
+                                    {/* Value chip */}
+                                    {proof.value && (
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-xs text-gray-500">
+                                          Number:
+                                        </span>
+                                        <code className="text-xs font-mono font-semibold bg-white px-2.5 py-1 rounded-lg border border-gray-200 text-gray-800 tracking-wider">
+                                          {String(proof.value)}
+                                        </code>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>

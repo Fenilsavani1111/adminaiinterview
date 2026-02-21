@@ -102,12 +102,16 @@ export interface Candidate {
     stream?: string;
     percentage?: string;
     yearOfPassing?: string;
+    schoolName?: string;
+    collegeName?: string;
   }>;
   educationDetails?: Array<{
     type: 'tenth' | 'degree' | 'pg' | 'master' | 'phd';
     stream?: string;
     percentage?: string;
     yearOfPassing?: string;
+    schoolName?: string;
+    collegeName?: string;
   }>;
   JobPost?: JobPost;
   StudentInterviewAnswer?: StudentInterviewAnswer[];
@@ -144,7 +148,13 @@ export interface Candidate {
   }>;
   residenceLocation: string;
   region: string;
-  governmentProof: any[];
+  governmentProof: Array<{
+    type?: string;
+    value?: string;
+    verified?: boolean;
+    idProofType?: string;
+    [k: string]: unknown;
+  }>;
   createdAt: string;
   updatedAt: string;
 }

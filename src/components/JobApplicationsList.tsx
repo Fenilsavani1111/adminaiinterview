@@ -40,12 +40,15 @@ export function JobApplicationsList({
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
+  const [selectedApplications, setSelectedApplications] = useState<string[]>(
+    [],
+  );
   const [viewingRecording, setViewingRecording] = useState<{
     id: string;
     name: string;
   } | null>(null);
-  const [selectedApplication, setSelectedApplication] = useState<Candidate | null>(null);
+  const [selectedApplication, setSelectedApplication] =
+    useState<Candidate | null>(null);
   const [jobpost, setJobpost] = useState<JobPost | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   let ignore = false;
@@ -59,8 +62,11 @@ export function JobApplicationsList({
     const matchesSearch =
       application.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       application.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      application.skills.some((skill) => skill.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesFilter = filterStatus === 'all' || application.status === filterStatus;
+      application?.skills?.some((skill) =>
+        skill?.toLowerCase()?.includes(searchTerm?.toLowerCase()),
+      );
+    const matchesFilter =
+      filterStatus === 'all' || application.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
@@ -132,7 +138,7 @@ export function JobApplicationsList({
     setSelectedApplications((prev) =>
       prev.includes(applicationId)
         ? prev.filter((id) => id !== applicationId)
-        : [...prev, applicationId]
+        : [...prev, applicationId],
     );
   };
 
@@ -144,14 +150,22 @@ export function JobApplicationsList({
     }
   };
 
-  const interviewedCount = filteredByType.filter((app) => app.status === 'completed').length;
+  const interviewedCount = filteredByType.filter(
+    (app) => app.status === 'completed',
+  ).length;
   const averageScore =
     interviewedCount > 0
       ? filteredByType
-        .filter((app) => app.categoryPercentage?.overallPercentage)
-        .reduce((sum, app) => sum + (app.categoryPercentage?.overallPercentage ?? 0), 0) / interviewedCount
+          .filter((app) => app.categoryPercentage?.overallPercentage)
+          .reduce(
+            (sum, app) =>
+              sum + (app.categoryPercentage?.overallPercentage ?? 0),
+            0,
+          ) / interviewedCount
       : 0;
-  const highPerformers = filteredByType.filter((app) => (app.categoryPercentage?.overallPercentage ?? 0) >= 85).length;
+  const highPerformers = filteredByType.filter(
+    (app) => (app.categoryPercentage?.overallPercentage ?? 0) >= 85,
+  ).length;
 
   const handleDownloadResume = async (resumeUrl: string, name: string) => {
     try {
@@ -210,37 +224,38 @@ export function JobApplicationsList({
   }
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className='bg-white shadow-sm border-b border-gray-100'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex items-center justify-between py-4'>
-            <div className='flex items-center space-x-4'>
+      <header className="bg-white shadow-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={onBack}
-                className='flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors'
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
-                <ArrowLeft className='h-5 w-5' />
+                <ArrowLeft className="h-5 w-5" />
                 <span>Back to Job Posts</span>
               </button>
               <div>
-                <h1 className='text-2xl font-bold text-gray-900'>
-                  {showInterviewsOnly ? 'Interviews' : 'Applications'} - {jobTitle}
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {showInterviewsOnly ? 'Interviews' : 'Applications'} -{' '}
+                  {jobTitle}
                 </h1>
-                <p className='text-sm text-gray-600'>
+                <p className="text-sm text-gray-600">
                   {company} • {sortedApplications.length}{' '}
                   {showInterviewsOnly ? 'interviews' : 'applications'}
                 </p>
               </div>
             </div>
-            <div className='flex items-center space-x-4'>
+            <div className="flex items-center space-x-4">
               {selectedApplications.length > 0 && (
-                <span className='text-sm text-gray-600'>
+                <span className="text-sm text-gray-600">
                   {selectedApplications.length} selected
                 </span>
               )}
-              <button className='flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors'>
-                <Download className='h-4 w-4' />
+              <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                <Download className="h-4 w-4" />
                 <span>Export Results</span>
               </button>
             </div>
@@ -248,105 +263,119 @@ export function JobApplicationsList({
         </div>
       </header>
 
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Summary Stats */}
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'>
-          <div className='bg-white rounded-xl shadow-sm p-6'>
-            <div className='flex items-center justify-between'>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <p className='text-sm text-gray-600 mb-1'>
+                <p className="text-sm text-gray-600 mb-1">
                   Total {showInterviewsOnly ? 'Interviews' : 'Applications'}
                 </p>
-                <p className='text-3xl font-bold text-gray-900'>{jobpost?.applicants ?? 0}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {jobpost?.applicants ?? 0}
+                </p>
               </div>
-              <div className='bg-blue-100 p-3 rounded-lg'>
-                <User className='h-6 w-6 text-blue-600' />
+              <div className="bg-blue-100 p-3 rounded-lg">
+                <User className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
 
           {showInterviewsOnly && (
             <>
-              <div className='bg-white rounded-xl shadow-sm p-6'>
-                <div className='flex items-center justify-between'>
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className='text-sm text-gray-600 mb-1'>Average Score</p>
-                    <p className='text-3xl font-bold text-gray-900'>{averageScore.toFixed(1)}</p>
+                    <p className="text-sm text-gray-600 mb-1">Average Score</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {averageScore.toFixed(1)}
+                    </p>
                   </div>
-                  <div className='bg-green-100 p-3 rounded-lg'>
-                    <Award className='h-6 w-6 text-green-600' />
+                  <div className="bg-green-100 p-3 rounded-lg">
+                    <Award className="h-6 w-6 text-green-600" />
                   </div>
                 </div>
               </div>
 
-              <div className='bg-white rounded-xl shadow-sm p-6'>
-                <div className='flex items-center justify-between'>
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className='text-sm text-gray-600 mb-1'>High Performers</p>
-                    <p className='text-3xl font-bold text-gray-900'>{highPerformers}</p>
-                    <p className='text-sm text-gray-500'>Score ≥ 85</p>
+                    <p className="text-sm text-gray-600 mb-1">
+                      High Performers
+                    </p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {highPerformers}
+                    </p>
+                    <p className="text-sm text-gray-500">Score ≥ 85</p>
                   </div>
-                  <div className='bg-yellow-100 p-3 rounded-lg'>
-                    <TrendingUp className='h-6 w-6 text-yellow-600' />
+                  <div className="bg-yellow-100 p-3 rounded-lg">
+                    <TrendingUp className="h-6 w-6 text-yellow-600" />
                   </div>
                 </div>
               </div>
             </>
           )}
 
-          <div className='bg-white rounded-xl shadow-sm p-6'>
-            <div className='flex items-center justify-between'>
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <p className='text-sm text-gray-600 mb-1'>Interviewed</p>
-                <p className='text-3xl font-bold text-gray-900'>{jobpost?.interviews}</p>
+                <p className="text-sm text-gray-600 mb-1">Interviewed</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {jobpost?.interviews}
+                </p>
               </div>
-              <div className='bg-purple-100 p-3 rounded-lg'>
-                <Video className='h-6 w-6 text-purple-600' />
+              <div className="bg-purple-100 p-3 rounded-lg">
+                <Video className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters and Search */}
-        <div className='bg-white rounded-xl shadow-sm p-6 mb-8'>
-          <div className='flex flex-col lg:flex-row gap-4'>
-            <div className='flex-1'>
-              <div className='relative'>
-                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
-                  type='text'
-                  placeholder='Search candidates by name, email, or skills...'
+                  type="text"
+                  placeholder="Search candidates by name, email, or skills..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
-            <div className='flex gap-4'>
+            <div className="flex gap-4">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value='all'>All Status</option>
-                <option value='pending'>Pending</option>
-                <option value='inprogress'>In Progress</option>
-                <option value='under_review'>Under Review</option>
-                <option value='completed'>Completed</option>
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="inprogress">In Progress</option>
+                <option value="under_review">Under Review</option>
+                <option value="completed">Completed</option>
               </select>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value='date'>Sort by Date</option>
-                <option value='name'>Sort by Name</option>
-                {showInterviewsOnly && <option value='score'>Sort by Score</option>}
-                <option value='experienceLevel'>Sort by Experience</option>
+                <option value="date">Sort by Date</option>
+                <option value="name">Sort by Name</option>
+                {showInterviewsOnly && (
+                  <option value="score">Sort by Score</option>
+                )}
+                <option value="experienceLevel">Sort by Experience</option>
               </select>
               <button
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className='px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
+                onClick={() =>
+                  setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 {sortOrder === 'asc' ? '↑' : '↓'}
               </button>
@@ -355,34 +384,38 @@ export function JobApplicationsList({
         </div>
 
         {/* Applications Grid */}
-        <div className='grid gap-6'>
+        <div className="grid gap-6">
           {loading ? (
-            <div className='flex justify-center items-center py-12'>
-              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
-              <span className='ml-3 text-gray-600'>Loading data...</span>
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading data...</span>
             </div>
           ) : sortedApplications?.length === 0 ? (
-            <div className='flex justify-center items-center py-8'>
-              <div className='px-6 py-4 text-center'>No application records found.</div>
+            <div className="flex justify-center items-center py-8">
+              <div className="px-6 py-4 text-center">
+                No application records found.
+              </div>
             </div>
           ) : (
             sortedApplications.map((application) => (
               <div
                 key={application.id}
-                className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow'
+                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
               >
-                <div className='p-6'>
-                  <div className='flex items-start justify-between'>
-                    <div className='flex items-start space-x-4 flex-1'>
+                <div className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4 flex-1">
                       <input
-                        type='checkbox'
+                        type="checkbox"
                         checked={selectedApplications.includes(application.id)}
-                        onChange={() => toggleApplicationSelection(application.id)}
-                        className='mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500'
+                        onChange={() =>
+                          toggleApplicationSelection(application.id)
+                        }
+                        className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
 
-                      <div className='h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center'>
-                        <span className='text-lg font-bold text-white'>
+                      <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <span className="text-lg font-bold text-white">
                           {application.name
                             .split(' ')
                             .map((n) => n[0])
@@ -390,15 +423,19 @@ export function JobApplicationsList({
                         </span>
                       </div>
 
-                      <div className='flex-1'>
-                        <div className='flex items-center space-x-3 mb-2'>
-                          <h3 className='text-lg font-bold text-gray-900'>{application.name}</h3>
-                          {application.categoryPercentage?.overallPercentage && application.categoryPercentage?.overallPercentage >= 90 && (
-                            <Star className='h-5 w-5 text-yellow-500 fill-current' />
-                          )}
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h3 className="text-lg font-bold text-gray-900">
+                            {application.name}
+                          </h3>
+                          {application.categoryPercentage?.overallPercentage &&
+                            application.categoryPercentage?.overallPercentage >=
+                              90 && (
+                              <Star className="h-5 w-5 text-yellow-500 fill-current" />
+                            )}
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                              application.status
+                              application.status,
                             )}`}
                           >
                             {application.status.charAt(0).toUpperCase() +
@@ -406,119 +443,152 @@ export function JobApplicationsList({
                           </span>
                         </div>
 
-                        <div className='grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4'>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                           <div>
-                            <p className='text-sm text-gray-600'>Contact</p>
-                            <p className='text-sm font-medium text-gray-900'>{application.email}</p>
-                            <p className='text-sm text-gray-600'>{application.phone}</p>
+                            <p className="text-sm text-gray-600">Contact</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {application.email}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {application.phone}
+                            </p>
                           </div>
                           <div>
-                            <p className='text-sm text-gray-600'>Experience</p>
-                            <p className='text-sm font-medium text-gray-900'>
+                            <p className="text-sm text-gray-600">Experience</p>
+                            <p className="text-sm font-medium text-gray-900">
                               {application.experienceLevel}
                             </p>
-                            <p className='text-sm text-gray-600'>
+                            <p className="text-sm text-gray-600">
                               {application.designation}
                               {/* at {application.currentCompany} */}
                             </p>
                           </div>
                           <div>
-                            <p className='text-sm text-gray-600'>Location</p>
-                            <p className='text-sm font-medium text-gray-900'>
+                            <p className="text-sm text-gray-600">Location</p>
+                            <p className="text-sm font-medium text-gray-900">
                               {application.location}
                             </p>
-                            <p className='text-sm text-gray-600'>
-                              Applied: {moment(application.appliedDate).format('DD-MM-YYYY')}
+                            <p className="text-sm text-gray-600">
+                              Applied:{' '}
+                              {moment(application.appliedDate).format(
+                                'DD-MM-YYYY',
+                              )}
                             </p>
                           </div>
                           {(application.status === 'completed' ||
                             application.status === 'under_review') && (
-                              <div>
-                                <p className='text-sm text-gray-600'>Interview Score</p>
-                                <div className='flex items-center space-x-2'>
+                            <div>
+                              <p className="text-sm text-gray-600">
+                                Interview Score
+                              </p>
+                              <div className="flex items-center space-x-2">
+                                <span
+                                  className={`text-lg font-bold ${
+                                    getScoreColor(
+                                      application.categoryPercentage
+                                        ?.overallPercentage ?? 0,
+                                    ).split(' ')[0]
+                                  }`}
+                                >
+                                  {application.categoryPercentage
+                                    ?.overallPercentage ?? 0}
+                                  %
+                                </span>
+                                {application.recommendations && (
                                   <span
-                                    className={`text-lg font-bold ${getScoreColor(application.categoryPercentage?.overallPercentage ?? 0).split(' ')[0]
-                                      }`}
+                                    className={`px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
+                                      application.recommendations
+                                        ?.recommendation ?? '',
+                                    )}`}
                                   >
-                                    {application.categoryPercentage?.overallPercentage ?? 0}%
+                                    {
+                                      application.recommendations
+                                        ?.recommendation
+                                    }
                                   </span>
-                                  {application.recommendations && (
-                                    <span
-                                      className={`px-2 py-1 text-xs font-semibold rounded-full ${getRecommendationColor(
-                                        application.recommendations?.recommendation ?? ''
-                                      )}`}
-                                    >
-                                      {application.recommendations?.recommendation}
-                                    </span>
-                                  )}
-                                </div>
-                                {application.interviewDate && (
-                                  <p className='text-sm text-gray-600'>
-                                    Interviewed:{' '}
-                                    {moment(application.interviewDate).format('DD-MM-YYYY')}
-                                  </p>
                                 )}
                               </div>
-                            )}
+                              {application.interviewDate && (
+                                <p className="text-sm text-gray-600">
+                                  Interviewed:{' '}
+                                  {moment(application.interviewDate).format(
+                                    'DD-MM-YYYY',
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
 
-                        <div className='mb-4'>
-                          <p className='text-sm text-gray-600 mb-2'>Skills</p>
-                          <div className='flex flex-wrap gap-2'>
-                            {application?.skills?.length && application?.skills?.length > 0 && application?.skills?.map((skill, index) => (
-                              <span
-                                key={index}
-                                className='bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium'
-                              >
-                                {skill}
-                              </span>
-                            ))}
+                        <div className="mb-4">
+                          <p className="text-sm text-gray-600 mb-2">Skills</p>
+                          <div className="flex flex-wrap gap-2">
+                            {application?.skills &&
+                              application?.skills?.length > 0 &&
+                              application?.skills?.map((skill, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
                           </div>
                         </div>
 
                         {application.performanceBreakdown && (
-                          <div className='mb-4'>
-                            <p className='text-sm text-gray-600 mb-2'>Performance Breakdown</p>
-                            <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
-                              {Object.entries(application.scores).map(([skill, score]) => (
-                                <div key={skill} className='flex items-center justify-between'>
-                                  <span className='text-xs text-gray-600 capitalize'>
-                                    {skill.replace(/([A-Z])/g, ' $1').trim()}
-                                  </span>
-                                  <div className='flex items-center space-x-2'>
-                                    <div className='w-12 bg-gray-200 rounded-full h-1.5'>
-                                      <div
-                                        className={`h-1.5 rounded-full ${score >= 90
-                                          ? 'bg-green-500'
-                                          : score >= 80
-                                            ? 'bg-blue-500'
-                                            : score >= 70
-                                              ? 'bg-yellow-500'
-                                              : 'bg-red-500'
-                                          }`}
-                                        style={{ width: `${score}%` }}
-                                      ></div>
-                                    </div>
-                                    <span className='text-xs font-medium text-gray-900 w-6'>
-                                      {score}%
+                          <div className="mb-4">
+                            <p className="text-sm text-gray-600 mb-2">
+                              Performance Breakdown
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              {Object.entries(application.scores).map(
+                                ([skill, score]) => (
+                                  <div
+                                    key={skill}
+                                    className="flex items-center justify-between"
+                                  >
+                                    <span className="text-xs text-gray-600 capitalize">
+                                      {skill.replace(/([A-Z])/g, ' $1').trim()}
                                     </span>
+                                    <div className="flex items-center space-x-2">
+                                      <div className="w-12 bg-gray-200 rounded-full h-1.5">
+                                        <div
+                                          className={`h-1.5 rounded-full ${
+                                            score >= 90
+                                              ? 'bg-green-500'
+                                              : score >= 80
+                                                ? 'bg-blue-500'
+                                                : score >= 70
+                                                  ? 'bg-yellow-500'
+                                                  : 'bg-red-500'
+                                          }`}
+                                          style={{ width: `${score}%` }}
+                                        ></div>
+                                      </div>
+                                      <span className="text-xs font-medium text-gray-900 w-6">
+                                        {score}%
+                                      </span>
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                ),
+                              )}
                             </div>
                           </div>
                         )}
 
                         {application.notes && (
-                          <div className='bg-gray-50 p-3 rounded-lg'>
-                            <p className='text-sm text-gray-700'>{application.notes}</p>
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <p className="text-sm text-gray-700">
+                              {application.notes}
+                            </p>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className='flex flex-col items-end space-y-2'>
-                      <div className='flex items-center space-x-2'>
+                    <div className="flex flex-col items-end space-y-2">
+                      <div className="flex items-center space-x-2">
                         {application.hasRecording && (
                           <button
                             onClick={() =>
@@ -527,28 +597,31 @@ export function JobApplicationsList({
                                 name: application.name,
                               })
                             }
-                            className='p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors'
-                            title='View Recording'
+                            className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors"
+                            title="View Recording"
                           >
-                            <Video className='h-5 w-5' />
+                            <Video className="h-5 w-5" />
                           </button>
                         )}
                         <button
                           onClick={() => setSelectedApplication(application)}
-                          className='p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors'
-                          title='View Details'
+                          className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="View Details"
                         >
-                          <Eye className='h-5 w-5' />
+                          <Eye className="h-5 w-5" />
                         </button>
                         {application.resumeUrl && (
                           <button
                             onClick={() =>
-                              handleDownloadResume(application.resumeUrl, application.name)
+                              handleDownloadResume(
+                                application.resumeUrl,
+                                application.name,
+                              )
                             }
-                            className='p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors'
-                            title='Download Resume'
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                            title="Download Resume"
                           >
-                            <FileText className='h-5 w-5' />
+                            <FileText className="h-5 w-5" />
                           </button>
                         )}
                         <button
@@ -556,18 +629,20 @@ export function JobApplicationsList({
                             //  window.location.href = `mailto:candidate@example.com?subject=Interview Opportunity&body=Hi, we’d like to connect...`
                             window.location.href = `mailto:${application.email}`;
                           }}
-                          className='p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors'
-                          title='Contact Candidate'
+                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                          title="Contact Candidate"
                         >
-                          <Mail className='h-5 w-5' />
+                          <Mail className="h-5 w-5" />
                         </button>
                         {application?.linkedinUrl && (
                           <button
-                            onClick={() => window.open(application.linkedinUrl, '_blank')}
-                            className='p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors'
-                            title='View LinkedIn'
+                            onClick={() =>
+                              window.open(application.linkedinUrl, '_blank')
+                            }
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                            title="View LinkedIn"
                           >
-                            <Linkedin className='h-5 w-5' />
+                            <Linkedin className="h-5 w-5" />
                           </button>
                         )}
                       </div>
@@ -581,24 +656,24 @@ export function JobApplicationsList({
 
         {/* Bulk Actions */}
         {selectedApplications.length > 0 && (
-          <div className='fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 p-4'>
-            <div className='flex items-center space-x-4'>
-              <span className='text-sm font-medium text-gray-700'>
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium text-gray-700">
                 {selectedApplications.length} candidate(s) selected
               </span>
-              <div className='flex space-x-2'>
-                <button className='bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm'>
+              <div className="flex space-x-2">
+                <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm">
                   Move to Next Round
                 </button>
-                <button className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm'>
+                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
                   Send Email
                 </button>
-                <button className='bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm'>
+                <button className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm">
                   Export Selected
                 </button>
                 <button
                   onClick={() => setSelectedApplications([])}
-                  className='border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm'
+                  className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                 >
                   Clear
                 </button>
@@ -610,51 +685,69 @@ export function JobApplicationsList({
 
       {/* Application Detail Modal */}
       {selectedApplication && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'>
-            <div className='p-6 border-b border-gray-200'>
-              <div className='flex items-center justify-between'>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h2 className='text-2xl font-bold text-gray-900'>{selectedApplication.name}</h2>
-                  <p className='text-gray-600'>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {selectedApplication.name}
+                  </h2>
+                  <p className="text-gray-600">
                     {selectedApplication.designation}
                     {/* at {selectedApplication.currentCompany} */}
                   </p>
                 </div>
                 <button
                   onClick={() => setSelectedApplication(null)}
-                  className='text-gray-400 hover:text-gray-600'
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  <X className='h-6 w-6' />
+                  <X className="h-6 w-6" />
                 </button>
               </div>
             </div>
 
-            <div className='p-6'>
-              <div className='grid md:grid-cols-2 gap-6'>
+            <div className="p-6">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className='text-lg font-semibold text-gray-900 mb-4'>Contact Information</h3>
-                  <div className='space-y-3'>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Contact Information
+                  </h3>
+                  <div className="space-y-3">
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>Email</label>
-                      <p className='text-gray-900'>{selectedApplication.email}</p>
+                      <label className="text-sm font-medium text-gray-600">
+                        Email
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedApplication.email}
+                      </p>
                     </div>
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>Phone</label>
-                      <p className='text-gray-900'>{selectedApplication.mobile}</p>
+                      <label className="text-sm font-medium text-gray-600">
+                        Phone
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedApplication.mobile}
+                      </p>
                     </div>
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>Location</label>
-                      <p className='text-gray-900'>{selectedApplication.location}</p>
+                      <label className="text-sm font-medium text-gray-600">
+                        Location
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedApplication.location}
+                      </p>
                     </div>
                     {selectedApplication.linkedinUrl && (
                       <div>
-                        <label className='text-sm font-medium text-gray-600'>LinkedIn</label>{' '}
+                        <label className="text-sm font-medium text-gray-600">
+                          LinkedIn
+                        </label>{' '}
                         <a
                           href={selectedApplication.linkedinUrl}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='text-blue-600 hover:text-blue-800'
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800"
                         >
                           View Profile
                         </a>
@@ -664,11 +757,17 @@ export function JobApplicationsList({
                 </div>
 
                 <div>
-                  <h3 className='text-lg font-semibold text-gray-900 mb-4'>Professional Details</h3>
-                  <div className='space-y-3'>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Professional Details
+                  </h3>
+                  <div className="space-y-3">
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>Experience</label>
-                      <p className='text-gray-900'>{selectedApplication.experienceLevel}</p>
+                      <label className="text-sm font-medium text-gray-600">
+                        Experience
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedApplication.experienceLevel}
+                      </p>
                     </div>
                     {/* <div>
                       <label className="text-sm font-medium text-gray-600">
@@ -677,21 +776,31 @@ export function JobApplicationsList({
                       <p className="text-gray-900">{selectedApplication.currentCompany}</p>
                     </div> */}
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>Current Role</label>
-                      <p className='text-gray-900'>{selectedApplication.designation}</p>
+                      <label className="text-sm font-medium text-gray-600">
+                        Current Role
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedApplication.designation}
+                      </p>
                     </div>
                     <div>
-                      <label className='text-sm font-medium text-gray-600'>Skills</label>
-                      <div className='flex flex-wrap gap-2 mt-1'>
-                        {selectedApplication.skills.map((skill: string, index: number) => (
-                          <span
-                            key={index}
-                            className='bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm'
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
+                      <label className="text-sm font-medium text-gray-600">
+                        Skills
+                      </label>
+                      {selectedApplication?.skills?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {selectedApplication.skills.map(
+                            (skill: string, index: number) => (
+                              <span
+                                key={index}
+                                className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm"
+                              >
+                                {skill}
+                              </span>
+                            ),
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -711,48 +820,56 @@ export function JobApplicationsList({
               {/* )} */}
 
               {selectedApplication.performanceBreakdown && (
-                <div className='mt-6'>
-                  <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Interview Performance
                   </h3>
-                  <div className='grid md:grid-cols-2 gap-4'>
-                    {Object.entries(selectedApplication.scores).map(([skill, score]) => (
-                      <div
-                        key={skill}
-                        className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'
-                      >
-                        <span className='text-sm font-medium text-gray-700 capitalize'>
-                          {skill.replace(/([A-Z])/g, ' $1').trim()}
-                        </span>
-                        <div className='flex items-center space-x-2'>
-                          <div className='w-20 bg-gray-200 rounded-full h-2'>
-                            <div
-                              className={`h-2 rounded-full ${score >= 90
-                                ? 'bg-green-500'
-                                : score >= 80
-                                  ? 'bg-blue-500'
-                                  : score >= 70
-                                    ? 'bg-yellow-500'
-                                    : 'bg-red-500'
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {Object.entries(selectedApplication.scores).map(
+                      ([skill, score]) => (
+                        <div
+                          key={skill}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <span className="text-sm font-medium text-gray-700 capitalize">
+                            {skill.replace(/([A-Z])/g, ' $1').trim()}
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-20 bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  score >= 90
+                                    ? 'bg-green-500'
+                                    : score >= 80
+                                      ? 'bg-blue-500'
+                                      : score >= 70
+                                        ? 'bg-yellow-500'
+                                        : 'bg-red-500'
                                 }`}
-                              style={{ width: `${score}%` }}
-                            ></div>
+                                style={{ width: `${score}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-bold text-gray-900">
+                              {score}%
+                            </span>
                           </div>
-                          <span className='text-sm font-bold text-gray-900'>{score}%</span>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
               )}
 
-              <div className='mt-6 flex justify-end space-x-4'>
+              <div className="mt-6 flex justify-end space-x-4">
                 {selectedApplication.resumeUrl && (
                   <button
                     onClick={() => {
-                      handleDownloadResume(selectedApplication.resumeUrl, selectedApplication.name);
+                      handleDownloadResume(
+                        selectedApplication.resumeUrl,
+                        selectedApplication.name,
+                      );
                     }}
-                    className='border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors'
+                    className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Download Resume
                   </button>
@@ -762,7 +879,7 @@ export function JobApplicationsList({
                     //  window.location.href = `mailto:candidate@example.com?subject=Interview Opportunity&body=Hi, we’d like to connect...`
                     window.location.href = `mailto:${selectedApplication.email}`;
                   }}
-                  className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors'
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Contact Candidate
                 </button>
@@ -775,7 +892,7 @@ export function JobApplicationsList({
                         name: selectedApplication.name,
                       });
                     }}
-                    className='bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors'
+                    className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
                   >
                     View Recording
                   </button>
